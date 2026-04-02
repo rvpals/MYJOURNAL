@@ -9,6 +9,7 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
 import android.util.Base64;
+import android.view.View;
 import android.webkit.GeolocationPermissions;
 import android.webkit.ValueCallback;
 import android.webkit.WebChromeClient;
@@ -30,6 +31,9 @@ import android.webkit.JavascriptInterface;
 
 import android.provider.MediaStore;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -47,18 +51,41 @@ public class MainActivity extends AppCompatActivity {
     private static final int FILE_CHOOSER_REQUEST = 1001;
     private static final int LOCATION_PERMISSION_REQUEST = 1002;
     private static final int CAMERA_PERMISSION_REQUEST = 1003;
+    private static final int DASHBOARD_REQUEST = 2001;
 
     private String pendingGeolocationOrigin;
     private GeolocationPermissions.Callback pendingGeolocationCallback;
+
+    private String autoLoginJournalId;
+    private String autoLoginPassword;
+    private String autoLoginSalt;
+    private String autoLoginVerify;
+    private String autoLoginJournalList;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        // Check for auto-login from LoginActivity
+        Intent intent = getIntent();
+        if (intent.getBooleanExtra("auto_login", false)) {
+            autoLoginJournalId = intent.getStringExtra("journal_id");
+            autoLoginPassword = intent.getStringExtra("password");
+            autoLoginSalt = intent.getStringExtra("crypto_salt");
+            autoLoginVerify = intent.getStringExtra("crypto_verify");
+            autoLoginJournalList = intent.getStringExtra("journal_list");
+        }
+
         webView = findViewById(R.id.webView);
         configureWebView();
         webView.addJavascriptInterface(new AndroidBridge(), "AndroidBridge");
+
+        // Hide WebView when auto-login is active (native screens handle display)
+        if (autoLoginJournalId != null) {
+            webView.setVisibility(View.INVISIBLE);
+        }
+
         webView.loadUrl("file:///android_asset/web/index.html");
     }
 
@@ -96,6 +123,17 @@ public class MainActivity extends AppCompatActivity {
                 Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
                 startActivity(intent);
                 return true;
+            }
+
+            @Override
+            public void onPageFinished(WebView view, String url) {
+                super.onPageFinished(view, url);
+                // Sync journal metadata from web localStorage to SharedPreferences
+                syncJournalMetadata();
+                // Auto-login if launched from native LoginActivity
+                if (autoLoginJournalId != null && autoLoginPassword != null) {
+                    performAutoLogin();
+                }
             }
         });
 
@@ -290,6 +328,33 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode == DASHBOARD_REQUEST) {
+            if (data != null) {
+                String navigate = data.getStringExtra("navigate_to");
+                if ("lock".equals(navigate)) {
+                    // Return to native login
+                    Intent loginIntent = new Intent(this, LoginActivity.class);
+                    loginIntent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
+                    startActivity(loginIntent);
+                    finish();
+                    return;
+                }
+                if ("dashboard".equals(navigate)) {
+                    // Re-query dashboard data and relaunch
+                    launchNativeDashboard();
+                    return;
+                }
+                if (navigate != null) {
+                    // Show WebView and navigate to the requested page
+                    webView.setVisibility(View.VISIBLE);
+                    webView.evaluateJavascript("navigateTo('" + navigate + "')", null);
+                }
+            } else {
+                // User pressed back from dashboard with no result — exit app
+                finish();
+            }
+            return;
+        }
         if (requestCode == FILE_CHOOSER_REQUEST) {
             if (fileUploadCallback != null) {
                 Uri[] results = null;
@@ -339,6 +404,149 @@ public class MainActivity extends AppCompatActivity {
         webView.evaluateJavascript("handleAndroidBack()", result -> {
             if ("\"exit\"".equals(result)) {
                 runOnUiThread(() -> MainActivity.super.onBackPressed());
+            } else if ("\"dashboard\"".equals(result)) {
+                // Navigate to native dashboard
+                runOnUiThread(() -> launchNativeDashboard());
+            }
+        });
+    }
+
+    void launchNativeDashboard() {
+        webView.evaluateJavascript(
+            "(function(){ return typeof getDashboardDataJSON === 'function' ? getDashboardDataJSON() : '{}'; })()",
+            value -> {
+                if (value != null && !"null".equals(value)) {
+                    String json = value;
+                    if (json.startsWith("\"")) {
+                        json = json.substring(1, json.length() - 1)
+                            .replace("\\\"", "\"")
+                            .replace("\\\\", "\\")
+                            .replace("\\n", "\n");
+                    }
+                    Intent intent = new Intent(MainActivity.this, DashboardActivity.class);
+                    intent.putExtra("dashboard_data", json);
+                    startActivityForResult(intent, DASHBOARD_REQUEST);
+                }
+            }
+        );
+    }
+
+    // ========== Auto Login from Native LoginActivity ==========
+
+    private void performAutoLogin() {
+        String jid = autoLoginJournalId;
+        String pwd = autoLoginPassword;
+        String salt = autoLoginSalt;
+        String verify = autoLoginVerify;
+        String journalList = autoLoginJournalList;
+        // Clear credentials from memory after use
+        autoLoginJournalId = null;
+        autoLoginPassword = null;
+        autoLoginSalt = null;
+        autoLoginVerify = null;
+        autoLoginJournalList = null;
+
+        // Escape single quotes in password for JS injection
+        String escapedPwd = pwd.replace("\\", "\\\\").replace("'", "\\'").replace("\n", "\\n");
+
+        // Build JS to sync native crypto keys to web localStorage before auto-login.
+        // This ensures the web Crypto module sees the same salt/verify as native.
+        StringBuilder js = new StringBuilder();
+        js.append("(async function() {");
+        js.append("  try {");
+
+        // Sync journal list to web localStorage
+        if (journalList != null) {
+            String escapedList = journalList.replace("\\", "\\\\").replace("'", "\\'");
+            js.append("    localStorage.setItem('journal_list', '").append(escapedList).append("');");
+        }
+
+        // Sync crypto keys (salt + verify token) to web localStorage
+        if (salt != null) {
+            js.append("    localStorage.setItem('journal_salt_").append(jid).append("', '").append(salt).append("');");
+        }
+        if (verify != null) {
+            String escapedVerify = verify.replace("\\", "\\\\").replace("'", "\\'");
+            js.append("    localStorage.setItem('journal_verify_").append(jid).append("', '").append(escapedVerify).append("');");
+        }
+
+        // Now auto-login: set credentials, load DB, enter app
+        js.append("    DB.setPassword('").append(escapedPwd).append("');");
+        js.append("    DB.setJournalId('").append(jid).append("');");
+        js.append("    await DB.loadAll('").append(escapedPwd).append("', '").append(jid).append("');");
+        js.append("    enterApp('").append(jid).append("');");
+        js.append("    var dashData = typeof getDashboardDataJSON === 'function' ? getDashboardDataJSON() : '{}';");
+        js.append("    AndroidBridge.onAutoLoginComplete(dashData);");
+        js.append("  } catch(e) {");
+        js.append("    console.error('Auto-login failed: ' + e.message);");
+        js.append("    AndroidBridge.onAutoLoginFailed(e.message || 'Unknown error');");
+        js.append("  }");
+        js.append("})();");
+
+        webView.evaluateJavascript(js.toString(), null);
+    }
+
+    /**
+     * Sync journal metadata from WebView localStorage to SharedPreferences.
+     * This keeps the native LoginActivity's data in sync with the web app.
+     */
+    private void syncJournalMetadata() {
+        String js = "(function() {" +
+                "  var result = {};" +
+                "  result.journal_list = localStorage.getItem('journal_list') || '[]';" +
+                "  result.last_journal_id = localStorage.getItem('last_journal_id') || '';" +
+                "  result.auto_open = localStorage.getItem('auto_open_last_journal') === 'true';" +
+                "  result.auto_biometric = localStorage.getItem('auto_biometric') === 'true';" +
+                "  var keys = {};" +
+                "  for (var i = 0; i < localStorage.length; i++) {" +
+                "    var k = localStorage.key(i);" +
+                "    if (k.startsWith('journal_salt_') || k.startsWith('journal_verify_')) {" +
+                "      keys[k] = localStorage.getItem(k);" +
+                "    }" +
+                "  }" +
+                "  result.crypto_keys = keys;" +
+                "  return JSON.stringify(result);" +
+                "})();";
+
+        webView.evaluateJavascript(js, value -> {
+            if (value == null || "null".equals(value)) return;
+            try {
+                // Remove surrounding quotes and unescape
+                String json = value;
+                if (json.startsWith("\"") && json.endsWith("\"")) {
+                    json = json.substring(1, json.length() - 1)
+                            .replace("\\\"", "\"")
+                            .replace("\\\\", "\\");
+                }
+                JSONObject data = new JSONObject(json);
+                SharedPreferences prefs = getSharedPreferences("journal_prefs", MODE_PRIVATE);
+                SharedPreferences.Editor editor = prefs.edit();
+
+                editor.putString("journal_list", data.getString("journal_list"));
+                editor.putString("last_journal_id", data.getString("last_journal_id"));
+                editor.putBoolean("auto_open_last_journal", data.getBoolean("auto_open"));
+                editor.putBoolean("auto_biometric", data.getBoolean("auto_biometric"));
+
+                // Sync crypto keys (salt + verify tokens)
+                JSONObject cryptoKeys = data.getJSONObject("crypto_keys");
+                java.util.Iterator<String> iter = cryptoKeys.keys();
+                while (iter.hasNext()) {
+                    String k = iter.next();
+                    // Convert from web key format (journal_salt_xxx) to native (salt_xxx)
+                    String nativeKey;
+                    if (k.startsWith("journal_salt_")) {
+                        nativeKey = "salt_" + k.substring("journal_salt_".length());
+                    } else if (k.startsWith("journal_verify_")) {
+                        nativeKey = "verify_" + k.substring("journal_verify_".length());
+                    } else {
+                        continue;
+                    }
+                    editor.putString(nativeKey, cryptoKeys.getString(k));
+                }
+
+                editor.apply();
+            } catch (JSONException e) {
+                // Sync failed silently — not critical
             }
         });
     }
@@ -438,6 +646,95 @@ public class MainActivity extends AppCompatActivity {
         @JavascriptInterface
         public boolean isAndroid() {
             return true;
+        }
+
+        @JavascriptInterface
+        public boolean hasNativeLogin() {
+            return true;
+        }
+
+        @JavascriptInterface
+        public void onAutoLoginComplete(String dashboardJson) {
+            runOnUiThread(() -> {
+                // Launch native dashboard as the home screen
+                if (dashboardJson != null && !dashboardJson.isEmpty() && !"{}".equals(dashboardJson)) {
+                    Intent intent = new Intent(MainActivity.this, DashboardActivity.class);
+                    intent.putExtra("dashboard_data", dashboardJson);
+                    startActivityForResult(intent, DASHBOARD_REQUEST);
+                } else {
+                    webView.setVisibility(View.VISIBLE);
+                }
+            });
+        }
+
+        @JavascriptInterface
+        public void onAutoLoginFailed(String error) {
+            runOnUiThread(() -> {
+                // Show WebView with web login as fallback
+                webView.setVisibility(View.VISIBLE);
+                Toast.makeText(MainActivity.this,
+                        "Auto-login failed: " + error, Toast.LENGTH_LONG).show();
+            });
+        }
+
+        @JavascriptInterface
+        public void onDashboardReady(String dashboardJson) {
+            runOnUiThread(() -> {
+                Intent intent = new Intent(MainActivity.this, DashboardActivity.class);
+                intent.putExtra("dashboard_data", dashboardJson);
+                startActivityForResult(intent, DASHBOARD_REQUEST);
+            });
+        }
+
+        /**
+         * Called from native DashboardActivity to refresh data.
+         * Queries the WebView and returns updated JSON.
+         */
+        @JavascriptInterface
+        public void requestDashboardRefresh() {
+            runOnUiThread(() -> {
+                webView.evaluateJavascript(
+                    "(function(){ return typeof getDashboardDataJSON === 'function' ? getDashboardDataJSON() : '{}'; })()",
+                    value -> {
+                        // value comes back as a quoted string from evaluateJavascript
+                    }
+                );
+            });
+        }
+
+        @JavascriptInterface
+        public void returnToLogin() {
+            runOnUiThread(() -> {
+                // Sync metadata before returning
+                syncJournalMetadata();
+                Intent intent = new Intent(MainActivity.this, LoginActivity.class);
+                intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
+                startActivity(intent);
+                finish();
+            });
+        }
+
+        /**
+         * Sync a single crypto key from web to SharedPreferences.
+         * Called by web JS whenever salt or verify token changes.
+         */
+        @JavascriptInterface
+        public void syncCryptoKey(String journalId, String salt, String verifyToken) {
+            SharedPreferences prefs = getSharedPreferences("journal_prefs", MODE_PRIVATE);
+            SharedPreferences.Editor editor = prefs.edit();
+            if (salt != null) editor.putString("salt_" + journalId, salt);
+            if (verifyToken != null) editor.putString("verify_" + journalId, verifyToken);
+            editor.apply();
+        }
+
+        /**
+         * Sync journal list from web to SharedPreferences.
+         * Called by web JS whenever journal list changes.
+         */
+        @JavascriptInterface
+        public void syncJournalList(String journalListJson) {
+            SharedPreferences prefs = getSharedPreferences("journal_prefs", MODE_PRIVATE);
+            prefs.edit().putString("journal_list", journalListJson).apply();
         }
 
         @JavascriptInterface

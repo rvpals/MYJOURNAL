@@ -1,0 +1,238 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/login_bg"
+    android:fillViewport="true">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:orientation="vertical"
+        android:padding="24dp"
+        android:layout_gravity="center">
+
+        <!-- App Title -->
+        <TextView
+            android:id="@+id/title_text"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="JOURNAL"
+            android:textColor="@color/login_accent"
+            android:textSize="36sp"
+            android:textStyle="bold"
+            android:letterSpacing="0.15"
+            android:layout_marginBottom="4dp" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Personal Journal &amp; Activity Log"
+            android:textColor="@color/login_text_secondary"
+            android:textSize="14sp"
+            android:layout_marginBottom="32dp" />
+
+        <!-- Login Card -->
+        <LinearLayout
+            android:id="@+id/login_card"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:background="@drawable/login_card_bg"
+            android:padding="24dp"
+            android:elevation="8dp">
+
+            <!-- Journal File Label -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Journal File"
+                android:textColor="@color/login_text"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                android:letterSpacing="0.05"
+                android:layout_marginBottom="8dp" />
+
+            <!-- Journal Selector Row -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:layout_marginBottom="12dp">
+
+                <Spinner
+                    android:id="@+id/journal_spinner"
+                    android:layout_width="0dp"
+                    android:layout_height="48dp"
+                    android:layout_weight="1"
+                    android:background="@drawable/spinner_bg"
+                    android:popupBackground="@color/login_card_bg"
+                    android:paddingStart="12dp"
+                    android:paddingEnd="12dp" />
+
+                <Button
+                    android:id="@+id/btn_new_journal"
+                    android:layout_width="44dp"
+                    android:layout_height="44dp"
+                    android:text="+"
+                    android:textColor="@color/white"
+                    android:textSize="20sp"
+                    android:background="@drawable/btn_accent"
+                    android:layout_marginStart="8dp" />
+
+                <Button
+                    android:id="@+id/btn_delete_journal"
+                    android:layout_width="44dp"
+                    android:layout_height="44dp"
+                    android:text="×"
+                    android:textColor="@color/white"
+                    android:textSize="20sp"
+                    android:background="@drawable/btn_delete"
+                    android:layout_marginStart="6dp" />
+            </LinearLayout>
+
+            <!-- New Journal Input (hidden by default) -->
+            <LinearLayout
+                android:id="@+id/new_journal_row"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:visibility="gone"
+                android:layout_marginBottom="12dp">
+
+                <EditText
+                    android:id="@+id/input_new_journal_name"
+                    android:layout_width="0dp"
+                    android:layout_height="44dp"
+                    android:layout_weight="1"
+                    android:hint="New journal name"
+                    android:textColor="@color/login_text"
+                    android:textColorHint="@color/login_text_secondary"
+                    android:background="@drawable/input_bg"
+                    android:paddingStart="12dp"
+                    android:paddingEnd="12dp"
+                    android:textSize="14sp"
+                    android:inputType="text"
+                    android:singleLine="true" />
+
+                <Button
+                    android:id="@+id/btn_create_journal"
+                    android:layout_width="wrap_content"
+                    android:layout_height="44dp"
+                    android:text="Create"
+                    android:textColor="@color/white"
+                    android:textSize="13sp"
+                    android:background="@drawable/btn_accent"
+                    android:paddingStart="14dp"
+                    android:paddingEnd="14dp"
+                    android:layout_marginStart="8dp" />
+
+                <Button
+                    android:id="@+id/btn_cancel_new"
+                    android:layout_width="wrap_content"
+                    android:layout_height="44dp"
+                    android:text="Cancel"
+                    android:textColor="@color/login_text_secondary"
+                    android:textSize="13sp"
+                    android:background="@drawable/btn_secondary"
+                    android:paddingStart="14dp"
+                    android:paddingEnd="14dp"
+                    android:layout_marginStart="6dp" />
+            </LinearLayout>
+
+            <!-- Password Input -->
+            <EditText
+                android:id="@+id/input_password"
+                android:layout_width="match_parent"
+                android:layout_height="48dp"
+                android:hint="Enter password"
+                android:textColor="@color/login_text"
+                android:textColorHint="@color/login_text_secondary"
+                android:background="@drawable/input_bg"
+                android:paddingStart="14dp"
+                android:paddingEnd="14dp"
+                android:textSize="15sp"
+                android:inputType="textPassword"
+                android:singleLine="true"
+                android:imeOptions="actionDone"
+                android:layout_marginBottom="8dp" />
+
+            <!-- Confirm Password (for new journals) -->
+            <EditText
+                android:id="@+id/input_password_confirm"
+                android:layout_width="match_parent"
+                android:layout_height="48dp"
+                android:hint="Confirm password"
+                android:textColor="@color/login_text"
+                android:textColorHint="@color/login_text_secondary"
+                android:background="@drawable/input_bg"
+                android:paddingStart="14dp"
+                android:paddingEnd="14dp"
+                android:textSize="15sp"
+                android:inputType="textPassword"
+                android:singleLine="true"
+                android:imeOptions="actionDone"
+                android:visibility="gone"
+                android:layout_marginBottom="8dp" />
+
+            <!-- Unlock Button -->
+            <Button
+                android:id="@+id/btn_unlock"
+                android:layout_width="match_parent"
+                android:layout_height="50dp"
+                android:text="Unlock"
+                android:textColor="@color/white"
+                android:textSize="16sp"
+                android:textStyle="bold"
+                android:letterSpacing="0.05"
+                android:background="@drawable/btn_primary"
+                android:layout_marginBottom="10dp" />
+
+            <!-- Biometric Button -->
+            <Button
+                android:id="@+id/btn_biometric"
+                android:layout_width="match_parent"
+                android:layout_height="50dp"
+                android:text="\uD83E\uDD1A  Fingerprint Unlock"
+                android:textColor="@color/white"
+                android:textSize="15sp"
+                android:background="@drawable/btn_biometric"
+                android:visibility="gone"
+                android:layout_marginBottom="10dp" />
+
+            <!-- Error Text -->
+            <TextView
+                android:id="@+id/login_error"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textColor="@color/login_error"
+                android:textSize="13sp"
+                android:gravity="center"
+                android:visibility="gone" />
+
+            <!-- Loading indicator -->
+            <ProgressBar
+                android:id="@+id/login_progress"
+                android:layout_width="32dp"
+                android:layout_height="32dp"
+                android:layout_gravity="center"
+                android:visibility="gone"
+                android:layout_marginTop="8dp" />
+
+        </LinearLayout>
+
+        <!-- Version text -->
+        <TextView
+            android:id="@+id/version_text"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="v1.0a"
+            android:textColor="@color/login_text_secondary"
+            android:textSize="12sp"
+            android:layout_marginTop="24dp" />
+
+    </LinearLayout>
+</ScrollView>

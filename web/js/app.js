@@ -60,9 +60,10 @@ function onJournalSelect() {
 
     updateBiometricLoginButton();
 
-    // Auto-trigger biometric if enabled
+    // Auto-trigger biometric if enabled (skip if native login already handled auth)
     if (isSetup && localStorage.getItem('auto_biometric') === 'true' && isBiometricSupported() &&
-        typeof AndroidBridge !== 'undefined' && AndroidBridge.hasCredential(journalId)) {
+        typeof AndroidBridge !== 'undefined' && AndroidBridge.hasCredential(journalId) &&
+        !(typeof AndroidBridge.hasNativeLogin === 'function' && AndroidBridge.hasNativeLogin())) {
         setTimeout(() => biometricLogin(), 300);
     }
 }
@@ -210,14 +211,21 @@ function enterApp(journalId) {
 }
 
 function lockApp() {
+    DB.setPassword(null);
+    DB.setJournalId(null);
+
+    // If native login is available, return to it
+    if (window.AndroidBridge && typeof AndroidBridge.hasNativeLogin === 'function' && AndroidBridge.hasNativeLogin()) {
+        AndroidBridge.returnToLogin();
+        return;
+    }
+
     document.getElementById('app-shell').style.display = 'none';
     document.getElementById('page-login').style.display = 'flex';
     document.getElementById('page-login').classList.add('active');
     document.getElementById('input-password').value = '';
     document.getElementById('input-password-confirm').value = '';
     document.getElementById('login-error').textContent = '';
-    DB.setPassword(null);
-    DB.setJournalId(null);
     populateJournalSelect();
 }
 
@@ -303,9 +311,13 @@ function handleAndroidBack() {
         navLinks.classList.remove('open');
         return 'handled';
     }
-    // If on login or dashboard, signal exit
-    if (typeof currentPage === 'undefined' || currentPage === 'login' || currentPage === 'dashboard') {
+    // If on login, signal exit
+    if (typeof currentPage === 'undefined' || currentPage === 'login') {
         return 'exit';
+    }
+    // If on dashboard, return to native dashboard
+    if (currentPage === 'dashboard') {
+        return 'dashboard';
     }
     // Otherwise navigate back
     navigateBack();
@@ -1141,6 +1153,12 @@ document.addEventListener('DOMContentLoaded', () => {
     // Detect Android WebView and add class for compact navbar
     if (window.AndroidBridge) {
         document.body.classList.add('android');
+    }
+
+    // If native login is handling auth, hide the web login page entirely.
+    // performAutoLogin() from MainActivity will call enterApp() directly.
+    if (window.AndroidBridge && typeof AndroidBridge.hasNativeLogin === 'function' && AndroidBridge.hasNativeLogin()) {
+        document.getElementById('page-login').style.display = 'none';
     }
 
     populateJournalSelect();

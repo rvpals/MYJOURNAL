@@ -1,0 +1,264 @@
+# REQUIREMENTS — MYJOURNAL
+
+## 1. Authentication & Security
+
+### Password Authentication
+- Each journal has its own independent password
+- PBKDF2-SHA256 key derivation with 100,000 iterations
+- AES-256-GCM encryption for all stored data
+- 16-byte random salt per journal, 12-byte random IV per encryption operation
+- Verification token: encrypt "JOURNAL_VERIFY_TOKEN" to validate password on login
+- Password change: verify old password, re-encrypt entire database with new key
+
+### Biometric Authentication (Android)
+- Optional fingerprint/face unlock via AndroidX BiometricPrompt
+- Enable/disable toggle in Settings > Preferences
+- Stored credential: plaintext password, base64-encoded, in SharedPreferences
+- Auto-biometric prompt when enabled and returning to locked app
+- Credential cleared if password verification fails
+- Credential updated when password is changed
+
+### Native Login (Android)
+- LoginActivity is the launcher/entry point
+- Journal selector: spinner dropdown populated from SharedPreferences journal list
+- New journal: password + confirmation fields, minimum length validation
+- Existing journal: single password field
+- Auto-open last journal option (skip login screen)
+- Delete journal: removes DB data, crypto keys, biometric credential
+- Passes credentials to MainActivity for WebView auto-login via JS injection
+
+## 2. Data Storage
+
+### Database (sql.js / SQLite WASM)
+- SQLite compiled to WebAssembly, runs entirely in browser/WebView
+- Base64 WASM fallback for file:// protocol (avoids CORS issues)
+- Encrypted database bytes stored in IndexedDB (DB: 'JournalDB', Store: 'encrypted_data')
+- Per-journal storage keys in IndexedDB
+- Full database loaded into memory on login, saved back on every write operation
+
+### Schema
+- **entries**: id, date (YYYY-MM-DD), time (HH:MM), title, content (plain text), richContent (HTML), categories (JSON array), tags (JSON array), people (JSON array), placeName, locations (JSON array of {lat, lng, address}), weather (JSON {temp, unit, description, code}), pinned (0/1), dtCreated, dtUpdated
+- **images**: id, entryId (FK), name, data (base64), thumb (base64), sortOrder
+- **categories**: name (PK)
+- **icons**: type + name (composite PK), data (SVG/emoji)
+- **people**: firstName + lastName (composite PK), description
+- **settings**: key (PK), value
+- **schema_version**: version (INT)
+- Indices: idx_entries_date, idx_entries_pinned, idx_images_entry
+
+### Sync (Android ↔ Web)
+- Journal list synced between web localStorage and native SharedPreferences
+- Crypto salt and verify token synced via AndroidBridge.syncCryptoKey()
+- Journal list synced via AndroidBridge.syncJournalList()
+
+## 3. Journal Entries
+
+### Entry Form
+- Date: text input, strict YYYY-MM-DD validation
+- Time: text input, HH:MM format
+- Title: text input
+- Content: dual-mode — Quill.js rich text editor OR plain textarea toggle
+- Categories: single-select dropdown from managed list, option to create new
+- Tags: multi-select with auto-complete from managed list, create new inline
+- People: multi-select with auto-complete from managed list
+- Place name: text input with geocoding search
+- Locations: array of {lat, lng, address} from geocoding results
+- Weather: fetch current weather button (Open-Meteo API), displays temp + condition
+- Images: file picker (gallery) or camera capture, base64 encoded, thumbnail generated
+- Save validates required fields and persists to encrypted DB
+
+### Entry List
+- Card view: entry cards with date, title, category badge, tag chips, content preview
+- List/table view: compact rows with selected columns
+- Search: debounced (300ms), searches title, content, tags, categories
+- Filters: date range picker, category dropdown, tag dropdown
+- Pagination: 10, 20, 50, 100, or all entries per page
+- Sort: by date (asc/desc), title, created date, updated date
+- Multi-select mode: checkbox per entry, batch delete with confirmation
+- Entry numbering in both views
+
+### Entry Viewer
+- Read-only display of all entry fields
+- Rich content rendered as HTML
+- Image gallery with lightbox (full-screen, prev/next navigation)
+- Action buttons: Pin/Unpin, Edit, Print (PDF), Delete, Back
+- Prev/Next navigation between entries (swipe on Android)
+- 3D styled buttons with gradient backgrounds, shadows, hover/press effects
+- Date/Time displayed using user's configured format
+- Viewer font customizable (family + size) in settings
+
+## 4. Dashboard
+
+### Stats
+- Total entries count
+- Entries this week / this month / this year
+- Clickable stats (navigate to filtered entry list)
+
+### Ranked Panels
+- Top tags, categories, places, people — ranked by entry count
+- Show top 10 by default, "Show All" toggle
+- Color-coded ranking badges
+- Clickable items navigate to filtered entry list
+
+### Pinned Entries
+- List of pinned entries with date and title
+- Max pinned entries configurable in settings
+- Click to view entry
+
+### Recent Entries
+- Most recent entries sorted by date DESC
+- Content preview (plain text, truncated)
+- Click to view entry
+
+### Dashboard Search
+- Live search across all entries
+- Results displayed inline with date, title, content preview
+
+### Quick Actions
+- Custom views pinned to dashboard appear as action buttons
+
+### Native Dashboard (Android)
+- DashboardActivity receives JSON data from WebView via getDashboardDataJSON()
+- 2x2 stats grid, pinned entries, recent entries, ranked panels
+- Clickable rows return navigation intent to MainActivity
+- Color-coded ranking badges
+
+## 5. Custom Views
+
+- Saved filter/sort/group combinations with a name
+- Condition builder: field, operator, value triplets
+- Logic: AND, OR, NOT combinations
+- Supported fields: date, time, title, content, categories, tags, placeName, locations, weather, people
+- Operators vary by field type: contains, equals, starts with, ends with, before, after, between, includes, not includes, is empty, is not empty
+- Group by: date, category, tag, place, weather condition
+- Sort by: multiple fields with asc/desc
+- Display mode override: card or list view
+- Pin to dashboard: view appears as quick action button
+- Default view: optionally set one view as default on app open
+- Preview: show matching entries without saving the view
+- Load into SQL Explorer: populate explorer conditions from saved view
+
+## 6. SQL Explorer
+
+- Accessible from "SQL Explorer" nav link
+- Two input modes: raw SQL textarea or visual condition builder
+- Visual builder: field chips, operator dropdown, value input, add/remove rows
+- Raw SQL: queries targeting non-entries tables (e.g., `SELECT * FROM icons`) run directly via sql.js
+- Entry queries: parsed from SQL or built from conditions, executed as in-memory filter
+- Supported fields (condition builder): date, time, title, content, categories, tags, placeName, locations, weather
+- Type-specific operators: contains, equals, starts/ends with, before/after, between, includes, is empty, has/no data
+- Toggleable field chips to select which columns appear in results
+- Results table: row numbers, clickable rows to open record detail overlay, inline delete button (with "Delete journal entry" tooltip)
+- Record detail overlay: full-screen modal showing all field values (untruncated), prev/next navigation between records, click outside or x to close
+- Load Custom View dropdown: load conditions from saved custom views into the builder and auto-run
+- CSV export button: exports current results grid to CSV file with all values double-quoted, date-stamped filename (e.g., `explorer_results_2026-04-01.csv`)
+- Table browser: clickable table name chips (dynamically loaded from SQLite schema) show column schema (name, type, PK, not null, default) and up to 5 sample rows
+- Clear button resets both SQL and builder
+
+## 7. Reports
+
+### Formats
+- **HTML**: rendered in-page with template substitution, printable
+- **PDF**: generated via jsPDF, page breaks between entries
+- **CSV**: all fields as columns, double-quoted values
+
+### Templates
+- HTML templates with field substitution tags:
+  - `<%TITLE%>`, `<%DATE%>`, `<%TIME%>`, `<%CONTENT%>`, `<%RICH_CONTENT%>`
+  - `<%CATEGORIES%>`, `<%TAGS%>`, `<%PLACES%>`, `<%WEATHER%>`
+  - `<%DT_CREATED%>`, `<%DT_UPDATED%>`, `<%ID%>`
+- Inline template editor in Reports page
+- Template CRUD in Settings > Templates tab
+- Sample templates provided in /web/templates/
+
+### Filters
+- Date range (from/to)
+- Category filter
+- Tag filter
+- Applied before report generation
+
+## 8. Settings
+
+### Preferences
+- Auto-open last journal (skip login)
+- Confirm before delete (entries)
+- Biometric authentication toggle
+- Geocoding provider: Photon, Nominatim, or Google
+- Viewer font: family + size with live preview
+- Date display format: Short, Long, ISO, US, EU, Weekday
+- Time display format: 12-hour, 24-hour
+- Max pinned entries count
+- Default sort field and direction
+
+### Themes
+- 12 themes: Light, Dark, Ocean, Midnight, Forest, Amethyst, Aurora, Lavender, Frost, Navy, Sunflower, Meadow
+- All implemented via CSS `[data-theme]` custom properties
+- Theme selection persisted in settings DB
+
+### Metadata Editing
+- Categories: add, rename, delete, assign color (color picker with swatches)
+- Tags: add, rename, delete, assign color (color picker with swatches)
+- "Use category/tag colors" toggles — colors applied in entry list and dashboard
+- People: add, edit, delete (first name, last name, description)
+- Icons: custom SVG/emoji icons for categories and tags
+- Entry field visibility toggles (show/hide fields in entry form)
+
+### Data Management
+- **Export**: Encrypted SQLite, Plain SQLite, JSON, CSV
+- **Import**: SQLite (encrypted or plain), JSON, CSV
+- **CSV Import**: Column mapping UI, date/time format configuration, duplicate detection
+- **Metadata Export**: JSON containing categories, tags, people, icons, settings, report templates, pre-fill templates, custom views (excludes entries/images)
+- **Metadata Import**: Overwrite warning, full replace, auto-reload
+- **Password Change**: Verify old password, re-encrypt entire database
+- **Cleanup**: Find entries with missing/invalid dates, find duplicate entries (same date + content), preview before delete
+
+### Pre-fill Templates
+- Saved templates that auto-fill entry form fields
+- Fields: date pattern, time, title, content, categories, tags
+- CRUD in Settings > Templates tab
+- Apply from entry form dropdown
+
+## 9. Weather Integration
+
+- Provider: Open-Meteo API (free, no API key)
+- City search by name → select location → save as default
+- Fetch current weather: temperature (C/F toggle), condition code, description
+- Weather data stored per-entry as JSON
+- Weather location persisted in settings
+- Display: weather badge in entry cards, full details in viewer
+
+## 10. Android Platform
+
+### Activities
+1. **LoginActivity** (launcher) — Journal selection, password, biometric
+2. **MainActivity** — WebView container with AndroidBridge
+3. **DashboardActivity** — Native stats/entries/rankings
+4. **AboutActivity** — App info, version, links
+
+### Permissions
+- INTERNET — API access (weather, geocoding, CDN)
+- ACCESS_FINE_LOCATION + ACCESS_COARSE_LOCATION — GPS for weather/places
+- USE_BIOMETRIC — Fingerprint/face unlock
+- CAMERA — Photo capture for journal entries
+
+### AndroidBridge (JS ↔ Native)
+- File downloads via scoped storage (API 29+)
+- Biometric prompting
+- Credential storage in SharedPreferences
+- Dashboard data exchange
+- Platform detection
+- Crypto key and journal list sync
+
+### CSS
+- style-android.css loaded only on Android (`.android` body class)
+- Compact navbar with icon-only buttons
+- Touch-optimized button sizes (2.2rem minimum)
+- 3D button styling with gradients and shadows
+- Active/press states with inset shadow + transform
+
+## 11. File Downloads
+
+- **Web browser**: standard blob URL download or anchor click
+- **Android WebView**: MUST use `downloadFile()` → `AndroidBridge.saveFile()` (blob URLs crash WebView)
+- Supported formats: PDF, CSV, SQLite (.db), JSON, HTML
+- Scoped storage on Android API 29+ (Downloads directory)

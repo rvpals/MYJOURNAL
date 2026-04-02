@@ -1,0 +1,90 @@
+# TODO — MYJOURNAL
+
+## Completed Features
+
+### Core (v0.9.0 – v1.0.0)
+- [x] Multi-journal support with per-journal passwords
+- [x] AES-256-GCM encryption with PBKDF2 key derivation (100k iterations)
+- [x] sql.js (SQLite WASM) database with IndexedDB persistence
+- [x] Journal entries: create, edit, delete, view
+- [x] Rich text editing (Quill.js) with image support
+- [x] Image attachments: gallery picker, camera capture, base64 storage, lightbox viewer
+- [x] Categories (single-select) and tags (multi-select) per entry
+- [x] Location/place name with geocoding (Photon/Nominatim/Google)
+- [x] Weather tracking via Open-Meteo API (GPS-based)
+- [x] Dashboard with stats (total, week, month, year), pinned entries, recent entries
+- [x] Entry list with search, date/category/tag filtering
+- [x] 8 themes (Light, Dark, Ocean, Midnight, Forest, Amethyst, Aurora, Lavender)
+- [x] Data export: encrypted SQLite, plain SQLite, JSON, CSV
+- [x] Data import: SQLite, JSON
+- [x] Settings: preferences, theme picker, category/tag editor
+- [x] Reports: HTML with custom templates, PDF (jsPDF), CSV
+
+### v1.1.0 (2026-03-20)
+- [x] SQL Explorer: visual query builder + raw SQL text input
+- [x] Print PDF from entry viewer
+- [x] 4 new themes: Amethyst, Aurora, Lavender, Frost
+- [x] Navbar icon buttons
+- [x] Entry numbering in lists
+- [x] Column layout toggle in entry list
+
+### v1.2.0 (2026-03-25)
+- [x] Custom Views: saved filter combinations with AND/OR/NOT logic, grouping, sorting
+- [x] 3 new themes: Navy, Sunflower, Meadow (total: 12)
+- [x] Pagination in entry list (10/20/50/100/all)
+- [x] Card and list view toggle
+- [x] Pre-fill templates (auto-fill date, time, title, content, categories, tags)
+- [x] Batch deletion (multi-select mode)
+- [x] CSV import with column mapping and duplicate detection
+- [x] Pin to dashboard for custom views
+
+### v1.3.1 (2026-03-27)
+- [x] Pin/unpin entries, max pinned entries setting
+- [x] Default entry view option
+- [x] Viewer font customization (family + size)
+- [x] Android swipe navigation in entry viewer
+- [x] Collapsible filter fields
+- [x] Date & time display format settings (6 date formats, 12h/24h time)
+- [x] Entry viewer 3D icon buttons (gradient, shadow, hover/press effects)
+- [x] Cleanup tool: find dateless entries + duplicate detection
+- [x] Invalid date bug fix (returns empty string instead of "Invalid Date")
+- [x] Biometric authentication (AndroidX BiometricPrompt)
+
+### Post-v1.3.1 (2026-03-31 session, in older JOURNAL repo)
+- [x] People feature: first/last name, description, multi-select per entry
+- [x] Custom icons for tags/categories
+- [x] Dashboard search with live results
+- [x] Settings tabs (Preferences, Templates, Edit Metadata, Data Management)
+- [x] Android navbar redesign: icon-only, two-row layout
+- [x] Separated CSS: style.css (web) + style-android.css (Android-only)
+- [x] Category and tag colors: color picker swatches, "Use colors" toggles
+- [x] Metadata export/import (JSON — categories, tags, people, icons, settings, templates, views)
+- [x] SQL Explorer: CSV export, raw SQL for any table, record detail overlay, custom view loader
+- [x] Delete button tooltip in Explorer results
+
+### Current (uncommitted UI overhaul)
+- [x] Native LoginActivity: journal selector, password, biometric login
+- [x] Native DashboardActivity: stats grid, pinned/recent entries, ranked panels
+- [x] Styled Android drawables: buttons (primary, secondary, accent, delete, biometric), inputs, cards, spinners, search/stat/entry/ranked backgrounds
+- [x] Android layout XMLs: login screen, dashboard, spinner items
+- [x] MainActivity expansion: AndroidBridge, file chooser, auto-login, metadata sync
+- [x] Web crypto.js: sync hooks for native SharedPreferences
+- [x] Web dashboard.js: getDashboardDataJSON() with streak for native dashboard
+- [x] Web db.js: journal list sync updates
+
+### Bug Fixes (2026-04-01)
+- [x] Fix: web login screen showing after native Android login — pass crypto keys via Intent extras, sync to localStorage in performAutoLogin()
+- [x] Fix: biometric prompt appearing twice on fingerprint login — check hasNativeLogin() in onJournalSelect()
+- [x] Fix: CSV import field mapping UI overflow on Android — reduce min-widths, add flex/overflow-x to container
+
+## Remaining / TODO
+
+- [ ] Re-test all features after UI overhaul (web + Android)
+- [ ] Google Drive backup/sync (gdrive.js is placeholder)
+- [ ] Web app: HTTPS requirement for Web Crypto API (currently file:// only works with base64 WASM fallback)
+- [ ] Entry image thumbnails could be optimized (currently full base64 stored)
+- [ ] Consider lazy loading for large journal databases (1000+ entries)
+- [ ] Password strength indicator on journal creation
+- [ ] Entry search: full-text search across rich content (currently plain text only)
+- [ ] Accessibility audit (screen reader support, keyboard navigation)
+- [ ] Localization / i18n support

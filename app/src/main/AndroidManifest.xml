@@ -23,17 +23,30 @@
         android:usesCleartextTraffic="false">
 
         <activity
-            android:name=".MainActivity"
-            android:configChanges="orientation|screenSize|keyboard|keyboardHidden"
+            android:name=".LoginActivity"
             android:exported="true"
             android:screenOrientation="unspecified"
-            android:windowSoftInputMode="adjustResize">
+            android:windowSoftInputMode="adjustResize"
+            android:theme="@style/AppTheme">
 
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <activity
+            android:name=".MainActivity"
+            android:configChanges="orientation|screenSize|keyboard|keyboardHidden"
+            android:exported="false"
+            android:screenOrientation="unspecified"
+            android:windowSoftInputMode="adjustResize" />
+
+        <activity
+            android:name=".DashboardActivity"
+            android:exported="false"
+            android:screenOrientation="unspecified"
+            android:theme="@style/AppTheme" />
 
         <activity
             android:name=".AboutActivity"
