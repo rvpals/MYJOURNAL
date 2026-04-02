@@ -1,0 +1,1181 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JOURNAL</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/style-android.css">
+    <link rel="stylesheet" href="https://cdn.quilljs.com/1.3.7/quill.snow.css">
+
+</head>
+<body>
+    <!-- LOGIN PAGE -->
+    <div id="page-login" class="page active">
+        <div class="login-container">
+            <h1>JOURNAL</h1>
+            <p class="login-subtitle">Personal Journal &amp; Activity Log</p>
+            <div class="login-box">
+                <div class="form-group">
+                    <label for="journal-select">Journal File</label>
+                    <div class="journal-select-row">
+                        <select id="journal-select" onchange="onJournalSelect()">
+                            <!-- populated dynamically -->
+                        </select>
+                        <button class="btn-small" onclick="showNewJournalInput()" title="New journal">+</button>
+                        <button class="btn-small btn-danger-small" id="btn-delete-journal" onclick="deleteJournal()" title="Delete journal" style="display:none">&times;</button>
+                    </div>
+                    <div id="new-journal-row" style="display:none">
+                        <div class="journal-new-input-row">
+                            <input type="text" id="new-journal-name" placeholder="New journal name">
+                            <button class="btn-small" onclick="createNewJournal()">Create</button>
+                            <button class="btn-small" onclick="cancelNewJournal()">Cancel</button>
+                        </div>
+                    </div>
+                </div>
+                <div id="login-form">
+                    <input type="password" id="input-password" placeholder="Enter password" autofocus>
+                    <div id="login-confirm-row" style="display:none">
+                        <input type="password" id="input-password-confirm" placeholder="Confirm password">
+                    </div>
+                    <button id="btn-unlock" class="btn-primary" onclick="handleLogin()">Unlock</button>
+                    <button id="btn-biometric" class="btn-secondary biometric-btn" onclick="biometricLogin()" style="display:none">&#x1F91A; Fingerprint Unlock</button>
+                    <p id="login-error" class="error-text"></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MAIN APP SHELL -->
+    <div id="app-shell" style="display:none">
+        <!-- NAV BAR -->
+        <nav id="navbar">
+            <div class="nav-row1">
+                <button class="nav-brand nav-brand-btn" onclick="navigateTo('dashboard')" title="Click to show dashboard">JOURNAL <span id="nav-journal-name" class="nav-journal-name"></span></button>
+                <a href="#" class="nav-link nav-link-settings nav-row1-btn" data-page="settings" onclick="navigateTo('settings')" title="Settings"><span class="nav-icon">&#x2699;&#xFE0F;</span> <span class="nav-label-text">Settings</span></a>
+                <button class="btn-icon nav-row1-btn" onclick="lockApp()" title="Lock">&#x1F512;</button>
+            </div>
+            <div class="nav-row2">
+                <button class="btn-icon btn-new-entry" onclick="navigateTo('entry-form')" title="New Entry">&#x1F4DD;</button>
+                <div class="nav-row2-right">
+                    <div class="nav-links">
+                        <a href="#" class="nav-link" data-page="entry-list" onclick="navigateTo('entry-list')"><span class="nav-icon">&#x1F4D6;</span><span class="nav-label-text">Entries</span></a>
+                        <a href="#" class="nav-link" data-page="reports" onclick="navigateTo('reports')"><span class="nav-icon">&#x1F4C4;</span><span class="nav-label-text">Reports</span></a>
+                        <a href="#" class="nav-link" data-page="explorer" onclick="navigateTo('explorer')"><span class="nav-icon">&#x1F50D;</span><span class="nav-label-text">Explorer</span></a>
+                    </div>
+                    <div class="nav-actions">
+                        <button id="btn-theme" class="btn-icon" onclick="cycleTheme()" title="Cycle theme">&#x1F3A8;</button>
+                    </div>
+                </div>
+            </div>
+            <button id="nav-hamburger" class="btn-icon nav-hamburger" onclick="toggleMobileNav()">&#9776;</button>
+        </nav>
+
+        <!-- DASHBOARD PAGE -->
+        <div id="page-dashboard" class="page active">
+            <div class="page-header page-header-row">
+                <h2>Dashboard</h2>
+                <div id="dashboard-weather" class="dashboard-weather-compact" style="display:none"></div>
+                <div class="col-toggle" data-target="dashboard-panels" id="col-toggle-dashboard"></div>
+            </div>
+            <div id="dashboard-quick-actions" class="dashboard-quick-actions"></div>
+            <fieldset class="dashboard-search-group" id="dashboard-search-group">
+                <legend class="dashboard-search-legend" onclick="toggleDashboardSearch()">&#x1F50D; Search for text <span id="dashboard-search-arrow" class="collapse-arrow">&#9654;</span></legend>
+                <div id="dashboard-search-body" class="dashboard-search-body" style="display:none">
+                    <div class="dashboard-search-row">
+                        <input type="text" id="dashboard-search-input" class="dashboard-search-input" placeholder="Search entries..." onkeydown="if(event.key==='Enter')dashboardSearch()">
+                        <button class="btn-small" onclick="dashboardSearch()" title="Search">&#x1F50D;</button>
+                        <button class="btn-small" onclick="clearDashboardSearch()" id="dashboard-search-clear" style="display:none" title="Clear">&times;</button>
+                    </div>
+                    <div id="dashboard-search-status" class="dashboard-search-status" style="display:none"></div>
+                    <div id="dashboard-search-results" class="dashboard-search-results" style="display:none"></div>
+                </div>
+            </fieldset>
+            <div class="stats-grid">
+                <div class="stat-card stat-card-clickable" onclick="statNavigate('total')">
+                    <div class="stat-value" id="stat-total">0</div>
+                    <div class="stat-label">Total Entries</div>
+                </div>
+                <div class="stat-card stat-card-clickable" onclick="statNavigate('week')">
+                    <div class="stat-value" id="stat-week">0</div>
+                    <div class="stat-label">This Week</div>
+                </div>
+                <div class="stat-card stat-card-clickable" onclick="statNavigate('month')">
+                    <div class="stat-value" id="stat-month">0</div>
+                    <div class="stat-label">This Month</div>
+                </div>
+                <div class="stat-card stat-card-clickable" onclick="statNavigate('year')">
+                    <div class="stat-value" id="stat-year">0</div>
+                    <div class="stat-label">This Year</div>
+                </div>
+            </div>
+            <div class="dashboard-panels" id="dashboard-panels">
+                <div class="panel">
+                    <div class="panel-header">
+                        <h3>Top Tags</h3>
+                        <div class="panel-header-actions">
+                            <button class="btn-small btn-show-all" id="btn-show-all-tags" onclick="toggleShowAll('tags')" style="display:none">Show All</button>
+                            <button class="btn-small" id="btn-view-tags" onclick="toggleRankedView('tags')">&#x1F504; View</button>
+                        </div>
+                    </div>
+                    <div id="top-tags" class="ranked-list"></div>
+                </div>
+                <div class="panel">
+                    <div class="panel-header">
+                        <h3>Top Categories</h3>
+                        <div class="panel-header-actions">
+                            <button class="btn-small btn-show-all" id="btn-show-all-categories" onclick="toggleShowAll('categories')" style="display:none">Show All</button>
+                            <button class="btn-small" id="btn-view-categories" onclick="toggleRankedView('categories')">&#x1F504; View</button>
+                        </div>
+                    </div>
+                    <div id="top-categories" class="ranked-list"></div>
+                </div>
+                <div class="panel">
+                    <div class="panel-header">
+                        <h3>Top Places</h3>
+                        <div class="panel-header-actions">
+                            <button class="btn-small btn-show-all" id="btn-show-all-places" onclick="toggleShowAll('places')" style="display:none">Show All</button>
+                            <button class="btn-small" id="btn-view-places" onclick="toggleRankedView('places')">&#x1F504; View</button>
+                        </div>
+                    </div>
+                    <div id="top-places" class="ranked-list"></div>
+                </div>
+                <div class="panel">
+                    <div class="panel-header">
+                        <h3>People</h3>
+                        <div class="panel-header-actions">
+                            <button class="btn-small btn-show-all" id="btn-show-all-people" onclick="toggleShowAll('people')" style="display:none">Show All</button>
+                            <button class="btn-small" id="btn-view-people" onclick="toggleRankedView('people')">&#x1F504; View</button>
+                        </div>
+                    </div>
+                    <div id="top-people" class="ranked-list"></div>
+                </div>
+                <div class="panel" id="panel-pinned-entries" style="display:none">
+                    <h3>&#x1F5D2;&#xFE0F; Pinned Entries</h3>
+                    <div id="pinned-entries"></div>
+                </div>
+                <div class="panel">
+                    <h3>Recent Entries</h3>
+                    <div id="recent-entries"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ENTRY VIEW PAGE (read-only) -->
+        <div id="page-entry-view" class="page">
+            <div class="ev-header-block">
+                <div class="ev-header-row1">
+                    <span id="ev-header-date" class="ev-header-chip"></span>
+                    <span id="ev-header-time" class="ev-header-chip"></span>
+                    <label class="ev-action-btn ev-pin-label ev-header-pin" title="Pin this entry">
+                        <input type="checkbox" id="ev-pin-toggle" onchange="togglePinEntry()">
+                        <span class="ev-btn-icon">&#x1F4CC;</span>
+                    </label>
+                </div>
+                <span id="entry-view-title" class="ev-header-chip ev-header-title"></span>
+            </div>
+            <div class="entry-view-card">
+                <div id="ev-main-content"></div>
+                <div id="ev-misc-group" class="ev-misc-group">
+                    <div class="ev-misc-header" onclick="toggleMiscInfo()">
+                        <span>&#x1F4CB; Misc Info</span>
+                        <span class="ev-misc-arrow" id="ev-misc-arrow">&#9660;</span>
+                    </div>
+                    <div id="ev-misc-content" class="ev-misc-body"></div>
+                </div>
+            </div>
+            <div class="ev-bottom-bar">
+                <div class="entry-view-nav">
+                    <button id="view-prev-btn" class="ev-action-btn ev-nav-btn" onclick="viewPrevEntry()" title="Previous entry">
+                        <span class="ev-btn-icon">&#x23EA;</span>
+                        <span class="ev-btn-text">Prev</span>
+                    </button>
+                    <span id="view-nav-counter" class="ev-nav-counter"></span>
+                    <button id="view-next-btn" class="ev-action-btn ev-nav-btn" onclick="viewNextEntry()" title="Next entry">
+                        <span class="ev-btn-icon">&#x23E9;</span>
+                        <span class="ev-btn-text">Next</span>
+                    </button>
+                </div>
+                <div class="ev-bottom-sep"></div>
+                <div class="entry-view-actions ev-btn-bar">
+                    <button class="ev-action-btn ev-btn-edit" onclick="editViewedEntry()">
+                        <span class="ev-btn-icon">&#x270F;&#xFE0F;</span>
+                        <span class="ev-btn-text">Edit</span>
+                    </button>
+                    <button class="ev-action-btn ev-btn-print" onclick="openPrintModal()">
+                        <span class="ev-btn-icon">&#x1F5A8;&#xFE0F;</span>
+                        <span class="ev-btn-text">Print</span>
+                    </button>
+                    <button class="ev-action-btn ev-btn-delete" onclick="deleteViewedEntry()">
+                        <span class="ev-btn-icon">&#x1F5D1;&#xFE0F;</span>
+                        <span class="ev-btn-text">Delete</span>
+                    </button>
+                    <button class="ev-action-btn ev-btn-back" onclick="navigateBack()">
+                        <span class="ev-btn-icon">&#x2B05;&#xFE0F;</span>
+                        <span class="ev-btn-text">Back</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ENTRY FORM PAGE -->
+        <div id="page-entry-form" class="page">
+            <div class="page-header page-header-row">
+                <h2 id="entry-form-title">New Entry</h2>
+                <button type="button" class="btn-small btn-quick-gps" onclick="quickFillGpsWeather()" title="Get current GPS location &amp; weather">&#x1F4CD; GPS + Weather</button>
+                <div id="entry-template-bar" class="entry-template-bar" style="display:none">
+                    <select id="entry-template-select" onchange="loadEntryTemplate()">
+                        <option value="">-- Pre-fill Template --</option>
+                    </select>
+                </div>
+            </div>
+            <form id="entry-form" onsubmit="saveEntry(event)">
+                <input type="hidden" id="entry-id">
+
+                <fieldset class="form-fieldset">
+                    <legend>Main</legend>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="entry-date">Date</label>
+                            <input type="date" id="entry-date" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="entry-time">Time (optional)</label>
+                            <div class="time-input-group">
+                                <input type="time" id="entry-time">
+                                <button type="button" class="btn-small" onclick="fillCurrentTime()">Now</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="entry-title">Title</label>
+                        <input type="text" id="entry-title" placeholder="Entry title" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="entry-content">Content</label>
+                        <textarea id="entry-content" rows="6" placeholder="Write your journal entry..."></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Rich Content (optional)</label>
+                        <div id="rich-content-editor"></div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Images</label>
+                        <div id="entry-images-preview" class="entry-images-grid"></div>
+                        <div class="image-attach-row">
+                            <button type="button" class="btn-small" onclick="document.getElementById('image-file-input').click()">&#x1F4F7; Attach Images</button>
+                            <button type="button" class="btn-small" onclick="document.getElementById('camera-capture-input').click()">&#x1F4F8; Take Photo</button>
+                            <input type="file" id="image-file-input" accept="image/*" multiple style="display:none" onchange="onImagesSelected(event)">
+                            <input type="file" id="camera-capture-input" accept="image/*" capture="environment" style="display:none" onchange="onImagesSelected(event)">
+                        </div>
+                    </div>
+                </fieldset>
+
+                <fieldset class="form-fieldset">
+                    <legend>Misc</legend>
+                    <div class="form-group">
+                        <label for="entry-category">Category</label>
+                        <div id="category-select" class="multi-select">
+                            <!-- populated dynamically -->
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="entry-tags">Tags</label>
+                        <div class="tag-input-container">
+                            <div id="tag-list" class="tag-list"></div>
+                            <input type="text" id="entry-tags-input" placeholder="Type a tag and press Enter" autocomplete="off">
+                            <div id="tag-dropdown" class="tag-dropdown"></div>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>People</label>
+                        <div id="selected-people-list" class="tag-list people-tag-list"></div>
+                        <div id="people-select" class="multi-select people-multi-select">
+                            <!-- populated dynamically -->
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="entry-place-name">Place Name</label>
+                        <input type="text" id="entry-place-name" placeholder="e.g. NYC Trip, Office, Home" list="place-name-suggestions" autocomplete="off">
+                        <datalist id="place-name-suggestions"></datalist>
+                    </div>
+                    <div class="form-group">
+                        <label>Locations</label>
+                        <div id="locations-list" class="locations-list"></div>
+                        <div class="location-search-row">
+                            <input type="text" id="location-search-input" placeholder="Search address or place..." autocomplete="off" onkeydown="if(event.key==='Enter'){event.preventDefault();searchLocation();}">
+                            <button type="button" class="btn-small" onclick="searchLocation()">Search</button>
+                            <button type="button" class="btn-small" onclick="getCurrentLocationNew()">GPS</button>
+                        </div>
+                        <div id="location-search-results" class="location-search-results" style="display:none"></div>
+                    </div>
+                    <div class="form-group">
+                        <label>Weather</label>
+                        <div class="weather-entry-row">
+                            <input type="text" id="entry-weather" placeholder="No weather data" readonly>
+                            <button type="button" class="btn-small" onclick="importWeather()">Import Weather</button>
+                        </div>
+                        <div id="weather-detail" class="weather-detail" style="display:none"></div>
+                        <input type="hidden" id="entry-weather-data">
+                    </div>
+                </fieldset>
+
+                <div class="form-actions">
+                    <button type="submit" class="btn-primary">Save Entry</button>
+                    <button type="button" class="btn-secondary" onclick="cancelEntry()">Cancel</button>
+                    <button type="button" class="btn-danger" id="btn-delete-entry" style="display:none" onclick="deleteEntry()">Delete</button>
+                </div>
+            </form>
+        </div>
+
+        <!-- ENTRY LIST PAGE -->
+        <div id="page-entry-list" class="page">
+            <div class="page-header page-header-row">
+                <div class="col-toggle" data-target="entries-container" id="col-toggle-entries"></div>
+                <h2 id="entries-page-title">Entries</h2>
+                <div></div>
+            </div>
+            <div id="views-bar" class="views-bar">
+                <select id="view-select" onchange="onViewSelect()">
+                    <option value="">-- Saved Views --</option>
+                </select>
+                <button class="btn-small" onclick="showNewViewBuilder()">New View</button>
+                <button class="btn-small" id="btn-edit-view" onclick="editCurrentView()">Edit</button>
+                <button class="btn-small btn-danger-small" id="btn-delete-view" onclick="deleteCurrentView()">Delete</button>
+            </div>
+            <div id="view-builder" class="view-builder" style="display:none">
+                <div class="view-builder-header">
+                    <input type="text" id="view-name-input" placeholder="View name..." class="view-name-input">
+                    <label class="view-logic-label">Match:
+                        <select id="view-logic-select" class="view-logic-select">
+                            <option value="AND">All conditions (AND)</option>
+                            <option value="OR">Any condition (OR)</option>
+                        </select>
+                    </label>
+                    <label class="toggle-label view-pin-label">
+                        <input type="checkbox" id="view-pin-dashboard">
+                        <span>Pin to Dashboard</span>
+                    </label>
+                </div>
+                <div id="view-conditions-list" class="view-conditions-list"></div>
+                <div class="view-builder-actions">
+                    <button class="btn-small" onclick="addViewConditionRow()">+ Add Condition</button>
+                    <button class="btn-small" onclick="previewViewFromBuilder()">Preview</button>
+                    <button class="btn-primary view-save-btn" onclick="saveViewFromBuilder()">Save View</button>
+                    <button class="btn-secondary" onclick="hideViewBuilder()">Cancel</button>
+                </div>
+            </div>
+            <div class="list-toolbar">
+                <div class="search-input-wrap">
+                    <input type="text" id="search-input" placeholder="Search entries..." oninput="onSearchInput()">
+                    <div id="search-progress" class="search-progress"></div>
+                </div>
+                <div class="filter-toggle-header" onclick="toggleFilterFields()">
+                    <span>Filters</span><span class="collapse-arrow">&#9660;</span>
+                </div>
+                <div id="filter-fields-body" class="filter-fields-body">
+                    <select id="filter-category" onchange="filterEntries()">
+                        <option value="">All Categories</option>
+                    </select>
+                    <select id="filter-tag" onchange="filterEntries()">
+                        <option value="">All Tags</option>
+                    </select>
+                    <input type="date" id="filter-date-from" onchange="filterEntries()" title="From date">
+                    <input type="date" id="filter-date-to" onchange="filterEntries()" title="To date">
+                    <button class="btn-small" onclick="clearFilters()">Clear</button>
+                </div>
+                <button class="btn-small" id="btn-select-mode" onclick="toggleSelectMode()">Select</button>
+                <button class="btn-small" id="btn-view-mode" onclick="toggleViewMode()" title="Toggle Card/List view">&#x1F4CB; Card</button>
+                <select id="page-size-select" class="page-size-select" onchange="onPageSizeChange()" title="Records per page">
+                    <option value="10">10 / page</option>
+                    <option value="20">20 / page</option>
+                    <option value="50">50 / page</option>
+                    <option value="100">100 / page</option>
+                    <option value="0">All</option>
+                </select>
+            </div>
+            <div id="batch-actions" class="batch-actions" style="display:none">
+                <span id="select-count" class="select-count"></span>
+                <button class="btn-small" onclick="selectAllVisible()">Select All</button>
+                <button class="btn-small" onclick="deselectAll()">Deselect All</button>
+                <button class="btn-danger-small" onclick="deleteSelectedEntries()">Delete Selected</button>
+            </div>
+            <div id="filter-criteria-box" class="filter-criteria-box" style="display:none"></div>
+            <div id="entries-container" class="entries-container"></div>
+            <div id="pagination-controls" class="pagination-controls" style="display:none"></div>
+        </div>
+
+        <!-- REPORTS PAGE -->
+        <div id="page-reports" class="page">
+            <div class="page-header">
+                <h2>Reports</h2>
+            </div>
+            <div class="report-options">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="report-date-from">From</label>
+                        <input type="date" id="report-date-from">
+                    </div>
+                    <div class="form-group">
+                        <label for="report-date-to">To</label>
+                        <input type="date" id="report-date-to">
+                    </div>
+                    <div class="form-group">
+                        <label for="report-category">Category</label>
+                        <select id="report-category">
+                            <option value="">All</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="report-tag">Tag</label>
+                        <select id="report-tag">
+                            <option value="">All</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="report-actions">
+                    <button class="btn-primary" onclick="generateReport('html')">View Report</button>
+                    <button class="btn-secondary" onclick="generateReport('print')">Print</button>
+                    <button class="btn-secondary" onclick="generateReport('csv')">Export CSV</button>
+                    <button class="btn-secondary" onclick="generateReport('pdf')">Export PDF</button>
+                </div>
+                <div class="report-template-section">
+                    <h3>Custom Template Report</h3>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="report-template-select">Template</label>
+                            <select id="report-template-select" onchange="onReportTemplateChange()">
+                                <option value="">-- Select a template --</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="report-actions">
+                        <button class="btn-primary" onclick="generateTemplateReport()">Generate from Template</button>
+                        <button class="btn-secondary" onclick="generateTemplateReport('download')">Download HTML</button>
+                        <button class="btn-secondary" id="btn-toggle-tpl-editor" onclick="toggleReportTemplateEditor()" style="display:none">Edit Template</button>
+                    </div>
+                    <div id="report-template-editor" class="report-tpl-editor" style="display:none">
+                        <div class="template-tags-help">
+                            <strong>Tags:</strong>
+                            <code>&lt;%TITLE%&gt;</code>
+                            <code>&lt;%DATE%&gt;</code>
+                            <code>&lt;%TIME%&gt;</code>
+                            <code>&lt;%CONTENT%&gt;</code>
+                            <code>&lt;%RICH_CONTENT%&gt;</code>
+                            <code>&lt;%CATEGORIES%&gt;</code>
+                            <code>&lt;%TAGS%&gt;</code>
+                            <code>&lt;%PLACES%&gt;</code>
+                            <code>&lt;%WEATHER%&gt;</code>
+                            <code>&lt;%DT_CREATED%&gt;</code>
+                            <code>&lt;%DT_UPDATED%&gt;</code>
+                            <code>&lt;%ID%&gt;</code>
+                        </div>
+                        <textarea id="report-template-textarea" rows="18" class="template-textarea" placeholder="Edit template HTML..."></textarea>
+                        <div class="form-actions">
+                            <button class="btn-primary" onclick="saveReportTemplateFromEditor()" style="width:auto">Save Template</button>
+                            <button class="btn-secondary" onclick="toggleReportTemplateEditor()">Close Editor</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div id="report-output" class="report-output"></div>
+        </div>
+
+        <!-- EXPLORER PAGE -->
+        <!-- CUSTOM VIEWS PAGE -->
+        <!-- Custom Views page removed; content moved to Settings > Templates tab -->
+
+        <div id="page-explorer" class="page">
+            <div class="page-header page-header-row">
+                <h2>SQL Explorer</h2>
+                <div class="col-toggle" data-target="explorer-results-body" id="col-toggle-explorer"></div>
+            </div>
+            <div id="explorer-tables" class="explorer-tables">
+                <span class="ev-label">Tables</span>
+                <div id="explorer-table-chips" class="explorer-field-chips"></div>
+                <div id="explorer-table-detail" class="explorer-table-detail" style="display:none"></div>
+            </div>
+            <div class="explorer-builder">
+                <div class="explorer-sql-section">
+                    <span class="ev-label">SQL</span>
+                    <textarea id="explorer-sql-input" class="explorer-sql-input" rows="3" placeholder="SELECT * FROM entries WHERE title CONTAINS 'trip' AND date > '2025-01-01'" spellcheck="false"></textarea>
+                    <div class="explorer-sql-help">
+                        Fields: date, time, title, content, categories, tags, placeName, locations, weather &mdash;
+                        Ops: CONTAINS, EQUALS, STARTS WITH, ENDS WITH, BEFORE, AFTER, BETWEEN...AND, INCLUDES, NOT INCLUDES, IS EMPTY, IS NOT EMPTY, HAS DATA, NO DATA
+                    </div>
+                </div>
+                <div class="explorer-divider"><span>or use the builder</span></div>
+                <div class="explorer-fields">
+                    <span class="ev-label">Fields</span>
+                    <div id="explorer-field-chips" class="explorer-field-chips"></div>
+                </div>
+                <div id="explorer-conditions" class="explorer-conditions"></div>
+                <div class="explorer-actions">
+                    <button class="btn-primary explorer-run-btn" onclick="runExplorerQuery()">Run Query</button>
+                    <button class="btn-secondary" onclick="clearExplorerQuery()">Clear</button>
+                    <select id="explorer-view-select" class="explorer-view-select" onchange="loadViewIntoExplorer()">
+                        <option value="">Load Custom View...</option>
+                    </select>
+                    <span id="explorer-result-count" class="fc-count"></span>
+                </div>
+            </div>
+            <div id="explorer-results" class="explorer-results" style="display:none">
+                <div class="explorer-results-bar">
+                    <button class="btn-secondary btn-small" onclick="exportExplorerCSV()">Export CSV</button>
+                </div>
+                <div class="explorer-results-scroll">
+                    <table class="explorer-table">
+                        <thead id="explorer-results-head"></thead>
+                        <tbody id="explorer-results-body"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- SETTINGS PAGE -->
+        <div id="page-settings" class="page">
+            <div class="page-header page-header-row">
+                <h2>Settings</h2>
+                <div class="col-toggle" data-target="page-settings" id="col-toggle-settings"></div>
+                <button class="btn-small btn-about-corner" onclick="openAbout()" title="About this app">&#x2139;&#xFE0F; About</button>
+            </div>
+
+            <div class="settings-tabs">
+                <button class="settings-tab active" onclick="switchSettingsTab('prefs')" id="stab-prefs">&#x2699;&#xFE0F; Preferences</button>
+                <button class="settings-tab" onclick="switchSettingsTab('templates')" id="stab-templates">&#x1F4DD; Templates</button>
+                <button class="settings-tab" onclick="switchSettingsTab('cattags')" id="stab-cattags">&#x1F3F7;&#xFE0F; Edit Metadata</button>
+                <button class="settings-tab" onclick="switchSettingsTab('data')" id="stab-data">&#x1F4BE; Data</button>
+            </div>
+
+            <!-- TAB 1: Preferences -->
+            <div class="settings-tab-content active" id="stab-content-prefs">
+
+            <div class="settings-section">
+                <h3 class="settings-collapsible" onclick="toggleSettingsSection(this)"><span class="settings-icon">&#x2699;&#xFE0F;</span>Preferences<span class="collapse-arrow">&#9660;</span></h3>
+                <div class="settings-section-body">
+                <label class="toggle-label">
+                    <input type="checkbox" id="auto-open-toggle" onchange="toggleAutoOpenJournal()">
+                    <span>Auto-open last journal on startup</span>
+                </label>
+                <label class="toggle-label" style="margin-top:0.5rem">
+                    <input type="checkbox" id="warn-delete-toggle" onchange="toggleWarnBeforeDelete()" checked>
+                    <span>Warn before delete</span>
+                </label>
+                <label class="toggle-label" style="margin-top:0.5rem">
+                    <input type="checkbox" id="warn-unsaved-toggle" onchange="toggleWarnUnsaved()" checked>
+                    <span>Warn if new entry not saved</span>
+                </label>
+                <label class="toggle-label" style="margin-top:0.5rem">
+                    <input type="checkbox" id="misc-collapsed-toggle" onchange="toggleMiscCollapsedDefault()">
+                    <span>Collapse Misc Info by default in viewer</span>
+                </label>
+                <label class="toggle-label biometric-setting" id="biometric-toggle-row" style="margin-top:0.5rem; display:none">
+                    <input type="checkbox" id="biometric-toggle" onchange="toggleBiometric()">
+                    <span>&#x1F91A; Fingerprint unlock for this journal</span>
+                </label>
+                <label class="toggle-label biometric-setting" id="auto-biometric-toggle-row" style="margin-top:0.5rem; display:none">
+                    <input type="checkbox" id="auto-biometric-toggle" onchange="toggleAutoBiometric()">
+                    <span>&#x1F91A; Unlock with biometric by default</span>
+                </label>
+                <div class="form-group" style="margin-top:0.75rem">
+                    <label for="geocoding-provider">Geocoding Provider</label>
+                    <select id="geocoding-provider" onchange="saveGeocodingProvider()">
+                        <option value="photon">Photon (Komoot) — free, no key</option>
+                        <option value="nominatim">Nominatim (OSM) — free, no key, better precision</option>
+                        <option value="google">Google Geocoding — requires API key</option>
+                    </select>
+                </div>
+                <div id="geocoding-api-key-row" class="form-group" style="display:none; margin-top:0.5rem">
+                    <label for="geocoding-api-key">Google API Key</label>
+                    <input type="text" id="geocoding-api-key" placeholder="Enter your Google Geocoding API key" onchange="saveGeocodingApiKey()">
+                </div>
+                <div class="form-group" style="margin-top:0.75rem">
+                    <label>Entry Viewer Font</label>
+                    <div class="pref-row">
+                        <select id="ev-font-family" onchange="saveViewerFont()">
+                            <option value="">Default (Quicksand)</option>
+                            <option value="'Georgia', serif">Georgia</option>
+                            <option value="'Times New Roman', serif">Times New Roman</option>
+                            <option value="'Garamond', serif">Garamond</option>
+                            <option value="'Palatino Linotype', serif">Palatino</option>
+                            <option value="'Arial', sans-serif">Arial</option>
+                            <option value="'Verdana', sans-serif">Verdana</option>
+                            <option value="'Trebuchet MS', sans-serif">Trebuchet MS</option>
+                            <option value="'Segoe UI', sans-serif">Segoe UI</option>
+                            <option value="'Roboto', sans-serif">Roboto</option>
+                            <option value="'Courier New', monospace">Courier New</option>
+                            <option value="'Consolas', monospace">Consolas</option>
+                        </select>
+                        <select id="ev-font-size" onchange="saveViewerFont()">
+                            <option value="">Default</option>
+                            <option value="0.8rem">Small</option>
+                            <option value="0.95rem">Medium</option>
+                            <option value="1.1rem">Large</option>
+                            <option value="1.25rem">X-Large</option>
+                            <option value="1.4rem">XX-Large</option>
+                        </select>
+                    </div>
+                    <div id="ev-font-preview" class="ev-font-preview">The quick brown fox jumps over the lazy dog.</div>
+                </div>
+                <div class="form-group" style="margin-top:0.75rem">
+                    <label>Date &amp; Time Display Format</label>
+                    <div class="pref-row">
+                        <select id="ev-date-format" onchange="saveDateTimeFormat()">
+                            <option value="short">Mar 27, 2026</option>
+                            <option value="long">March 27, 2026</option>
+                            <option value="iso">2026-03-27</option>
+                            <option value="us">03/27/2026</option>
+                            <option value="eu">27/03/2026</option>
+                            <option value="weekday">Thu, Mar 27, 2026</option>
+                        </select>
+                        <select id="ev-time-format" onchange="saveDateTimeFormat()">
+                            <option value="12h">2:30 PM</option>
+                            <option value="24h">14:30</option>
+                        </select>
+                    </div>
+                    <div id="ev-datetime-preview" class="ev-font-preview" style="margin-top:0.3rem"></div>
+                </div>
+                <div class="form-group" style="margin-top:0.75rem">
+                    <label for="max-pinned-entries">Max Pinned Entries</label>
+                    <input type="number" id="max-pinned-entries" min="1" max="100" value="10" style="width:100px" onchange="saveMaxPinnedEntries()">
+                </div>
+                <div class="form-group" style="margin-top:0.75rem">
+                    <label>Default Entry List Order</label>
+                    <div class="pref-row">
+                        <select id="default-sort-field" onchange="saveDefaultEntryListOrder()">
+                            <option value="date">Date</option>
+                            <option value="time">Time</option>
+                            <option value="title">Title</option>
+                            <option value="content">Content</option>
+                            <option value="categories">Categories</option>
+                            <option value="tags">Tags</option>
+                            <option value="placeName">Place Name</option>
+                            <option value="dtCreated">Created</option>
+                            <option value="dtUpdated">Updated</option>
+                        </select>
+                        <select id="default-sort-dir" onchange="saveDefaultEntryListOrder()">
+                            <option value="desc">Descending (newest first)</option>
+                            <option value="asc">Ascending (oldest first)</option>
+                        </select>
+                    </div>
+                </div>
+                </div>
+            </div>
+
+            <div class="settings-section">
+                <h3 class="settings-collapsible" onclick="toggleSettingsSection(this)"><span class="settings-icon">&#x1F4CB;</span>Display &amp; Appearance<span class="collapse-arrow">&#9660;</span></h3>
+                <div class="settings-section-body">
+
+                <fieldset class="settings-group-box">
+                    <legend>&#x1F4CB; Entry List Fields</legend>
+                    <p class="settings-description">Choose which fields to display on entry cards in the list view.</p>
+                    <div id="entry-fields-list" class="entry-fields-checkboxes"></div>
+                </fieldset>
+
+                <fieldset class="settings-group-box">
+                    <legend>&#x1F326;&#xFE0F; Weather Location</legend>
+                    <p class="settings-description">Set your location to import current weather into journal entries.</p>
+                    <div class="form-group">
+                        <label for="weather-city-search">Search City</label>
+                        <div class="weather-search-row">
+                            <input type="text" id="weather-city-search" placeholder="Type a city name...">
+                            <button class="btn-small" onclick="weatherSearchCity()">Search</button>
+                        </div>
+                        <div id="weather-search-results" class="weather-search-results"></div>
+                    </div>
+                    <div id="weather-location-display" class="weather-location-display" style="display:none">
+                        <span id="weather-location-name"></span>
+                        <span id="weather-location-coords" class="weather-coords"></span>
+                        <button class="btn-small" onclick="clearWeatherLocation()">Clear</button>
+                    </div>
+                    <div class="form-group" style="margin-top:0.75rem">
+                        <label for="weather-temp-unit">Temperature Unit</label>
+                        <select id="weather-temp-unit" onchange="saveWeatherTempUnit()">
+                            <option value="fahrenheit">Fahrenheit</option>
+                            <option value="celsius">Celsius</option>
+                        </select>
+                    </div>
+                    <p id="weather-settings-msg" class="msg-text"></p>
+                </fieldset>
+
+                <fieldset class="settings-group-box">
+                    <legend>&#x1F3A8; Theme</legend>
+                    <div class="form-group">
+                        <label for="theme-select">Color Theme</label>
+                        <select id="theme-select" onchange="setTheme(this.value)">
+                            <option value="light">Light</option>
+                            <option value="dark">Dark</option>
+                            <option value="ocean">Ocean</option>
+                            <option value="midnight">Midnight</option>
+                            <option value="forest">Forest</option>
+                            <option value="amethyst">Amethyst</option>
+                            <option value="aurora">Aurora</option>
+                            <option value="lavender">Lavender</option>
+                            <option value="frost">Frost</option>
+                            <option value="navy">Navy</option>
+                            <option value="sunflower">Sunflower</option>
+                            <option value="meadow">Meadow</option>
+                        </select>
+                    </div>
+                    <div id="theme-preview" class="theme-preview-grid"></div>
+                </fieldset>
+
+                </div>
+            </div>
+
+            </div>
+
+            <!-- TAB 2: Templates -->
+            <div class="settings-tab-content" id="stab-content-templates">
+
+            <div class="settings-section" id="page-custom-views">
+                <h3 class="settings-collapsible" onclick="toggleSettingsSection(this)"><span class="settings-icon">&#x1F4CB;</span>Custom Views<span class="collapse-arrow">&#9660;</span></h3>
+                <div class="settings-section-body">
+                <div style="display:flex; justify-content:flex-end; margin-bottom:0.75rem">
+                    <button class="btn-primary" onclick="cvNewView()">+ New View</button>
+                </div>
+                <div id="cv-list" class="cv-list"></div>
+
+                <!-- View Editor -->
+                <div id="cv-editor" class="cv-editor" style="display:none">
+                    <h3 id="cv-editor-title">New View</h3>
+
+                    <div class="form-group">
+                        <label for="cv-name">View Name</label>
+                        <input type="text" id="cv-name" placeholder="My custom view...">
+                    </div>
+
+                    <!-- Conditions -->
+                    <div class="cv-section">
+                        <div class="cv-section-header">
+                            <h4>Filter Conditions</h4>
+                            <label class="cv-logic-label">Match:
+                                <select id="cv-logic" class="cv-logic-select">
+                                    <option value="AND">All conditions (AND)</option>
+                                    <option value="OR">Any condition (OR)</option>
+                                </select>
+                            </label>
+                        </div>
+                        <div id="cv-conditions" class="cv-conditions"></div>
+                        <button class="btn-small" onclick="cvAddCondition()">+ Add Condition</button>
+                    </div>
+
+                    <!-- Group By -->
+                    <div class="cv-section">
+                        <h4>Group By</h4>
+                        <select id="cv-group-by" class="cv-group-select">
+                            <option value="">None</option>
+                            <option value="date">Date</option>
+                            <option value="categories">Category</option>
+                            <option value="tags">Tag</option>
+                            <option value="placeName">Place Name</option>
+                            <option value="weather">Weather</option>
+                        </select>
+                    </div>
+
+                    <!-- Order By -->
+                    <div class="cv-section">
+                        <div class="cv-section-header">
+                            <h4>Order By</h4>
+                        </div>
+                        <div id="cv-order-list" class="cv-order-list"></div>
+                        <button class="btn-small" onclick="cvAddOrderField()">+ Add Sort Field</button>
+                    </div>
+
+                    <!-- Display Mode -->
+                    <div class="cv-section">
+                        <h4>Display Mode</h4>
+                        <select id="cv-display-mode" class="cv-group-select">
+                            <option value="">Default (use toolbar setting)</option>
+                            <option value="card">Card</option>
+                            <option value="list">List (table)</option>
+                        </select>
+                    </div>
+
+                    <!-- Options -->
+                    <div class="cv-section cv-options-row">
+                        <label class="toggle-label cv-pin-label">
+                            <input type="checkbox" id="cv-pin-dashboard">
+                            <span>Pin to Dashboard</span>
+                        </label>
+                        <label class="toggle-label cv-pin-label">
+                            <input type="checkbox" id="cv-default-entry-view">
+                            <span>Default Entry View</span>
+                        </label>
+                    </div>
+
+                    <!-- Actions -->
+                    <div class="cv-editor-actions">
+                        <button class="btn-primary" onclick="cvSaveView()">Save View</button>
+                        <button class="btn-small" onclick="cvPreview()">Preview</button>
+                        <button class="btn-secondary" onclick="cvCancelEditor()">Cancel</button>
+                    </div>
+                </div>
+
+                <!-- Preview results -->
+                <div id="cv-preview-results" style="display:none">
+                    <div class="cv-section-header">
+                        <h4 id="cv-preview-title">Preview</h4>
+                        <button class="btn-small" onclick="document.getElementById('cv-preview-results').style.display='none'">Close Preview</button>
+                    </div>
+                    <div id="cv-preview-container" class="entries-container"></div>
+                </div>
+                </div>
+            </div>
+
+            <div class="settings-section">
+                <h3 class="settings-collapsible" onclick="toggleSettingsSection(this)"><span class="settings-icon">&#x1F4DD;</span>Pre-fill Templates<span class="collapse-arrow">&#9660;</span></h3>
+                <div class="settings-section-body">
+                <p class="settings-description">Create templates to quickly pre-fill new entries with preset categories, tags, and more.</p>
+                <div id="entry-templates-list" class="settings-list"></div>
+                <div class="settings-add-row">
+                    <input type="text" id="new-entry-template-name" placeholder="Template name">
+                    <button class="btn-small" onclick="createEntryTemplate()">New Template</button>
+                </div>
+                <div id="entry-template-editor" class="template-editor-section" style="display:none">
+                    <h4 id="entry-template-editor-title">Edit Pre-fill Template</h4>
+                    <div class="form-group">
+                        <label>Template Name</label>
+                        <input type="text" id="et-name" placeholder="Template name">
+                    </div>
+                    <div class="form-group">
+                        <label>Description (optional)</label>
+                        <input type="text" id="et-description" placeholder="What this template is for...">
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="toggle-label">
+                                <input type="checkbox" id="et-auto-date" checked>
+                                <span>Auto-fill today's date</span>
+                            </label>
+                        </div>
+                        <div class="form-group">
+                            <label class="toggle-label">
+                                <input type="checkbox" id="et-auto-time">
+                                <span>Auto-fill current time</span>
+                            </label>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Default Title (optional)</label>
+                        <input type="text" id="et-title" placeholder="Leave blank for no default">
+                    </div>
+                    <div class="form-group">
+                        <label>Default Content (optional)</label>
+                        <textarea id="et-content" rows="3" placeholder="Leave blank for no default"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>Categories</label>
+                        <div id="et-category-select" class="multi-select"></div>
+                    </div>
+                    <div class="form-group">
+                        <label>Tags (comma-separated)</label>
+                        <input type="text" id="et-tags" placeholder="e.g. daily, personal, work">
+                    </div>
+                    <div class="form-actions">
+                        <button type="button" class="btn-primary" onclick="saveEntryTemplate()" style="width:auto">Save Template</button>
+                        <button type="button" class="btn-secondary" onclick="cancelEntryTemplateEdit()">Cancel</button>
+                        <button type="button" class="btn-danger" onclick="deleteEntryTemplate()">Delete</button>
+                    </div>
+                </div>
+                </div>
+            </div>
+
+            <div class="settings-section">
+                <h3 class="settings-collapsible" onclick="toggleSettingsSection(this)"><span class="settings-icon">&#x1F4C4;</span>Report Templates<span class="collapse-arrow">&#9660;</span></h3>
+                <div class="settings-section-body">
+                <p class="settings-description">Create HTML report templates using field tags like <code>&lt;%TITLE%&gt;</code>, <code>&lt;%DATE%&gt;</code>, <code>&lt;%CONTENT%&gt;</code>, etc.</p>
+                <div id="templates-list" class="settings-list"></div>
+                <div class="settings-add-row">
+                    <input type="text" id="new-template-name" placeholder="Template name">
+                    <button class="btn-small" onclick="createTemplate()">New Template</button>
+                </div>
+
+                <div id="template-editor-section" class="template-editor-section" style="display:none">
+                    <h4 id="template-editor-title">Edit Template</h4>
+                    <div class="template-tags-help">
+                        <strong>Available tags:</strong>
+                        <code>&lt;%TITLE%&gt;</code>
+                        <code>&lt;%DATE%&gt;</code>
+                        <code>&lt;%TIME%&gt;</code>
+                        <code>&lt;%CONTENT%&gt;</code>
+                        <code>&lt;%RICH_CONTENT%&gt;</code>
+                        <code>&lt;%CATEGORIES%&gt;</code>
+                        <code>&lt;%TAGS%&gt;</code>
+                        <code>&lt;%PLACES%&gt;</code>
+                        <code>&lt;%PLACE_NAMES%&gt;</code>
+                        <code>&lt;%PLACE_ADDRESSES%&gt;</code>
+                        <code>&lt;%PLACE_COORDS%&gt;</code>
+                        <code>&lt;%WEATHER%&gt;</code>
+                        <code>&lt;%WEATHER_TEMP%&gt;</code>
+                        <code>&lt;%WEATHER_DESC%&gt;</code>
+                        <code>&lt;%DT_CREATED%&gt;</code>
+                        <code>&lt;%DT_UPDATED%&gt;</code>
+                        <code>&lt;%ID%&gt;</code>
+                    </div>
+                    <textarea id="template-editor" rows="16" class="template-textarea" placeholder="Enter your HTML template here..."></textarea>
+                    <div class="form-actions">
+                        <button class="btn-primary" onclick="saveTemplate()">Save Template</button>
+                        <button class="btn-secondary" onclick="cancelTemplateEdit()">Cancel</button>
+                        <button class="btn-danger" onclick="deleteTemplate()">Delete</button>
+                        <button class="btn-secondary" onclick="exportTemplate()">Export HTML</button>
+                        <button class="btn-secondary" onclick="document.getElementById('import-template-file').click()">Import HTML</button>
+                        <input type="file" id="import-template-file" accept=".html,.htm" style="display:none" onchange="importTemplate(event)">
+                    </div>
+                </div>
+                </div>
+            </div>
+
+            </div>
+
+            <!-- TAB 3: Categories & Tags -->
+            <div class="settings-tab-content" id="stab-content-cattags">
+
+            <div class="metadata-io-bar">
+                <div class="metadata-io-buttons">
+                    <button class="btn-3d btn-metadata-io" onclick="exportMetadata()">&#x1F4E4; Export Metadata</button>
+                    <button class="btn-3d btn-metadata-io" onclick="document.getElementById('metadata-import-file').click()">&#x1F4E5; Import Metadata</button>
+                    <input type="file" id="metadata-import-file" accept=".json" style="display:none" onchange="importMetadata(event)">
+                </div>
+                <p class="metadata-io-desc">Includes categories, tags, people, custom icons, themes, preferences, report templates, pre-fill templates, custom views, and all settings. Does not include journal entries or images.</p>
+            </div>
+
+            <div class="settings-section">
+                <h3 class="settings-collapsible" onclick="toggleSettingsSection(this)"><span class="settings-icon">&#x1F3F7;&#xFE0F;</span>Categories<span class="collapse-arrow">&#9660;</span></h3>
+                <div class="settings-section-body">
+                <label class="toggle-label" style="margin-bottom:0.5rem">
+                    <input type="checkbox" id="use-category-color-toggle" onchange="toggleUseCategoryColor()">
+                    <span>Use category colors in viewer</span>
+                </label>
+                <div id="categories-list" class="settings-list"></div>
+                <div class="settings-add-row">
+                    <input type="text" id="new-category-input" placeholder="New category">
+                    <button class="btn-small" onclick="addCategory()">Add</button>
+                </div>
+                </div>
+            </div>
+
+            <div class="settings-section">
+                <h3 class="settings-collapsible" onclick="toggleSettingsSection(this)"><span class="settings-icon">&#x1F516;</span>Tags<span class="collapse-arrow">&#9660;</span></h3>
+                <div class="settings-section-body">
+                <label class="toggle-label" style="margin-bottom:0.5rem">
+                    <input type="checkbox" id="use-tag-color-toggle" onchange="toggleUseTagColor()">
+                    <span>Use tag colors in viewer</span>
+                </label>
+                <div id="tags-icon-list" class="settings-list"></div>
+                <p class="settings-hint">Tags are created in entries. Assign custom icons here.</p>
+                </div>
+            </div>
+
+            <div class="settings-section">
+                <h3 class="settings-collapsible" onclick="toggleSettingsSection(this)"><span class="settings-icon">&#x1F464;</span>People<span class="collapse-arrow">&#9660;</span></h3>
+                <div class="settings-section-body">
+                <div class="people-filter-row">
+                    <input type="text" id="people-filter-input" placeholder="Filter by name..." oninput="filterPeopleList()">
+                </div>
+                <div id="people-list" class="settings-list people-list"></div>
+                <div class="settings-add-row">
+                    <button class="btn-small" onclick="newPersonForm()">+ New Person</button>
+                </div>
+                <div id="person-editor" class="person-editor" style="display:none">
+                    <h4 id="person-editor-title">New Person</h4>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="person-first-name">First Name</label>
+                            <input type="text" id="person-first-name" placeholder="First name">
+                        </div>
+                        <div class="form-group">
+                            <label for="person-last-name">Last Name</label>
+                            <input type="text" id="person-last-name" placeholder="Last name">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="person-description">Description</label>
+                        <textarea id="person-description" rows="2" placeholder="Optional description..."></textarea>
+                    </div>
+                    <div class="form-actions">
+                        <button type="button" class="btn-primary" onclick="savePersonFromEditor()" style="width:auto">Save</button>
+                        <button type="button" class="btn-secondary" onclick="cancelPersonEditor()">Cancel</button>
+                        <button type="button" class="btn-danger" id="btn-delete-person" onclick="deletePersonFromEditor()" style="display:none">Delete</button>
+                    </div>
+                </div>
+                </div>
+            </div>
+
+            </div>
+
+            <!-- TAB 4: Data Management -->
+            <div class="settings-tab-content" id="stab-content-data">
+
+            <div class="settings-section">
+                <h3 class="settings-collapsible" onclick="toggleSettingsSection(this)"><span class="settings-icon">&#x1F4BE;</span>Data &amp; Security<span class="collapse-arrow">&#9660;</span></h3>
+                <div class="settings-section-body">
+
+                <fieldset class="settings-group-box">
+                    <legend>&#x1F4BE; Data Management</legend>
+                    <div class="settings-actions">
+                        <button class="btn-secondary" onclick="exportData(true)">Export Encrypted</button>
+                        <button class="btn-secondary" onclick="exportData(false)">Export Unencrypted</button>
+                        <button class="btn-secondary" onclick="exportCsvFromSettings()">Export CSV</button>
+                        <button class="btn-secondary" onclick="document.getElementById('import-file').click()">Import Data</button>
+                        <input type="file" id="import-file" accept=".sqlite.enc,.sqlite,.json" style="display:none" onchange="importData(event)">
+                        <button class="btn-secondary" onclick="document.getElementById('import-csv-file').click()">Import CSV</button>
+                        <input type="file" id="import-csv-file" accept=".csv,.txt,text/csv,text/plain,text/comma-separated-values,application/csv" style="display:none" onchange="startCsvImport(event)">
+                        <button class="btn-danger" onclick="cleanupDatelessEntries()">&#x1F9F9; Cleanup Dateless</button>
+                    </div>
+                    <div id="csv-import-section" class="csv-import-section" style="display:none">
+                        <h4>Map CSV Columns to Journal Fields</h4>
+                        <p class="settings-description">Assign each CSV column to a journal field. Leave as "-- Skip --" to ignore a column.</p>
+                        <div id="csv-preview-info" class="csv-preview-info"></div>
+                        <div id="csv-mapping-list" class="csv-mapping-list"></div>
+                        <div class="form-group">
+                            <label>Multi-value separator for Categories, Tags</label>
+                            <input type="text" id="csv-separator" value="," placeholder="e.g. , or ; or |" style="max-width:120px">
+                        </div>
+                        <div class="form-group" id="csv-date-format-group" style="display:none">
+                            <label>Date Format</label>
+                            <input type="text" id="csv-date-format" placeholder="e.g. MM/DD/YYYY or DD-MM-YYYY" style="max-width:240px">
+                            <span class="settings-hint">Tokens: YYYY, YY, MM, DD, M, D. Leave blank for auto-detect.</span>
+                        </div>
+                        <div class="form-group" id="csv-time-format-group" style="display:none">
+                            <label>Time Format</label>
+                            <input type="text" id="csv-time-format" placeholder="e.g. HH:mm or H:mm A" style="max-width:240px">
+                            <span class="settings-hint">Tokens: HH, H, mm, A (AM/PM). Leave blank for auto-detect.</span>
+                        </div>
+                        <div id="csv-preview-table-container" class="csv-preview-table-container"></div>
+                        <div class="csv-import-actions">
+                            <button class="btn-primary csv-import-btn" onclick="executeCsvImport()">Import Entries</button>
+                            <button class="btn-secondary" onclick="cancelCsvImport()">Cancel</button>
+                        </div>
+                        <div id="csv-progress-container" class="csv-progress-container" style="display:none">
+                            <div class="csv-progress-track">
+                                <div id="csv-progress-bar" class="csv-progress-bar"></div>
+                            </div>
+                            <span id="csv-progress-text" class="csv-progress-text">0 / 0</span>
+                        </div>
+                        <p id="csv-import-msg" class="msg-text"></p>
+                        <div id="csv-duplicate-log" class="csv-duplicate-log" style="display:none"></div>
+                    </div>
+                </fieldset>
+
+                <fieldset class="settings-group-box">
+                    <legend>&#x1F512; Change Password</legend>
+                    <div class="form-group">
+                        <input type="password" id="current-password" placeholder="Current password">
+                    </div>
+                    <div class="form-group">
+                        <input type="password" id="new-password" placeholder="New password">
+                    </div>
+                    <div class="form-group">
+                        <input type="password" id="confirm-new-password" placeholder="Confirm new password">
+                    </div>
+                    <button class="btn-primary" onclick="changePassword()">Change Password</button>
+                    <p id="password-change-msg" class="msg-text"></p>
+                </fieldset>
+
+                </div>
+            </div>
+
+            </div>
+
+            <input type="file" id="icon-file-input" accept="image/*" style="display:none" onchange="onIconFileSelected(event)">
+
+        </div>
+    </div>
+
+    <!-- Quill JS -->
+    <script src="https://cdn.quilljs.com/1.3.7/quill.min.js"></script>
+    <!-- jsPDF for PDF export -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+    <!-- Print PDF Modal (entry view) -->
+    <div id="print-modal" class="print-modal" style="display:none" onclick="closePrintModal(event)">
+        <div class="print-modal-content" onclick="event.stopPropagation()">
+            <h3 class="print-modal-title">Print Entry as PDF</h3>
+            <div class="print-modal-body">
+                <label for="print-template-select" class="form-label">Select Template</label>
+                <select id="print-template-select" class="form-control">
+                    <option value="">-- Default (no template) --</option>
+                </select>
+                <div id="print-template-preview" class="print-template-preview"></div>
+            </div>
+            <div class="print-modal-actions">
+                <button class="btn-primary" onclick="printEntryPdf()">Generate PDF</button>
+                <button class="btn-secondary" onclick="closePrintModal()">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- About Modal -->
+    <div id="about-modal" class="about-modal" style="display:none" onclick="closeAboutModal(event)">
+        <div class="about-modal-content" onclick="event.stopPropagation()">
+            <h2 class="about-title" id="about-modal-name"></h2>
+            <div class="about-version" id="about-modal-version"></div>
+            <div class="about-card">
+                <h3>About</h3>
+                <p id="about-modal-description"></p>
+            </div>
+            <div class="about-card">
+                <h3>Info</h3>
+                <div class="about-row">
+                    <span class="about-label">Support Email</span>
+                    <a id="about-modal-email" class="about-link" href="#"></a>
+                </div>
+                <div class="about-divider"></div>
+                <div class="about-row">
+                    <span class="about-label">Author Homepage</span>
+                    <a id="about-modal-url" class="about-link" href="#" target="_blank"></a>
+                </div>
+                <div class="about-divider"></div>
+                <div class="about-row">
+                    <span class="about-label">Play Store</span>
+                    <a id="about-modal-company-url" class="about-link" href="#" target="_blank"></a>
+                </div>
+            </div>
+            <div id="about-db-stats" class="about-card" style="display:none">
+                <h3>Database Statistics</h3>
+                <div id="about-db-stats-content"></div>
+            </div>
+            <button class="btn-primary about-changelog-btn" onclick="toggleChangelog()">Change History</button>
+            <div id="about-changelog" class="about-changelog" style="display:none"></div>
+            <button class="btn-secondary about-close-btn" onclick="closeAboutModal()">Close</button>
+        </div>
+    </div>
+
+    <!-- Image Lightbox -->
+    <div id="image-lightbox" class="image-lightbox" style="display:none" onclick="closeLightbox(event)">
+        <div class="lightbox-inner" onclick="event.stopPropagation()">
+            <img id="lightbox-img" src="">
+            <div class="lightbox-nav">
+                <button class="lightbox-btn" id="lightbox-prev" onclick="lightboxPrev()">&#9664;</button>
+                <span id="lightbox-counter" class="lightbox-counter"></span>
+                <button class="lightbox-btn" id="lightbox-next" onclick="lightboxNext()">&#9654;</button>
+                <button class="lightbox-btn lightbox-download" onclick="lightboxDownload()" title="Download image">&#11015;</button>
+            </div>
+            <button class="lightbox-close" onclick="closeLightbox()">&times;</button>
+        </div>
+    </div>
+
+    <!-- App JS -->
+    <script src="lib/sql-wasm.js"></script>
+    <script src="lib/sql-wasm-base64.js"></script>
+    <script src="js/app_info.js"></script>
+    <script src="js/crypto.js"></script>
+    <script src="js/db.js"></script>
+    <script src="js/app.js"></script>
+    <script src="js/entries.js"></script>
+    <script src="js/views.js"></script>
+    <script src="js/dashboard.js"></script>
+    <script src="js/reports.js"></script>
+    <script src="js/weather.js"></script>
+    <script src="js/explorer.js"></script>
+    <script src="js/settings.js"></script>
+</body>
+</html>

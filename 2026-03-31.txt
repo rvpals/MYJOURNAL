@@ -1,0 +1,1152 @@
+ ▐▛███▜▌   Claude Code v2.1.87
+▝▜█████▛▘  Sonnet 4.5 · API Usage Billing
+  ▘▘ ▝▝    E:\Code\Claude_Project\JOURNAL\android
+
+✻ Conversation compacted (ctrl+o for history)
+
+  ⎿  Referenced file ..\web\css\style.css
+  ⎿  Referenced file ..\web\js\explorer.js
+  ⎿  Referenced file ..\web\index.html
+  ⎿  Referenced file ..\web\js\settings.js
+  ⎿  Referenced file ..\web\js\dashboard.js
+  ⎿  Skills restored (wrap, start)
+
+● Let me read the current state of the relevant files to implement the CSV
+  export for SQL Explorer.
+
+  Searched for 1 pattern, read 2 files (ctrl+o to expand)
+
+● Now I'll add the CSV export button and implement the function. I need to store
+   last results and add an export button.
+
+● Update(E:\Code\Claude_Project\JOURNAL\web\index.html)
+  ⎿  Added 3 lines
+      527                  </div>
+      528              </div>
+      529              <div id="explorer-results" class="explorer-results
+           " style="display:none">
+      530 +                <div class="explorer-results-bar">            
+      531 +                    <button class="btn-secondary btn-small" on
+          +click="exportExplorerCSV()">Export CSV</button>               
+      532 +                </div>                                        
+      533                  <div class="explorer-results-scroll">
+      534                      <table class="explorer-table">
+      535                          <thead id="explorer-results-head"></th
+           ead>
+
+● Update(E:\Code\Claude_Project\JOURNAL\web\js\explorer.js)
+  ⎿  Added 1 line
+      25  let explorerConditions = [];
+      26  let explorerSelectedCols = ['date', 'title', 'categories', 'tag
+          s'];
+      27  let explorerActiveTable = null;
+      28 +let explorerLastResults = [];                                  
+      29  
+      30  function initExplorer() {
+      31      renderExplorerTableChips();
+
+● Now store results in runExplorerQuery and add the exportExplorerCSV function.
+
+● Update(E:\Code\Claude_Project\JOURNAL\web\js\explorer.js)
+  ⎿  Added 1 line
+      535  
+      536      document.getElementById('explorer-result-count').textConte
+           nt = entries.length + ' result' + (entries.length !== 1 ? 's' 
+           : '');
+      537  
+      538 +    explorerLastResults = entries;                            
+      539      renderExplorerResults(entries);
+      540  }
+      541  
+
+● Update(E:\Code\Claude_Project\JOURNAL\web\js\explorer.js)
+  ⎿  Added 28 lines
+      589      runExplorerQuery();
+      590  }
+      591  
+      592 +function exportExplorerCSV() {                                
+      593 +    if (!explorerLastResults || explorerLastResults.length ===
+          + 0) {                                                         
+      594 +        alert('No results to export. Run a query first.');    
+      595 +        return;                                               
+      596 +    }                                                         
+      597 +    const cols = explorerSelectedCols.filter(k => EXPLORER_FIE
+          +LDS.find(f => f.key === k));                                  
+      598 +    const headers = cols.map(k => EXPLORER_FIELDS.find(f => f.
+          +key === k).label);                                            
+      599 +                                                              
+      600 +    const csvEscape = (val) => '"' + String(val).replace(/"/g,
+          + '""') + '"';                                                 
+      601 +                                                              
+      602 +    const lines = [headers.map(h => csvEscape(h)).join(',')]; 
+      603 +    explorerLastResults.forEach(entry => {                    
+      604 +        const row = cols.map(k => csvEscape(getExplorerCellVal
+          +ue(entry, k)));                                               
+      605 +        lines.push(row.join(','));                            
+      606 +    });                                                       
+      607 +                                                              
+      608 +    const csv = lines.join('\n');                             
+      609 +    const blob = new Blob([csv], { type: 'text/csv;charset=utf
+          +-8;' });                                                      
+      610 +    const url = URL.createObjectURL(blob);                    
+      611 +    const a = document.createElement('a');                    
+      612 +    a.href = url;                                             
+      613 +    a.download = 'explorer_results_' + (new Date().toISOString
+          +().slice(0, 10)) + '.csv';                                    
+      614 +    document.body.appendChild(a);                             
+      615 +    a.click();                                                
+      616 +    document.body.removeChild(a);                             
+      617 +    URL.revokeObjectURL(url);                                 
+      618 +}                                                             
+      619 +                                                              
+      620  function clearExplorerQuery() {
+      621      explorerConditions = [];
+      622      addExplorerCondition();
+
+● Now add a small style for the results bar.
+
+  Searched for 1 pattern, read 1 file (ctrl+o to expand)
+
+● Update(E:\Code\Claude_Project\JOURNAL\web\css\style.css)
+  ⎿  Added 6 lines
+      4785      margin-top: 0.5rem;
+      4786  }
+      4787  
+      4788 +.explorer-results-bar {                                      
+      4789 +    display: flex;                                           
+      4790 +    justify-content: flex-end;                               
+      4791 +    padding: 0.35rem 0;                                      
+      4792 +}                                                            
+      4793 +                                                             
+      4794  .explorer-results-scroll {
+      4795      overflow-x: auto;
+      4796      border: var(--border-width) solid var(--border-color);
+
+● Also clear results on clear:
+
+  Read 1 file (ctrl+o to expand)
+
+● Update(E:\Code\Claude_Project\JOURNAL\web\js\explorer.js)
+  ⎿  Added 1 line
+      624      if (sqlInput) sqlInput.value = '';
+      625      document.getElementById('explorer-results').style.display 
+           = 'none';
+      626      document.getElementById('explorer-result-count').textConte
+           nt = '';
+      627 +    explorerLastResults = [];                                 
+      628  }
+
+● Done. The CSV export button is now added to SQL Explorer. When you run a
+  query, an "Export CSV" button appears above the results table. Clicking it
+  downloads a .csv file with all values double-quoted and internal quotes
+  escaped as "". The filename includes today's date (e.g.,
+  explorer_results_2026-03-31.csv).
+
+✻ Cogitated for 7m 29s
+
+> what is red x button do in the result grid                                    
+
+● Looking at explorer.js:577, each result row has a red × button that calls
+  deleteExplorerEntry(id) — it permanently deletes that journal entry from the
+  database (after a confirmation prompt if confirm-on-delete is enabled).
+
+> add a hint to x "Delete journal entry"                                        
+
+● Update(E:\Code\Claude_Project\JOURNAL\web\js\explorer.js)
+  ⎿  Added 1 line, removed 1 line
+      575  
+      576      bodyEl.innerHTML = entries.map((e, i) => {
+      577          const cells = cols.map(k => `<td>${escapeHtml(getExplo
+           rerCellValue(e, k))}</td>`).join('');
+      578 -        return `<tr onclick="viewEntry('${e.id}')" class="expl
+          -orer-row"><td class="explorer-row-num">${i + 1}</td>${cells}<t
+          -d><button class="btn-small btn-danger-small" onclick="event.st
+          -opPropagation(); deleteExplorerEntry('${e.id}')">&times;</butt
+          -on></td></tr>`;                                               
+      578 +        return `<tr onclick="viewEntry('${e.id}')" class="expl
+          +orer-row"><td class="explorer-row-num">${i + 1}</td>${cells}<t
+          +d><button class="btn-small btn-danger-small" title="Delete jou
+          +rnal entry" onclick="event.stopPropagation(); deleteExplorerEn
+          +try('${e.id}')">&times;</button></td></tr>`;                  
+      579      }).join('');
+      580  
+      581      resultsEl.style.display = 'block';
+
+● Done. The × button now shows a "Delete journal entry" tooltip on hover.
+
+> I tried to type in sql query like "select * from icons", hit Run Query        
+button, nothing works. It gives an error "Could not parse query. use field      
+Operator /value'                                                                
+● The SQL text input currently only parses SELECT ... FROM entries WHERE ... —
+  it's a pseudo-SQL parser, not a real SQL executor. But since DB.execRawSQL()
+  already exists (used for table inspection), I can make it fall back to running
+   raw SQL when the query targets a non-entries table.
+
+  Read 1 file (ctrl+o to expand)
+
+● Now I'll update runExplorerQuery to detect non-entries SQL and run it as raw
+  SQL, plus add a raw results renderer.
+
+● Update(E:\Code\Claude_Project\JOURNAL\web\js\explorer.js)
+  ⎿  Added 13 lines, removed 1 line
+      505      let conditions = explorerConditions;
+      506      let columns = null;
+      507  
+      508 -    // If SQL text box has content, parse and use it          
+      508 +    // If SQL text box has content, try to parse or run as raw
+          + SQL                                                          
+      509      if (sqlText) {
+      510 +        // Check if this targets a table other than entries — 
+          +run as raw SQL                                                
+      511 +        const fromMatch = sqlText.match(/\bFROM\s+(\w+)/i);   
+      512 +        if (fromMatch && fromMatch[1].toLowerCase() !== 'entri
+          +es') {                                                        
+      513 +            runRawSQL(sqlText);                               
+      514 +            return;                                           
+      515 +        }                                                     
+      516 +        // Also run as raw SQL for non-SELECT statements or if
+          + it looks like raw SQL                                        
+      517 +        if (!sqlText.match(/^SELECT\b/i) && !sqlText.match(/^\
+          +w+\s+(contains|equals|starts|ends|is\s|includes|not\s|before|a
+          +fter|between|has\s|no\s)/i)) {                                
+      518 +            runRawSQL(sqlText);                               
+      519 +            return;                                           
+      520 +        }                                                     
+      521 +                                                              
+      522          const parsed = parseExplorerSQL(sqlText);
+      523          if (parsed.error && (!parsed.conditions || parsed.cond
+           itions.length === 0)) {
+      524              document.getElementById('explorer-result-count').t
+           extContent = 'Error: ' + parsed.error;
+
+● Now add the runRawSQL and renderRawResults functions before
+  clearExplorerQuery:
+
+● Update(E:\Code\Claude_Project\JOURNAL\web\js\explorer.js)
+  ⎿  Added 44 lines
+      601      runExplorerQuery();
+      602  }
+      603  
+      604 +function runRawSQL(sql) {                                     
+      605 +    const resultsEl = document.getElementById('explorer-result
+          +s');                                                          
+      606 +    const headEl = document.getElementById('explorer-results-h
+          +ead');                                                        
+      607 +    const bodyEl = document.getElementById('explorer-results-b
+          +ody');                                                        
+      608 +    const countEl = document.getElementById('explorer-result-c
+          +ount');                                                       
+      609 +                                                              
+      610 +    try {                                                     
+      611 +        const results = DB.execRawSQL(sql);                   
+      612 +        if (!results || results.length === 0 || !results[0].va
+          +lues || results[0].values.length === 0) {                     
+      613 +            countEl.textContent = '0 results';                
+      614 +            resultsEl.style.display = 'block';                
+      615 +            headEl.innerHTML = '';                            
+      616 +            bodyEl.innerHTML = '<tr><td class="no-data" style=
+          +"padding:1.5rem">No results.</td></tr>';                      
+      617 +            explorerLastResults = [];                         
+      618 +            return;                                           
+      619 +        }                                                     
+      620 +                                                              
+      621 +        const cols = results[0].columns;                      
+      622 +        const rows = results[0].values;                       
+      623 +        countEl.textContent = rows.length + ' result' + (rows.
+          +length !== 1 ? 's' : '');                                     
+      624 +                                                              
+      625 +        headEl.innerHTML = '<tr><th>#</th>' + cols.map(c => `<
+          +th>${escapeHtml(c)}</th>`).join('') + '</tr>';                
+      626 +        bodyEl.innerHTML = rows.map((row, i) => {             
+      627 +            const cells = row.map(cell => `<td>${cell === null
+          + ? '<em>NULL</em>' : escapeHtml(truncateCell(String(cell)))}</
+          +td>`).join('');                                               
+      628 +            return `<tr class="explorer-row"><td class="explor
+          +er-row-num">${i + 1}</td>${cells}</tr>`;                      
+      629 +        }).join('');                                          
+      630 +                                                              
+      631 +        resultsEl.style.display = 'block';                    
+      632 +                                                              
+      633 +        // Store for CSV export — convert to objects keyed by 
+          +column name                                                   
+      634 +        explorerLastResults = rows.map(row => {               
+      635 +            const obj = {};                                   
+      636 +            cols.forEach((c, idx) => obj[c] = row[idx]);      
+      637 +            return obj;                                       
+      638 +        });                                                   
+      639 +        // Override selected cols for CSV export              
+      640 +        explorerSelectedCols = cols.slice();                  
+      641 +    } catch (e) {                                             
+      642 +        countEl.textContent = 'Error: ' + e.message;          
+      643 +        resultsEl.style.display = 'none';                     
+      644 +        explorerLastResults = [];                             
+      645 +    }                                                         
+      646 +}                                                             
+      647 +                                                              
+      648  function exportExplorerCSV() {
+      649      if (!explorerLastResults || explorerLastResults.length ===
+            0) {
+      650          alert('No results to export. Run a query first.');
+
+● Now I need to update exportExplorerCSV to handle raw SQL results (where
+  columns are arbitrary, not EXPLORER_FIELDS). Currently it uses
+  getExplorerCellValue which only works for entry fields. Let me update it:
+
+  Read 1 file (ctrl+o to expand)
+
+● Update(E:\Code\Claude_Project\JOURNAL\web\js\explorer.js)
+  ⎿  Added 15 lines, removed 4 lines
+      650          alert('No results to export. Run a query first.');
+      651          return;
+      652      }
+      653 -    const cols = explorerSelectedCols.filter(k => EXPLORER_FIE
+          -LDS.find(f => f.key === k));                                  
+      654 -    const headers = cols.map(k => EXPLORER_FIELDS.find(f => f.
+          -key === k).label);                                            
+      653 +    const csvEscape = (val) => '"' + String(val === null || va
+          +l === undefined ? '' : val).replace(/"/g, '""') + '"';        
+      654  
+      656 -    const csvEscape = (val) => '"' + String(val).replace(/"/g,
+          - '""') + '"';                                                 
+      655 +    // Determine if results are from raw SQL (plain objects) o
+          +r entry-based query                                           
+      656 +    const isRawResult = explorerLastResults.length > 0 && !exp
+          +lorerLastResults[0].id;                                       
+      657 +    let cols, headers;                                        
+      658  
+      659 +    if (isRawResult) {                                        
+      660 +        cols = explorerSelectedCols;                          
+      661 +        headers = cols;                                       
+      662 +    } else {                                                  
+      663 +        cols = explorerSelectedCols.filter(k => EXPLORER_FIELD
+          +S.find(f => f.key === k));                                    
+      664 +        headers = cols.map(k => EXPLORER_FIELDS.find(f => f.ke
+          +y === k).label);                                              
+      665 +    }                                                         
+      666 +                                                              
+      667      const lines = [headers.map(h => csvEscape(h)).join(',')];
+      668      explorerLastResults.forEach(entry => {
+      660 -        const row = cols.map(k => csvEscape(getExplorerCellVal
+          -ue(entry, k)));                                               
+      669 +        const row = cols.map(k => isRawResult                 
+      670 +            ? csvEscape(entry[k])                             
+      671 +            : csvEscape(getExplorerCellValue(entry, k)));     
+      672          lines.push(row.join(','));
+      673      });
+      674  
+
+● Now SELECT * FROM icons (or any table) will run as raw SQL and display results
+   in the grid. The CSV export also works for raw SQL results. Entry-based
+  queries (FROM entries) still use the condition builder as before.
+
+✻ Crunched for 44s
+
+> In the result grid, when user clicking on a row, show a detail single record  
+view that shows all the full values of each field.                              
+
+  Read 1 file (ctrl+o to expand)
+
+● Now let me also check how the entry-based results render rows (with the
+  onclick):
+
+  Read 1 file (ctrl+o to expand)
+
+● Now let me check what lightbox/modal patterns already exist in the app so I
+  can reuse the style.
+
+  Searched for 1 pattern, read 1 file (ctrl+o to expand)
+
+● I'll add the detail view as an overlay, add click handlers to raw SQL rows,
+  and keep entry rows using viewEntry but also support the detail view. Let me
+  implement this.
+
+● Update(E:\Code\Claude_Project\JOURNAL\web\js\explorer.js)
+  ⎿  Added 1 line, removed 1 line
+      625          headEl.innerHTML = '<tr><th>#</th>' + cols.map(c => `<
+           th>${escapeHtml(c)}</th>`).join('') + '</tr>';
+      626          bodyEl.innerHTML = rows.map((row, i) => {
+      627              const cells = row.map(cell => `<td>${cell === null
+            ? '<em>NULL</em>' : escapeHtml(truncateCell(String(cell)))}</
+           td>`).join('');
+      628 -            return `<tr class="explorer-row"><td class="explor
+          -er-row-num">${i + 1}</td>${cells}</tr>`;                      
+      628 +            return `<tr class="explorer-row" onclick="showExpl
+          +orerDetail(${i})"><td class="explorer-row-num">${i + 1}</td>${
+          +cells}</tr>`;                                                 
+      629          }).join('');
+      630  
+      631          resultsEl.style.display = 'block';
+
+● Now update entry-based results to also use the detail view instead of
+  viewEntry:
+
+● Update(E:\Code\Claude_Project\JOURNAL\web\js\explorer.js)
+  ⎿  Added 1 line, removed 1 line
+      587  
+      588      bodyEl.innerHTML = entries.map((e, i) => {
+      589          const cells = cols.map(k => `<td>${escapeHtml(getExplo
+           rerCellValue(e, k))}</td>`).join('');
+      590 -        return `<tr onclick="viewEntry('${e.id}')" class="expl
+          -orer-row"><td class="explorer-row-num">${i + 1}</td>${cells}<t
+          -d><button class="btn-small btn-danger-small" title="Delete jou
+          -rnal entry" onclick="event.stopPropagation(); deleteExplorerEn
+          -try('${e.id}')">&times;</button></td></tr>`;                  
+      590 +        return `<tr onclick="showExplorerDetail(${i})" class="
+          +explorer-row"><td class="explorer-row-num">${i + 1}</td>${cell
+          +s}<td><button class="btn-small btn-danger-small" title="Delete
+          + journal entry" onclick="event.stopPropagation(); deleteExplor
+          +erEntry('${e.id}')">&times;</button></td></tr>`;              
+      591      }).join('');
+      592  
+      593      resultsEl.style.display = 'block';
+
+● Now I need to track whether results are raw or entry-based, and add the detail
+   view function. Let me add a flag and the function:
+
+● Update(E:\Code\Claude_Project\JOURNAL\web\js\explorer.js)
+  ⎿  Added 1 line
+      26  let explorerSelectedCols = ['date', 'title', 'categories', 'tag
+          s'];
+      27  let explorerActiveTable = null;
+      28  let explorerLastResults = [];
+      29 +let explorerLastRawCols = null; // set when raw SQL results are
+         + displayed                                                     
+      30  
+      31  function initExplorer() {
+      32      renderExplorerTableChips();
+
+● Set the flag in the appropriate places:
+
+● Update(E:\Code\Claude_Project\JOURNAL\web\js\explorer.js)
+  ⎿  Added 1 line
+      549      document.getElementById('explorer-result-count').textConte
+           nt = entries.length + ' result' + (entries.length !== 1 ? 's' 
+           : '');
+      550  
+      551      explorerLastResults = entries;
+      552 +    explorerLastRawCols = null;                               
+      553      renderExplorerResults(entries);
+      554  }
+      555  
+
+● Update(E:\Code\Claude_Project\JOURNAL\web\js\explorer.js)
+  ⎿  Added 1 line
+      640          });
+      641          // Override selected cols for CSV export
+      642          explorerSelectedCols = cols.slice();
+      643 +        explorerLastRawCols = cols.slice();                   
+      644      } catch (e) {
+      645          countEl.textContent = 'Error: ' + e.message;
+      646          resultsEl.style.display = 'none';
+
+● Now add the showExplorerDetail and closeExplorerDetail functions. I'll also
+  need to check which fields an entry has for entry-based results:
+
+● Update(E:\Code\Claude_Project\JOURNAL\web\js\explorer.js)
+  ⎿  Added 71 lines
+      603      runExplorerQuery();
+      604  }
+      605  
+      606 +function showExplorerDetail(idx) {                            
+      607 +    if (!explorerLastResults || idx < 0 || idx >= explorerLast
+          +Results.length) return;                                       
+      608 +    const record = explorerLastResults[idx];                  
+      609 +                                                              
+      610 +    let rows;                                                 
+      611 +    if (explorerLastRawCols) {                                
+      612 +        // Raw SQL result — show all columns                  
+      613 +        rows = explorerLastRawCols.map(col => ({              
+      614 +            label: col,                                       
+      615 +            value: record[col] === null ? 'NULL' : String(reco
+          +rd[col])                                                      
+      616 +        }));                                                  
+      617 +    } else {                                                  
+      618 +        // Entry-based result — show all EXPLORER_FIELDS with 
+          +full values                                                   
+      619 +        rows = EXPLORER_FIELDS.map(f => ({                    
+      620 +            label: f.label,                                   
+      621 +            value: getExplorerCellValueFull(record, f.key)    
+      622 +        }));                                                  
+      623 +    }                                                         
+      624 +                                                              
+      625 +    const html = `<div class="explorer-detail-overlay" onclick
+          +="if(event.target===this)closeExplorerDetail()">              
+      626 +        <div class="explorer-detail-panel">                   
+      627 +            <div class="explorer-detail-header">              
+      628 +                <span>Record ${idx + 1} of ${explorerLastResul
+          +ts.length}</span>                                             
+      629 +                <div class="explorer-detail-nav">             
+      630 +                    ${idx > 0 ? `<button class="btn-small" onc
+          +lick="event.stopPropagation(); showExplorerDetail(${idx - 1})"
+          +>&larr; Prev</button>` : ''}                                  
+      631 +                    ${idx < explorerLastResults.length - 1 ? `
+          +<button class="btn-small" onclick="event.stopPropagation(); sh
+          +owExplorerDetail(${idx + 1})">Next &rarr;</button>` : ''}     
+      632 +                    <button class="btn-small" onclick="event.s
+          +topPropagation(); closeExplorerDetail()">&times;</button>     
+      633 +                </div>                                        
+      634 +            </div>                                            
+      635 +            <div class="explorer-detail-body">                
+      636 +                <table class="explorer-table explorer-detail-t
+          +able">                                                        
+      637 +                    <tbody>                                   
+      638 +                        ${rows.map(r => `<tr><td class="explor
+          +er-detail-label">${escapeHtml(r.label)}</td><td class="explore
+          +r-detail-value">${escapeHtml(r.value)}</td></tr>`).join('')}  
+      639 +                    </tbody>                                  
+      640 +                </table>                                      
+      641 +            </div>                                            
+      642 +        </div>                                                
+      643 +    </div>`;                                                  
+      644 +                                                              
+      645 +    // Remove any existing detail overlay                     
+      646 +    closeExplorerDetail();                                    
+      647 +    document.body.insertAdjacentHTML('beforeend', html);      
+      648 +}                                                             
+      649 +                                                              
+      650 +function closeExplorerDetail() {                              
+      651 +    const el = document.querySelector('.explorer-detail-overla
+          +y');                                                          
+      652 +    if (el) el.remove();                                      
+      653 +}                                                             
+      654 +                                                              
+      655 +function getExplorerCellValueFull(entry, key) {               
+      656 +    switch (key) {                                            
+      657 +        case 'date': return entry.date || '';                 
+      658 +        case 'time': return entry.time || '';                 
+      659 +        case 'title': return entry.title || '';               
+      660 +        case 'content': return (entry.content || '').replace(/
+          +<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();                  
+      661 +        case 'categories': return (entry.categories || []).joi
+          +n(', ');                                                      
+      662 +        case 'tags': return (entry.tags || []).join(', ');    
+      663 +        case 'placeName': return entry.placeName || '';       
+      664 +        case 'locations':                                     
+      665 +            return (entry.locations || []).map(l => {         
+      666 +                const parts = [];                             
+      667 +                if (l.address) parts.push(l.address);         
+      668 +                if (l.lat != null && l.lng != null) parts.push
+          +(`(${l.lat}, ${l.lng})`);                                     
+      669 +                return parts.join(' ');                       
+      670 +            }).join('; ');                                    
+      671 +        case 'weather':                                       
+      672 +            return entry.weather ? Weather.formatWeather(entry
+          +.weather) : '';                                               
+      673 +        default: return '';                                   
+      674 +    }                                                         
+      675 +}                                                             
+      676 +                                                              
+      677  function runRawSQL(sql) {
+      678      const resultsEl = document.getElementById('explorer-result
+           s');
+      679      const headEl = document.getElementById('explorer-results-h
+           ead');
+
+● Now add the CSS for the detail overlay:
+
+  Read 1 file (ctrl+o to expand)
+● Update(E:\Code\Claude_Project\JOURNAL\web\css\style.css)
+  ⎿  Added 62 lines
+      4791      padding: 0.35rem 0;
+      4792  }
+      4793  
+      4794 +.explorer-detail-overlay {                                   
+      4795 +    position: fixed;                                         
+      4796 +    top: 0; left: 0; right: 0; bottom: 0;                    
+      4797 +    background: rgba(0,0,0,0.7);                             
+      4798 +    z-index: 10000;                                          
+      4799 +    display: flex;                                           
+      4800 +    align-items: center;                                     
+      4801 +    justify-content: center;                                 
+      4802 +    padding: 1rem;                                           
+      4803 +}                                                            
+      4804 +                                                             
+      4805 +.explorer-detail-panel {                                     
+      4806 +    background: var(--card-bg);                              
+      4807 +    border: var(--border-width) solid var(--border-color);   
+      4808 +    border-radius: var(--radius);                            
+      4809 +    box-shadow: var(--shadow);                               
+      4810 +    max-width: 700px;                                        
+      4811 +    width: 100%;                                             
+      4812 +    max-height: 85vh;                                        
+      4813 +    display: flex;                                           
+      4814 +    flex-direction: column;                                  
+      4815 +}                                                            
+      4816 +                                                             
+      4817 +.explorer-detail-header {                                    
+      4818 +    display: flex;                                           
+      4819 +    justify-content: space-between;                          
+      4820 +    align-items: center;                                     
+      4821 +    padding: 0.75rem 1rem;                                   
+      4822 +    border-bottom: var(--border-width) solid var(--border-col
+           +or);                                                         
+      4823 +    font-weight: 600;                                        
+      4824 +    color: var(--text-color);                                
+      4825 +}                                                            
+      4826 +                                                             
+      4827 +.explorer-detail-nav {                                       
+      4828 +    display: flex;                                           
+      4829 +    gap: 0.35rem;                                            
+      4830 +    align-items: center;                                     
+      4831 +}                                                            
+      4832 +                                                             
+      4833 +.explorer-detail-body {                                      
+      4834 +    overflow-y: auto;                                        
+      4835 +    padding: 0.5rem;                                         
+      4836 +}                                                            
+      4837 +                                                             
+      4838 +.explorer-detail-table td {                                  
+      4839 +    vertical-align: top;                                     
+      4840 +    padding: 0.5rem 0.75rem;                                 
+      4841 +}                                                            
+      4842 +                                                             
+      4843 +.explorer-detail-label {                                     
+      4844 +    font-weight: 600;                                        
+      4845 +    color: var(--accent-color);                              
+      4846 +    white-space: nowrap;                                     
+      4847 +    width: 1%;                                               
+      4848 +}                                                            
+      4849 +                                                             
+      4850 +.explorer-detail-value {                                     
+      4851 +    color: var(--text-color);                                
+      4852 +    word-break: break-word;                                  
+      4853 +    white-space: pre-wrap;                                   
+      4854 +}                                                            
+      4855 +                                                             
+      4856  .explorer-results-scroll {
+      4857      overflow-x: auto;
+      4858      border: var(--border-width) solid var(--border-color);
+
+● Done. Clicking any row in the Explorer results grid now opens a detail overlay
+   showing all fields with full (non-truncated) values. Features:
+
+  - Prev/Next buttons to navigate between records without closing
+  - Click outside the panel or the × button to close
+  - For entry-based queries: shows all entry fields (Date, Time, Title, Content
+  as plain text, Categories, Tags, Place, Locations, Weather)
+  - For raw SQL queries: shows all columns from the result
+  - Content is stripped of HTML tags for readability
+
+✻ Cogitated for 1m 10s
+
+> works                                                                         
+
+● Great. What's next?
+
+> reubild apk                                                                   
+
+● Bash(cd E:/Code/Claude_Project/JOURNAL/android &&
+      JAVA_HOME="E:/Prog/Java/jdk-17" ANDROID_SDK_ROOT="C:/Android/android-sdk"
+      ./gradlew.bat assembleDebug 2>&1 | tail -…)
+  ⎿  > Task :app:createDebugApkListingFileRedirect UP-TO-DATE
+     > Task :app:assembleDebug
+     … +2 lines (ctrl+o to expand)
+  ⎿  (timeout 5m)
+
+● Build successful. APK at android/app/build/outputs/apk/debug/app-debug.apk.
+
+> /wrap                                                                         
+
+  Read 5 files (ctrl+o to expand)
+
+● Now let me update all the md files with the new features from this session
+  (continuing 2026-03-31).
+
+● Update(E:\Code\Claude_Project\JOURNAL\TODO.md)
+  ⎿  Added 10 lines, removed 1 line
+      64  - [x] Metadata export includes: categories, tags, people, icons
+          , settings, report templates, pre-fill templates, custom views
+      65  - [x] Metadata import with overwrite warning, full replace, and
+           auto-reload
+      66  - [x] Description text explaining what metadata includes (exclu
+          des entries/images)
+      67 -- [x] Tested on both Android and Web                           
+      67 +- [x] Settings Tags card overflow fix (max-height increased to 
+         +5000px)                                                        
+      68 +- [x] Android viewer pin button moved to same row as date/time 
+         +(right-aligned)                                                
+      69 +- [x] Android navbar redesign: icon-only buttons, two-row layou
+         +t (row1: brand+settings+lock, row2: new entry+toolbar)         
+      70 +- [x] Separated CSS into two tracks: style.css (web) and style-
+         +android.css (Android-only rules)                               
+      71 +- [x] Category and tag colors: color picker swatches, "Use cate
+         +gory/tag colors" toggles, colors applied in entries/dashboard  
+      72 +- [x] Custom Views loader in SQL Explorer (dropdown to load vie
+         +w conditions into builder and auto-run)                        
+      73 +- [x] SQL Explorer CSV export button (double-quoted values, dat
+         +e-stamped filename)                                            
+      74 +- [x] SQL Explorer raw SQL support for non-entries tables (e.g.
+         +, SELECT * FROM icons)                                         
+      75 +- [x] SQL Explorer record detail overlay (click row to see full
+         + values, prev/next navigation)                                 
+      76 +- [x] Delete button tooltip "Delete journal entry" in Explorer 
+         +results                                                        
+      77  
+      78  ## Remaining
+      79  - [ ] Re-test all features after SQLite migration (web app — pa
+          rtially tested, core features working)
+
+● Update(E:\Code\Claude_Project\JOURNAL\ISSUES.md)
+  ⎿  Added 5 lines
+      10  - ~~Web app WASM loading fails on file:// protocol (CORS blocks
+           XHR)~~ **FIXED** — added inline base64 WASM fallback for file:
+          // protocol
+      11  - ~~New journal creation silently fails on web~~ **FIXED** — wa
+          s caused by WASM CORS issue; also added try-catch with error di
+          splay and loading indicator
+      12  
+      13 +## Fixed (2026-03-31)                                          
+      14 +- ~~Settings Tags card cut off with no scrollbar~~ **FIXED** — 
+         +increased `.settings-section-body` max-height from 2000px to 50
+         +00px                                                           
+      15 +- ~~Android viewer pin button on third row~~ **FIXED** — restru
+         +ctured header into row1 (date, time, pin) and title below      
+      16 +                                                               
+      17  ## Untested
+      18  - Web app: partially tested after SQLite migration (new journal
+          , login, import, export, images, lightbox working)
+      19  - Android: back button, custom views not yet re-tested
+      20  - New features from 2026-03-30 session (people, icons, dashboar
+          d search, settings tabs) tested on Android, not yet on Web
+      21  - Metadata export/import (2026-03-31) tested on both Android an
+          d Web
+      22 +- SQL Explorer enhancements (2026-03-31): CSV export, raw SQL, 
+         +record detail view, custom view loader — tested on web, needs A
+         +ndroid verification                                            
+      23  
+      24  ## Limitations
+      25  - Web Crypto API requires HTTPS or localhost (no plain HTTP)
+
+● Update(E:\Code\Claude_Project\JOURNAL\TO_TEST.md)
+  ⎿  Added 9 lines
+      64  
+      65  ## Untested — New Features (2026-03-31 session)
+      66  - [x] **Metadata export/import** - TESTED OK (Android + Web) Ex
+          port/import metadata JSON from Settings > Edit Metadata
+      67 +- [x] **Settings tags overflow** - TESTED OK (Web) Tags card no
+         + longer cuts off                                               
+      68 +- [x] **Android viewer pin button** - TESTED OK (Web) Pin butto
+         +n on same row as date/time                                     
+      69 +- [x] **Android navbar redesign** - TESTED OK (Android) Icon-on
+         +ly, two-row layout                                             
+      70 +- [x] **CSS track separation** - TESTED OK (Android + Web) styl
+         +e.css + style-android.css                                      
+      71 +- [x] **Category/tag colors** - TESTED OK (Web) Color picker sw
+         +atches, use-color toggles                                      
+      72 +- [x] **Custom Views in Explorer** - TESTED OK (Web) Load view 
+         +conditions into SQL Explorer                                   
+      73 +- [ ] **SQL Explorer CSV export** - Export results grid to CSV 
+         +with double-quoted values                                      
+      74 +- [ ] **SQL Explorer raw SQL** - Run queries against any table 
+         +(not just entries)                                             
+      75 +- [ ] **SQL Explorer record detail** - Click row to see full fi
+         +eld values in overlay                                          
+      76  
+      77  ## Prior Sessions (pre-SQLite migration)
+      78  - [x] All features listed below were tested OK before the SQLit
+          e migration.
+
+● Update(E:\Code\Claude_Project\JOURNAL\REQUIREMENT.md)
+  ⎿  Added 6 lines, removed 2 lines
+      184  - Accessible from "SQL Explorer" button in top navbar
+      185  - Two input modes: raw SQL text box or visual condition builde
+           r
+      186  - SQL syntax: `SELECT [cols] FROM entries WHERE field OP 'valu
+           e' [AND ...]`
+      187 -- Supported fields: date, time, title, content, categories, ta
+          -gs, placeName, locations, weather                             
+      187 +- Raw SQL support: queries targeting non-entries tables (e.g.,
+          + `SELECT * FROM icons`) run directly via sql.js               
+      188 +- Supported fields (condition builder): date, time, title, con
+          +tent, categories, tags, placeName, locations, weather         
+      189  - Type-specific operators: contains, equals, starts/ends with,
+            before/after, between, includes, is empty, has/no data
+      190  - Toggleable field chips to select which columns appear in res
+           ults
+      190 -- Results table with row numbers, clickable rows to view entry
+          -, inline delete                                               
+      191 +- Results table with row numbers, clickable rows to open recor
+          +d detail overlay, inline delete (with tooltip)                
+      192 +- Record detail overlay: full-screen modal showing all field v
+          +alues (untruncated), prev/next navigation between records     
+      193 +- Load Custom View dropdown: load conditions from saved custom
+          + views into the builder and auto-run                          
+      194 +- CSV export button: exports current results grid to CSV file 
+          +with all values double-quoted, date-stamped filename          
+      195  - Clear button resets both SQL and builder
+      196  - Table browser: clickable table name chips (dynamically loade
+           d from SQLite schema) show column schema (name, type, PK, not 
+           null, default) and up to 5 sample rows
+      197  
+
+● Now update CLAUDE.md — add style-android.css to the project structure and
+  update explorer.js description:
+
+● Update(E:\Code\Claude_Project\JOURNAL\CLAUDE.md)
+  ⎿  Added 2 lines, removed 1 line
+      33  ├── web/                        # Shared web app (used by both 
+          platforms)
+      34  │   ├── index.html              # Single-page app with all view
+          s
+      35  │   ├── css/
+      36 -│   │   └── style.css           # Multi-theme support (12 theme
+         -s)                                                             
+      36 +│   │   ├── style.css           # Multi-theme support (12 theme
+         +s), web layout                                                 
+      37 +│   │   └── style-android.css   # Android-only styles (.android
+         + prefix rules)                                                 
+      38  │   ├── app_info.xml            # App metadata & changelog (sin
+          gle source of truth)
+      39  │   ├── js/
+      40  │   │   ├── app_info.js         # Loads APP_INFO and APP_CHANGE
+          LOG from embedded XML
+
+● Update(E:\Code\Claude_Project\JOURNAL\CLAUDE.md)
+  ⎿  Added 1 line, removed 1 line
+      45  │   │   ├── views.js           # Custom views (saved filter com
+          binations, default view)
+      46  │   │   ├── dashboard.js        # Stats, aggregates, search, pe
+          ople/tags/categories/places panels
+      47  │   │   ├── reports.js          # HTML, print, CSV, PDF, custom
+           template reports
+      48 -│   │   ├── explorer.js         # SQL Explorer: query builder +
+         - SQL text input                                                
+      48 +│   │   ├── explorer.js         # SQL Explorer: query builder, 
+         +raw SQL, CSV export, record detail overlay                     
+      49  │   │   ├── settings.js         # Categories, tags, people, ico
+          ns, templates, export/import, metadata export/import, password
+      50  │   │   └── weather.js          # Open-Meteo weather API, locat
+          ion settings
+      51  │   ├── templates/              # Sample report templates (HTML
+          )
+
+● Now commit all changes:
+
+● Bash(cd E:/Code/Claude_Project/JOURNAL && git status)
+  ⎿  On branch master
+     Your branch is up to date with 'origin/master'.
+     … +23 lines (ctrl+o to expand)
+
+● Bash(cd E:/Code/Claude_Project/JOURNAL && git diff --stat)
+  ⎿  warning: in the working copy of 'CLAUDE.md', LF will be replaced by CR
+     LF the next time Git touches it
+     warning: in the working copy of 'ISSUES.md', LF will be replaced by CR
+     … +23 lines (ctrl+o to expand)
+
+● Bash(cd E:/Code/Claude_Project/JOURNAL && git log --oneline -5)
+  ⎿  625f2b5 Add metadata export/import feature in Settings > Edit Metadata
+     ea19ddd Add People feature, custom icons, dashboard search, settings t
+     abs, nav brand button
+     … +4 lines (ctrl+o to expand)
+
+● Bash(cd E:/Code/Claude_Project/JOURNAL && git add CLAUDE.md ISSUES.md
+      REQUIREMENT.md TODO.md TO_TEST.md web/css/style.css
+      web/css/style-android.css web/index.html we…)
+  ⎿  warning: in the working copy of 'CLAUDE.md', LF will be replaced by CR
+     LF the next time Git touches it
+     warning: in the working copy of 'ISSUES.md', LF will be replaced by CR
+     … +17 lines (ctrl+o to expand)
+
+● Bash(cd E:/Code/Claude_Project/JOURNAL && git commit -m "$(cat <<'EOF'
+      SQL Explorer enhancements, Android CSS separation, category/tag colors, UI
+       fixes…)
+  ⎿  [master f0e8b1c] SQL Explorer enhancements, Android CSS separation, ca
+     tegory/tag colors, UI fixes
+      13 files changed, 737 insertions(+), 218 deletions(-)
+      create mode 100644 web/css/style-android.css
+
+● Bash(cd E:/Code/Claude_Project/JOURNAL && git push)
+  ⎿  To https://github.com/rvpals/journal.git
+        625f2b5..f0e8b1c  master -> master
+● Now rebuild the APK:
+
+● Bash(cd E:/Code/Claude_Project/JOURNAL/android &&
+      JAVA_HOME="E:/Prog/Java/jdk-17" ANDROID_SDK_ROOT="C:/Android/android-sdk"
+      ./gradlew.bat assembleDebug 2>&1 | tail -…)
+  ⎿  > Task :app:createDebugApkListingFileRedirect UP-TO-DATE
+     > Task :app:assembleDebug UP-TO-DATE
+     … +2 lines (ctrl+o to expand)
+
+● Now export the conversation:
+
+● Skill(export)
+  ⎿  Initializing…
+  ⎿  Error: Skill export is not a prompt-based skill
+
+● Bash(cd E:/Code/Claude_Project/JOURNAL && echo "Session export placeholder" >
+      android/2026-03-31.txt)
+  ⎿  (No output)
+
+● Please type /export android/2026-03-31.txt to save the conversation
+  transcript.
+
+  ---
+  Session Summary (2026-03-31)
+
+  Features added:
+  1. SQL Explorer CSV export — Export button above results grid, double-quoted
+  values, date-stamped filename
+  2. SQL Explorer raw SQL — Queries targeting any table (e.g., SELECT * FROM 
+  icons) now execute directly via sql.js
+  3. SQL Explorer record detail overlay — Click any row to see full untruncated
+  values in a modal with prev/next navigation
+  4. Custom Views in Explorer — Dropdown to load saved view conditions into the
+  builder and auto-run
+  5. Category/tag colors — Color picker swatches in Settings, "Use colors"
+  toggles, colors applied in entries list and dashboard
+  6. Android CSS separation — style-android.css for Android-only rules,
+  style.css for web
+  7. Android navbar redesign — Icon-only buttons, two-row layout
+  (brand+settings+lock / new entry+toolbar)
+  8. Metadata export/import — Full metadata JSON export/import in Settings >
+  Edit Metadata
+  9. Delete button tooltip — "Delete journal entry" hint on Explorer result rows
+
+  Bug fixes:
+  - Settings Tags card overflow (cut off tags)
+  - Android viewer pin button on wrong row
+
+  Committed & pushed: f0e8b1c
+  APK rebuilt: android/app/build/outputs/apk/debug/app-debug.apk
+
+✻ Brewed for 1m 44s
+
+> bug: in adroid, hit export csv button would cause the app to crash (smiply    
+closes). I use sql query "Select * from entries"                                
+
+● The issue is that Android WebView can't handle blob URL downloads — it
+  crashes. Other downloads in the app use AndroidBridge.saveFile(). Let me check
+   the pattern.
+
+  Searched for 1 pattern (ctrl+o to expand)
+
+● There's already a downloadFile() function in reports.js that handles
+  AndroidBridge. My exportExplorerCSV used raw blob URLs instead. Simple fix —
+  use downloadFile().
+
+  Read 1 file (ctrl+o to expand)
+
+● Now replace the blob download in exportExplorerCSV with downloadFile():
+
+● Update(E:\Code\Claude_Project\JOURNAL\web\js\explorer.js)
+  ⎿  Added 1 line, removed 9 lines
+      747      });
+      748  
+      749      const csv = lines.join('\n');
+      750 -    const blob = new Blob([csv], { type: 'text/csv;charset=utf
+          --8;' });                                                      
+      751 -    const url = URL.createObjectURL(blob);                    
+      752 -    const a = document.createElement('a');                    
+      753 -    a.href = url;                                             
+      754 -    a.download = 'explorer_results_' + (new Date().toISOString
+          -().slice(0, 10)) + '.csv';                                    
+      755 -    document.body.appendChild(a);                             
+      756 -    a.click();                                                
+      757 -    document.body.removeChild(a);                             
+      758 -    URL.revokeObjectURL(url);                                 
+      750 +    downloadFile(csv, 'explorer_results_' + (new Date().toISOS
+          +tring().slice(0, 10)) + '.csv', 'text/csv');                  
+      751  }
+      752  
+      753  function clearExplorerQuery() {
+
+● Fixed. The CSV export now uses downloadFile() which routes through
+  AndroidBridge.saveFile() on Android instead of blob URLs that crash the
+  WebView.
+
+> rebuild apk                                                                   
+
+● Bash(cd E:/Code/Claude_Project/JOURNAL/android &&
+      JAVA_HOME="E:/Prog/Java/jdk-17" ANDROID_SDK_ROOT="C:/Android/android-sdk"
+      ./gradlew.bat assembleDebug 2>&1 | tail -…)
+  ⎿  > Task :app:createDebugApkListingFileRedirect UP-TO-DATE
+     > Task :app:assembleDebug
+     … +2 lines (ctrl+o to expand)
+
+● Done. APK rebuilt.
+
+> notice the x button in result grid to delete journal entry is not visble on   
+android                                                                         
+
+  Searched for 2 patterns (ctrl+o to expand)
+
+● The button styles exist in style.css and nothing overrides them on Android.
+  The issue is likely the button being too small to see or the table column
+  being collapsed. Let me check the explorer table styles on Android.
+
+  Searched for 1 pattern, read 1 file (ctrl+o to expand)
+
+● The button itself should render fine. The problem is likely that the results
+  table scrolls horizontally and the delete column is off-screen on a narrow
+  Android display. But more likely — for raw SQL results, the delete button
+  isn't rendered at all. Let me check:
+
+  Read 1 file (ctrl+o to expand)
+
+● The user said SELECT * FROM entries — that's a raw SQL query (hits runRawSQL
+  since the SQL parser detects FROM entries but... wait, actually FROM entries
+  should go through the normal path. Let me re-read the logic:
+
+  Read 1 file (ctrl+o to expand)
+
+● SELECT * FROM entries goes through the normal entry-based path with
+  renderExplorerResults which does include the delete button. The button should
+  be there. It's likely just not visible on the small screen — scrolled off to
+  the right. Let me make the delete button more visible on Android by ensuring
+  it's not hidden or too small:
+
+  Read 1 file (ctrl+o to expand)
+
+● The issue is probably that the × button text color is white on a white/light
+  card background in some themes making it invisible — but it has background: 
+  var(--danger) (red) so that should be visible. More likely: on Android the
+  table is horizontally scrollable and the button column is off-screen. Let me
+  check if --danger variable exists:
+
+  Searched for 1 pattern (ctrl+o to expand)
+
+● The variable exists. The most likely cause on Android is the button being
+  scrolled off-screen in the horizontal scroll container. Let me make the last
+  column sticky so it's always visible:
+
+  Searched for 1 pattern (ctrl+o to expand)
+  ⎿  Interrupted · What should Claude do instead?
+
+> wait you're right. It's scroll all the way to the right                       
+● I'll make the delete button column sticky on the right so it's always visible:
+
+  Read 1 file (ctrl+o to expand)
+
+● Update(E:\Code\Claude_Project\JOURNAL\web\css\style.css)
+  ⎿  Added 12 lines
+      4922      transition: background var(--transition);
+      4923  }
+      4924  
+      4925 +.explorer-row td:last-child,                                 
+      4926 +.explorer-table thead th:last-child {                        
+      4927 +    position: sticky;                                        
+      4928 +    right: 0;                                                
+      4929 +    background: var(--bg-card);                              
+      4930 +    z-index: 1;                                              
+      4931 +}                                                            
+      4932 +                                                             
+      4933 +.explorer-table thead th:last-child {                        
+      4934 +    background: var(--bg-secondary);                         
+      4935 +}                                                            
+      4936 +                                                             
+      4937  .explorer-row:hover {
+      4938      background: var(--bg-card-alt);
+      4939  }
+
+> no 
+
+> keep eerything same 
+
+● Got it — reverting the sticky change. Keeping everything as is.
+
+● Update(E:\Code\Claude_Project\JOURNAL\web\css\style.css)
+  ⎿  Removed 12 lines
+      4922      transition: background var(--transition);
+      4923  }
+      4924  
+      4925 -.explorer-row td:last-child,                                 
+      4926 -.explorer-table thead th:last-child {                        
+      4927 -    position: sticky;                                        
+      4928 -    right: 0;                                                
+      4929 -    background: var(--bg-card);                              
+      4930 -    z-index: 1;                                              
+      4931 -}                                                            
+      4932 -                                                             
+      4933 -.explorer-table thead th:last-child {                        
+      4934 -    background: var(--bg-secondary);                         
+      4935 -}                                                            
+      4936 -                                                             
+      4925  .explorer-row:hover {
+      4926      background: var(--bg-card-alt);
+      4927  }
+
+● Reverted. Everything stays the same.
+
+> bug is fixed.                                                                 
+
+● Got it — the CSV export crash on Android is fixed (using downloadFile()
+  instead of blob URLs). Anything else?
+
+> /wrap                                                                         
+
+● Bash(cd E:/Code/Claude_Project/JOURNAL && git diff --stat)
+  ⎿  warning: in the working copy of 'web/css/style.css', LF will be replac
+     ed by CRLF the next time Git touches it
+     warning: in the working copy of 'web/js/explorer.js', LF will be repla
+     … +3 lines (ctrl+o to expand)
+
+● Only change since last commit is the CSV export fix in explorer.js. The md
+  files are already up to date from the earlier commit — just need to note the
+  bug fix.
+
+● Update(E:\Code\Claude_Project\JOURNAL\ISSUES.md)
+  ⎿  Added 1 line
+      13  ## Fixed (2026-03-31)
+      14  - ~~Settings Tags card cut off with no scrollbar~~ **FIXED** — 
+          increased `.settings-section-body` max-height from 2000px to 50
+          00px
+      15  - ~~Android viewer pin button on third row~~ **FIXED** — restru
+          ctured header into row1 (date, time, pin) and title below
+      16 +- ~~SQL Explorer CSV export crashes Android app~~ **FIXED** — r
+         +eplaced blob URL download with `downloadFile()` which uses Andr
+         +oidBridge on Android                                           
+      17  
+      18  ## Untested
+      19  - Web app: partially tested after SQLite migration (new journal
+          , login, import, export, images, lightbox working)
+
+● Bash(cd E:/Code/Claude_Project/JOURNAL && git add web/js/explorer.js ISSUES.md
+       && git commit -m "$(cat <<'EOF'
+      Fix SQL Explorer CSV export crash on Android…)
+  ⎿  warning: in the working copy of 'ISSUES.md', LF will be replaced by CR
+     LF the next time Git touches it
+     warning: in the working copy of 'web/js/explorer.js', LF will be repla
+     … +3 lines (ctrl+o to expand)
+
+● Bash(cd E:/Code/Claude_Project/JOURNAL && git push)
+  ⎿  To https://github.com/rvpals/journal.git
+        f0e8b1c..2cad3e8  master -> master
+
+● Bash(cd E:/Code/Claude_Project/JOURNAL/android &&
+      JAVA_HOME="E:/Prog/Java/jdk-17" ANDROID_SDK_ROOT="C:/Android/android-sdk"
+      ./gradlew.bat assembleDebug 2>&1 | tail -…)
+  ⎿  > Task :app:createDebugApkListingFileRedirect UP-TO-DATE
+     > Task :app:assembleDebug UP-TO-DATE
+     … +2 lines (ctrl+o to expand)
+
+● Session Summary (2026-03-31)
+
+  Features added:
+  1. SQL Explorer CSV export — Export button above results, double-quoted
+  values, date-stamped filename
+  2. SQL Explorer raw SQL — Queries any table (e.g., SELECT * FROM icons)
+  3. SQL Explorer record detail overlay — Click row for full values, prev/next
+  navigation
+  4. Custom Views loader in Explorer — Dropdown to load saved view conditions
+  and auto-run
+  5. Category/tag colors — Color picker swatches, "Use colors" toggles
+  6. Android CSS separation — style-android.css for Android-only rules
+  7. Android navbar redesign — Icon-only, two-row layout
+  8. Metadata export/import — Full metadata JSON in Settings > Edit Metadata
+  9. Delete button tooltip in Explorer results
+
+  Bug fixes:
+  - Settings tags card overflow (cut off)
+  - Android viewer pin button on wrong row
+  - SQL Explorer CSV export crash on Android (blob URL → downloadFile())
+
+  Commits: f0e8b1c, 2cad3e8 — pushed to remote
+
+  Please type /export android/2026-03-31.txt to save the conversation
+  transcript.
+
+✻ Baked for 36s
+
+> /export android/2026-03-31.txt                                                
+  ⎿  Failed to export conversation: ENOENT: no such file or directory, open
+     'E:\Code\Claude_Project\JOURNAL\android\android\2026-03-31.txt'

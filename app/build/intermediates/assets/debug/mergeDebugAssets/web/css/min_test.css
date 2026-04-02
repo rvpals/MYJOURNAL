@@ -1,0 +1,221 @@
+@import url('https://fonts.googleapis.com/css?family=Quicksand');
+
+// Variables
+
+$color-background: #3c415e;
+$color-border: #738598;
+$color-color: #1cb3c8;
+$color-hover: #dfe2e2;
+$color-shadow: darken( $color-background, 25% );
+
+$degrees-gradient: 45deg;
+$size-gradient: ( 100%, 70% );
+$size-text: ( 100%, auto );
+$size-font: 1.35em;
+$size-min: 200px;
+$size-max: 300px;
+$size-scrollbar: 7.5px;
+$space: 10px;
+
+$border: thick solid $color-border;
+$shadow: 0 0 $space 0 $color-shadow;
+
+// Mixins
+
+@mixin size ( $w: null, $h: null )
+{
+  width: $w;
+  height: $h;
+}
+
+@mixin box-size ( $s )
+{
+  @include size( $s, $s );
+}
+
+@mixin scrollbar ( $size, $coord: y )
+{
+  overflow: hidden;
+  overflow-#{ $coord }: scroll;
+  scroll-behavior: smooth;
+
+  // Mozilla Firefox
+  scrollbar-color: $color-color $color-background;
+  scrollbar-width: thin;
+
+  // Scrollbar
+  &::-webkit-scrollbar
+  {
+    @include size( $size );
+  }
+
+  // Track
+  &::-webkit-scrollbar-track
+  {
+    color: $color-color;
+    background-color: $color-background;
+  }
+
+  // Handle
+  &::-webkit-scrollbar-thumb
+  {
+    color: $color-color;
+    background-color: $color-color;
+    border-radius: $size;
+  }
+
+  // Rules for devices with mouse here
+  @media ( pointer: fine )
+  {
+    // Mozilla Firefox
+    scrollbar-color: $color-background $color-background;
+
+    // Track
+    &::-webkit-scrollbar-track
+    {
+      color: $color-color;
+      background-color: $color-background;
+    }
+
+    // Handle
+    &::-webkit-scrollbar-thumb
+    {
+      color: $color-color;
+      background-color: $color-background;
+    }
+
+    &:hover
+    {
+      // Mozilla Firefox
+      scrollbar-color: $color-color $color-background;
+
+      // Handle
+      &::-webkit-scrollbar-thumb
+      {
+        background-color: $color-color;
+
+        &:hover
+        {
+          background-color: $color-hover
+        }
+      }
+    }
+  }
+}
+
+// Extends
+
+%full-size
+{
+  @include box-size( 100% );
+}
+
+%flex-center
+{
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+// Reset
+
+*,
+*::before,
+*::after
+{
+  box-shadow: none;
+  outline: 0;
+  margin: 0;
+  border: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: 'Quicksand', sans-serif;
+}
+
+// Layout
+
+html { @include size( 100vw, 100vh ) }
+
+body { @extend %full-size }
+
+ul { list-style: none }
+
+.gradients
+{
+  @extend %full-size, %flex-center;
+  overflow: hidden;
+  padding: $space;
+  padding-left: 2 * $space;
+  background: $color-background;
+}
+
+.list-gradient
+{
+  @extend %full-size;
+  @include scrollbar( $size-scrollbar );
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-evenly;
+}
+
+.item-gradient
+{
+  @include size( auto, calc( 100vh - 4 * #{ $space } ) );
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: center;
+  flex: 1 1 auto;
+  min-width: $size-min;
+  max-width: $size-max;
+  padding: 2 * $space;
+  margin: $space;
+  border: $border;  
+  border-radius: $space;
+  box-shadow: $shadow;
+  transition: border-color .35s ease-in-out;
+
+  &:hover
+  {
+    border-color: $color-color;
+  }
+
+  @media ( min-height: 500px )
+  {
+    @include size( auto, calc( 50vh - 3 * #{ $space } ) );
+  }
+}
+
+.gradient
+{
+  @include size( $size-gradient... );
+  background: linear-gradient( $degrees-gradient, var( --start ), var( --end ) );
+  border-radius: $space;
+}
+
+.start,
+.end
+{
+  @extend %flex-center;
+  @include size( $size-text... );
+  justify-content: space-between;
+  font-weight: bold;
+  font-size: $size-font;
+  letter-spacing: .1em;
+  color: $color-color;
+  transition: color .35s ease-in-out;
+  margin-top: $space;
+  
+  &:hover { color: $color-hover }
+  
+  &::before
+  {
+    @extend %flex-center;
+    @include box-size( $size-font );
+    content: '';
+    border-radius: 50%;
+  }
+}
+
+.start::before { background: var( --start ) }
+.end::before { background: var( --end ) }

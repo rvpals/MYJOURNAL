@@ -1,0 +1,149 @@
+1<?xml version="1.0" encoding="utf-8"?>
+2<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+3    package="com.journal.app"
+4    android:versionCode="1"
+5    android:versionName="1.0" >
+6
+7    <uses-sdk
+8        android:minSdkVersion="24"
+9        android:targetSdkVersion="34" />
+10
+11    <uses-permission android:name="android.permission.INTERNET" />
+11-->E:\Code\Claude_Project\JOURNAL\android\app\src\main\AndroidManifest.xml:4:5-67
+11-->E:\Code\Claude_Project\JOURNAL\android\app\src\main\AndroidManifest.xml:4:22-64
+12    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+12-->E:\Code\Claude_Project\JOURNAL\android\app\src\main\AndroidManifest.xml:5:5-79
+12-->E:\Code\Claude_Project\JOURNAL\android\app\src\main\AndroidManifest.xml:5:22-76
+13    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+13-->E:\Code\Claude_Project\JOURNAL\android\app\src\main\AndroidManifest.xml:6:5-81
+13-->E:\Code\Claude_Project\JOURNAL\android\app\src\main\AndroidManifest.xml:6:22-78
+14    <uses-permission android:name="android.permission.USE_BIOMETRIC" />
+14-->E:\Code\Claude_Project\JOURNAL\android\app\src\main\AndroidManifest.xml:7:5-72
+14-->E:\Code\Claude_Project\JOURNAL\android\app\src\main\AndroidManifest.xml:7:22-69
+15    <uses-permission android:name="android.permission.CAMERA" />
+15-->E:\Code\Claude_Project\JOURNAL\android\app\src\main\AndroidManifest.xml:8:5-65
+15-->E:\Code\Claude_Project\JOURNAL\android\app\src\main\AndroidManifest.xml:8:22-62
+16
+17    <uses-feature
+17-->E:\Code\Claude_Project\JOURNAL\android\app\src\main\AndroidManifest.xml:9:5-85
+18        android:name="android.hardware.camera"
+18-->E:\Code\Claude_Project\JOURNAL\android\app\src\main\AndroidManifest.xml:9:19-57
+19        android:required="false" />
+19-->E:\Code\Claude_Project\JOURNAL\android\app\src\main\AndroidManifest.xml:9:58-82
+20
+21    <queries>
+21-->E:\Code\Claude_Project\JOURNAL\android\app\src\main\AndroidManifest.xml:11:5-15:15
+22        <intent>
+22-->E:\Code\Claude_Project\JOURNAL\android\app\src\main\AndroidManifest.xml:12:9-14:18
+23            <action android:name="android.media.action.IMAGE_CAPTURE" />
+23-->E:\Code\Claude_Project\JOURNAL\android\app\src\main\AndroidManifest.xml:13:13-73
+23-->E:\Code\Claude_Project\JOURNAL\android\app\src\main\AndroidManifest.xml:13:21-70
+24        </intent>
+25    </queries>
+26
+27    <!-- suppress DeprecatedClassUsageInspection -->
+28    <uses-permission android:name="android.permission.USE_FINGERPRINT" />
+28-->[androidx.biometric:biometric:1.1.0] C:\Users\rvpals\.gradle\caches\transforms-3\e19b00fab02c355a1052253f631e2680\transformed\biometric-1.1.0\AndroidManifest.xml:27:5-74
+28-->[androidx.biometric:biometric:1.1.0] C:\Users\rvpals\.gradle\caches\transforms-3\e19b00fab02c355a1052253f631e2680\transformed\biometric-1.1.0\AndroidManifest.xml:27:22-71
+29
+30    <permission
+30-->[androidx.core:core:1.9.0] C:\Users\rvpals\.gradle\caches\transforms-3\168fd16f696aed070989d54693531e3f\transformed\core-1.9.0\AndroidManifest.xml:22:5-24:47
+31        android:name="com.journal.app.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION"
+31-->[androidx.core:core:1.9.0] C:\Users\rvpals\.gradle\caches\transforms-3\168fd16f696aed070989d54693531e3f\transformed\core-1.9.0\AndroidManifest.xml:23:9-81
+32        android:protectionLevel="signature" />
+32-->[androidx.core:core:1.9.0] C:\Users\rvpals\.gradle\caches\transforms-3\168fd16f696aed070989d54693531e3f\transformed\core-1.9.0\AndroidManifest.xml:24:9-44
+33
+34    <uses-permission android:name="com.journal.app.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION" />
+34-->[androidx.core:core:1.9.0] C:\Users\rvpals\.gradle\caches\transforms-3\168fd16f696aed070989d54693531e3f\transformed\core-1.9.0\AndroidManifest.xml:26:5-97
+34-->[androidx.core:core:1.9.0] C:\Users\rvpals\.gradle\caches\transforms-3\168fd16f696aed070989d54693531e3f\transformed\core-1.9.0\AndroidManifest.xml:26:22-94
+35
+36    <application
+36-->E:\Code\Claude_Project\JOURNAL\android\app\src\main\AndroidManifest.xml:17:5-52:19
+37        android:allowBackup="true"
+37-->E:\Code\Claude_Project\JOURNAL\android\app\src\main\AndroidManifest.xml:18:9-35
+38        android:appComponentFactory="androidx.core.app.CoreComponentFactory"
+38-->[androidx.core:core:1.9.0] C:\Users\rvpals\.gradle\caches\transforms-3\168fd16f696aed070989d54693531e3f\transformed\core-1.9.0\AndroidManifest.xml:28:18-86
+39        android:debuggable="true"
+40        android:extractNativeLibs="false"
+41        android:icon="@mipmap/ic_launcher"
+41-->E:\Code\Claude_Project\JOURNAL\android\app\src\main\AndroidManifest.xml:19:9-43
+42        android:label="@string/app_name"
+42-->E:\Code\Claude_Project\JOURNAL\android\app\src\main\AndroidManifest.xml:20:9-41
+43        android:supportsRtl="true"
+43-->E:\Code\Claude_Project\JOURNAL\android\app\src\main\AndroidManifest.xml:21:9-35
+44        android:theme="@style/AppTheme"
+44-->E:\Code\Claude_Project\JOURNAL\android\app\src\main\AndroidManifest.xml:22:9-40
+45        android:usesCleartextTraffic="false" >
+45-->E:\Code\Claude_Project\JOURNAL\android\app\src\main\AndroidManifest.xml:23:9-45
+46        <activity
+46-->E:\Code\Claude_Project\JOURNAL\android\app\src\main\AndroidManifest.xml:25:9-36:20
+47            android:name="com.journal.app.MainActivity"
+47-->E:\Code\Claude_Project\JOURNAL\android\app\src\main\AndroidManifest.xml:26:13-41
+48            android:configChanges="orientation|screenSize|keyboard|keyboardHidden"
+48-->E:\Code\Claude_Project\JOURNAL\android\app\src\main\AndroidManifest.xml:27:13-83
+49            android:exported="true"
+49-->E:\Code\Claude_Project\JOURNAL\android\app\src\main\AndroidManifest.xml:28:13-36
+50            android:screenOrientation="unspecified"
+50-->E:\Code\Claude_Project\JOURNAL\android\app\src\main\AndroidManifest.xml:29:13-52
+51            android:windowSoftInputMode="adjustResize" >
+51-->E:\Code\Claude_Project\JOURNAL\android\app\src\main\AndroidManifest.xml:30:13-55
+52            <intent-filter>
+52-->E:\Code\Claude_Project\JOURNAL\android\app\src\main\AndroidManifest.xml:32:13-35:29
+53                <action android:name="android.intent.action.MAIN" />
+53-->E:\Code\Claude_Project\JOURNAL\android\app\src\main\AndroidManifest.xml:33:17-69
+53-->E:\Code\Claude_Project\JOURNAL\android\app\src\main\AndroidManifest.xml:33:25-66
+54
+55                <category android:name="android.intent.category.LAUNCHER" />
+55-->E:\Code\Claude_Project\JOURNAL\android\app\src\main\AndroidManifest.xml:34:17-77
+55-->E:\Code\Claude_Project\JOURNAL\android\app\src\main\AndroidManifest.xml:34:27-74
+56            </intent-filter>
+57        </activity>
+58        <activity
+58-->E:\Code\Claude_Project\JOURNAL\android\app\src\main\AndroidManifest.xml:38:9-41:47
+59            android:name="com.journal.app.AboutActivity"
+59-->E:\Code\Claude_Project\JOURNAL\android\app\src\main\AndroidManifest.xml:39:13-42
+60            android:exported="false"
+60-->E:\Code\Claude_Project\JOURNAL\android\app\src\main\AndroidManifest.xml:40:13-37
+61            android:theme="@style/AppTheme" />
+61-->E:\Code\Claude_Project\JOURNAL\android\app\src\main\AndroidManifest.xml:41:13-44
+62
+63        <provider
+64            android:name="androidx.core.content.FileProvider"
+64-->E:\Code\Claude_Project\JOURNAL\android\app\src\main\AndroidManifest.xml:44:13-62
+65            android:authorities="com.journal.app.fileprovider"
+65-->E:\Code\Claude_Project\JOURNAL\android\app\src\main\AndroidManifest.xml:45:13-64
+66            android:exported="false"
+66-->E:\Code\Claude_Project\JOURNAL\android\app\src\main\AndroidManifest.xml:46:13-37
+67            android:grantUriPermissions="true" >
+67-->E:\Code\Claude_Project\JOURNAL\android\app\src\main\AndroidManifest.xml:47:13-47
+68            <meta-data
+68-->E:\Code\Claude_Project\JOURNAL\android\app\src\main\AndroidManifest.xml:48:13-50:54
+69                android:name="android.support.FILE_PROVIDER_PATHS"
+69-->E:\Code\Claude_Project\JOURNAL\android\app\src\main\AndroidManifest.xml:49:17-67
+70                android:resource="@xml/file_paths" />
+70-->E:\Code\Claude_Project\JOURNAL\android\app\src\main\AndroidManifest.xml:50:17-51
+71        </provider>
+72        <provider
+72-->[androidx.emoji2:emoji2:1.2.0] C:\Users\rvpals\.gradle\caches\transforms-3\dca052c51dbdf1152fc35fc53c04521d\transformed\emoji2-1.2.0\AndroidManifest.xml:24:9-32:20
+73            android:name="androidx.startup.InitializationProvider"
+73-->[androidx.emoji2:emoji2:1.2.0] C:\Users\rvpals\.gradle\caches\transforms-3\dca052c51dbdf1152fc35fc53c04521d\transformed\emoji2-1.2.0\AndroidManifest.xml:25:13-67
+74            android:authorities="com.journal.app.androidx-startup"
+74-->[androidx.emoji2:emoji2:1.2.0] C:\Users\rvpals\.gradle\caches\transforms-3\dca052c51dbdf1152fc35fc53c04521d\transformed\emoji2-1.2.0\AndroidManifest.xml:26:13-68
+75            android:exported="false" >
+75-->[androidx.emoji2:emoji2:1.2.0] C:\Users\rvpals\.gradle\caches\transforms-3\dca052c51dbdf1152fc35fc53c04521d\transformed\emoji2-1.2.0\AndroidManifest.xml:27:13-37
+76            <meta-data
+76-->[androidx.emoji2:emoji2:1.2.0] C:\Users\rvpals\.gradle\caches\transforms-3\dca052c51dbdf1152fc35fc53c04521d\transformed\emoji2-1.2.0\AndroidManifest.xml:29:13-31:52
+77                android:name="androidx.emoji2.text.EmojiCompatInitializer"
+77-->[androidx.emoji2:emoji2:1.2.0] C:\Users\rvpals\.gradle\caches\transforms-3\dca052c51dbdf1152fc35fc53c04521d\transformed\emoji2-1.2.0\AndroidManifest.xml:30:17-75
+78                android:value="androidx.startup" />
+78-->[androidx.emoji2:emoji2:1.2.0] C:\Users\rvpals\.gradle\caches\transforms-3\dca052c51dbdf1152fc35fc53c04521d\transformed\emoji2-1.2.0\AndroidManifest.xml:31:17-49
+79            <meta-data
+79-->[androidx.lifecycle:lifecycle-process:2.4.1] C:\Users\rvpals\.gradle\caches\transforms-3\642755f9332907f70df4a4f288beb394\transformed\lifecycle-process-2.4.1\AndroidManifest.xml:31:13-33:52
+80                android:name="androidx.lifecycle.ProcessLifecycleInitializer"
+80-->[androidx.lifecycle:lifecycle-process:2.4.1] C:\Users\rvpals\.gradle\caches\transforms-3\642755f9332907f70df4a4f288beb394\transformed\lifecycle-process-2.4.1\AndroidManifest.xml:32:17-78
+81                android:value="androidx.startup" />
+81-->[androidx.lifecycle:lifecycle-process:2.4.1] C:\Users\rvpals\.gradle\caches\transforms-3\642755f9332907f70df4a4f288beb394\transformed\lifecycle-process-2.4.1\AndroidManifest.xml:33:17-49
+82        </provider>
+83    </application>
+84
+85</manifest>

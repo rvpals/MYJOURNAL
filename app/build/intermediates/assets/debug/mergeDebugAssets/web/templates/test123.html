@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title><%TITLE%> - Journal Entry</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 850px;
+            margin: 2rem auto;
+            padding: 0 1.5rem;
+            color: #2c3145;
+            line-height: 1.6;
+        }
+        h1 {
+            color: #1cb3c8;
+            border-bottom: 3px solid #1cb3c8;
+            padding-bottom: 0.5rem;
+            margin-bottom: 0.25rem;
+        }
+        .meta-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.5rem 2rem;
+            margin: 1rem 0 1.5rem;
+            padding: 1rem;
+            background: #f4f7fa;
+            border-radius: 8px;
+            border: 1px solid #dde2ea;
+        }
+        .meta-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+        .meta-label {
+            font-weight: 700;
+            color: #5a6478;
+            min-width: 120px;
+        }
+        .meta-value {
+            color: #2c3145;
+        }
+        .tags-list span {
+            display: inline-block;
+            background: #d6f4f9;
+            color: #0e7a8a;
+            padding: 2px 10px;
+            border-radius: 4px;
+            margin: 2px 4px 2px 0;
+            font-size: 0.9em;
+            font-weight: 600;
+        }
+        .content-section {
+            margin: 1.5rem 0;
+        }
+        .content-section h2 {
+            font-size: 1.1rem;
+            color: #5a6478;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            margin-bottom: 0.5rem;
+        }
+        .content-body {
+            min-height: 200px;
+            padding: 1rem;
+            background: #fafbfc;
+            border: 1px solid #dde2ea;
+            border-radius: 8px;
+            white-space: pre-wrap;
+            font-size: 1rem;
+            line-height: 1.8;
+        }
+        .rich-content-body {
+            min-height: 200px;
+            padding: 1rem;
+            background: #fafbfc;
+            border: 1px solid #dde2ea;
+            border-radius: 8px;
+            font-size: 1rem;
+            line-height: 1.8;
+        }
+        .places-section {
+            margin: 1rem 0;
+            padding: 0.75rem 1rem;
+            background: #f4f7fa;
+            border-radius: 8px;
+            border: 1px solid #dde2ea;
+        }
+        .weather-section {
+            margin: 1rem 0;
+            padding: 0.75rem 1rem;
+            background: #eaf8fa;
+            border-radius: 8px;
+            border: 1px solid #b8e6ed;
+        }
+        .footer {
+            margin-top: 2rem;
+            padding-top: 0.75rem;
+            border-top: 1px solid #dde2ea;
+            font-size: 0.8rem;
+            color: #8a92a4;
+            display: flex;
+            justify-content: space-between;
+        }
+    </style>
+</head>
+<body>
+    <h1><%TITLE%></h1>
+
+    <div class="meta-grid">
+        <div class="meta-item">
+            <span class="meta-label">Date:</span>
+            <span class="meta-value"><%DATE%></span>
+        </div>
+        <div class="meta-item">
+            <span class="meta-label">Time:</span>
+            <span class="meta-value"><%TIME%></span>
+        </div>
+        <div class="meta-item">
+            <span class="meta-label">ID:</span>
+            <span class="meta-value" style="font-family: monospace; font-size: 0.85em;"><%ID%></span>
+        </div>
+        <div class="meta-item">
+            <span class="meta-label">Categories:</span>
+            <span class="meta-value"><%CATEGORIES%></span>
+        </div>
+        <div class="meta-item" style="grid-column: 1 / -1;">
+            <span class="meta-label">Tags:</span>
+            <span class="meta-value tags-list"><%TAGS%></span>
+        </div>
+    </div>
+
+    <div class="weather-section">
+        <div class="meta-item">
+            <span class="meta-label">Weather:</span>
+            <span class="meta-value"><%WEATHER%></span>
+        </div>
+        <div class="meta-item">
+            <span class="meta-label">Temperature:</span>
+            <span class="meta-value"><%WEATHER_TEMP%></span>
+        </div>
+        <div class="meta-item">
+            <span class="meta-label">Conditions:</span>
+            <span class="meta-value"><%WEATHER_DESC%></span>
+        </div>
+    </div>
+
+    <div class="content-section">
+        <h2>Content</h2>
+        <div class="content-body"><%CONTENT%></div>
+    </div>
+
+    <div class="content-section">
+        <h2>Rich Content</h2>
+        <div class="rich-content-body"><%RICH_CONTENT%></div>
+    </div>
+
+    <div class="places-section">
+        <div class="meta-item">
+            <span class="meta-label">Places:</span>
+            <span class="meta-value"><%PLACES%></span>
+        </div>
+        <div class="meta-item">
+            <span class="meta-label">Place Names:</span>
+            <span class="meta-value"><%PLACE_NAMES%></span>
+        </div>
+        <div class="meta-item">
+            <span class="meta-label">Addresses:</span>
+            <span class="meta-value"><%PLACE_ADDRESSES%></span>
+        </div>
+        <div class="meta-item">
+            <span class="meta-label">Coordinates:</span>
+            <span class="meta-value" style="font-family: monospace;"><%PLACE_COORDS%></span>
+        </div>
+    </div>
+
+    <div class="footer">
+        <span>Created: <%DT_CREATED%></span>
+        <span>Updated: <%DT_UPDATED%></span>
+    </div>
+</body>
+</html>

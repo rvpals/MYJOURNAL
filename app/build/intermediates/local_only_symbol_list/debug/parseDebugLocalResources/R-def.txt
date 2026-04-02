@@ -1,0 +1,31 @@
+R_DEF: Internal format may change without notice
+local
+color black
+color primary
+color primary_dark
+color white
+drawable about_back_btn_bg
+drawable about_card_bg
+drawable ic_launcher_background
+drawable ic_launcher_foreground
+id about_app_name
+id about_back_btn
+id about_company_url
+id about_description
+id about_email
+id about_icon
+id about_url
+id about_version
+id webView
+layout activity_about
+layout activity_main
+mipmap ic_launcher
+string app_info_company_url
+string app_info_description
+string app_info_email
+string app_info_name
+string app_info_url
+string app_info_version
+string app_name
+style AppTheme
+xml file_paths
