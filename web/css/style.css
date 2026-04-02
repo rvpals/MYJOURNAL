@@ -2491,6 +2491,7 @@ mark.search-highlight {
     border: var(--border-width) solid var(--border-color);
     box-shadow: var(--shadow);
     min-height: 200px;
+    overflow-x: auto;
 }
 
 .report-output table {

@@ -2,7 +2,7 @@
 
 ## Critical Path (must work)
 
-- [ ] **Login flow** — Create new journal with password, re-open existing journal, wrong password rejection
+- [x] **Login flow** — Create new journal with password, re-open existing journal, wrong password rejection (verified 2026-04-02)
 - [x] **Biometric login** — Enable in settings, lock app, re-authenticate with fingerprint/face (fixed double-prompt bug 2026-04-01)
 - [x] **Native LoginActivity** — Journal selector spinner, password entry, biometric button, auto-open last journal (fixed web login reappearing 2026-04-01)
 - [ ] **Entry CRUD** — Create entry with all fields, edit existing, delete with confirmation

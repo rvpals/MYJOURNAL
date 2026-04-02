@@ -649,6 +649,7 @@ const CSV_JOURNAL_FIELDS = [
     { key: 'richContent',  label: 'Rich Content (HTML)' },
     { key: 'categories',   label: 'Categories' },
     { key: 'tags',         label: 'Tags' },
+    { key: 'people',       label: 'People' },
     { key: 'placeName',    label: 'Place Name' },
     { key: 'placeAddress', label: 'Place Address' },
     { key: 'placeCoords',  label: 'Place Coords (lat, lng)' }
@@ -940,6 +941,7 @@ async function executeCsvImport() {
     });
 
     const separator = document.getElementById('csv-separator').value || ',';
+    const tagsSpaceSep = document.getElementById('csv-tags-space-sep').checked;
     const customDateFmt = (document.getElementById('csv-date-format').value || '').trim();
     const customTimeFmt = (document.getElementById('csv-time-format').value || '').trim();
 
@@ -950,6 +952,14 @@ async function executeCsvImport() {
     let skipped = 0;
     let duplicates = [];
     const total = rows.length;
+
+    // Track new categories, tags, and people to auto-create
+    const existingCategories = new Set(DB.getCategories().map(c => c.toLowerCase()));
+    const existingTags = new Set((DB.getSettings().tags || []).map(t => t.toLowerCase()));
+    const existingPeople = new Set(DB.getPeople().map(p => (p.firstName + ' ' + p.lastName).trim().toLowerCase()));
+    const newCategories = new Set();
+    const newTags = new Set();
+    const newPeople = []; // array of {firstName, lastName}
 
     for (let i = 0; i < rows.length; i++) {
         const row = rows[i];
@@ -962,6 +972,7 @@ async function executeCsvImport() {
             richContent: '',
             categories: [],
             tags: [],
+            people: [],
             placeName: '',
             locations: [],
             weather: null,
@@ -996,7 +1007,17 @@ async function executeCsvImport() {
                     entry.categories = val.split(separator).map(s => s.trim()).filter(Boolean);
                     break;
                 case 'tags':
-                    entry.tags = val.split(separator).map(s => s.trim()).filter(Boolean);
+                    if (tagsSpaceSep) {
+                        entry.tags = val.split(/\s+/).map(s => s.trim()).filter(Boolean);
+                    } else {
+                        entry.tags = val.split(separator).map(s => s.trim()).filter(Boolean);
+                    }
+                    break;
+                case 'people':
+                    entry.people = val.split(separator).map(s => s.trim()).filter(Boolean).map(name => {
+                        const parts = name.split(/\s+/);
+                        return { firstName: parts[0] || '', lastName: parts.slice(1).join(' ') || '' };
+                    });
                     break;
                 case 'placeName':
                     csvPlaceName = val;
@@ -1022,6 +1043,27 @@ async function executeCsvImport() {
                 }
             }
             entry.locations.push(loc);
+        }
+
+        // Collect new categories, tags, people for auto-creation
+        for (const cat of entry.categories) {
+            if (!existingCategories.has(cat.toLowerCase())) {
+                newCategories.add(cat);
+                existingCategories.add(cat.toLowerCase());
+            }
+        }
+        for (const tag of entry.tags) {
+            if (!existingTags.has(tag.toLowerCase())) {
+                newTags.add(tag);
+                existingTags.add(tag.toLowerCase());
+            }
+        }
+        for (const person of (entry.people || [])) {
+            const key = (person.firstName + ' ' + person.lastName).trim().toLowerCase();
+            if (!existingPeople.has(key)) {
+                newPeople.push(person);
+                existingPeople.add(key);
+            }
         }
 
         // Skip rows with no title and no content
@@ -1050,11 +1092,28 @@ async function executeCsvImport() {
         }
     }
 
+    // Auto-create new categories, tags, and people
+    if (newCategories.size > 0) {
+        const allCats = [...DB.getCategories(), ...newCategories];
+        DB.setCategories(allCats);
+    }
+    if (newTags.size > 0) {
+        const settings = DB.getSettings();
+        const allTags = [...(settings.tags || []), ...newTags];
+        DB.setSettings({ tags: allTags });
+    }
+    for (const person of newPeople) {
+        DB.addPerson(person.firstName, person.lastName, '');
+    }
+
     // Done
     progressBar.style.width = '100%';
     progressText.textContent = `${total} / ${total}`;
 
     let msg = `Import complete: ${imported} entries imported.`;
+    if (newCategories.size > 0) msg += ` ${newCategories.size} new categories created.`;
+    if (newTags.size > 0) msg += ` ${newTags.size} new tags created.`;
+    if (newPeople.length > 0) msg += ` ${newPeople.length} new people created.`;
     if (skipped > 0) msg += ` ${skipped} rows skipped (no title or content).`;
     if (duplicates.length > 0) msg += ` ${duplicates.length} duplicates skipped.`;
     msgEl.textContent = msg;

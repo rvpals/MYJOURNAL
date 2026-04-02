@@ -315,9 +315,9 @@ function handleAndroidBack() {
     if (typeof currentPage === 'undefined' || currentPage === 'login') {
         return 'exit';
     }
-    // If on dashboard, return to native dashboard
+    // If on dashboard, exit app
     if (currentPage === 'dashboard') {
-        return 'dashboard';
+        return 'exit';
     }
     // Otherwise navigate back
     navigateBack();
@@ -1157,11 +1157,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // If native login is handling auth, hide the web login page entirely.
     // performAutoLogin() from MainActivity will call enterApp() directly.
+    // Skip populateJournalSelect() to avoid triggering auto-biometric from web layer.
     if (window.AndroidBridge && typeof AndroidBridge.hasNativeLogin === 'function' && AndroidBridge.hasNativeLogin()) {
         document.getElementById('page-login').style.display = 'none';
+    } else {
+        populateJournalSelect();
     }
-
-    populateJournalSelect();
     initColumnToggles();
 
     // Tag input - Enter key and dropdown

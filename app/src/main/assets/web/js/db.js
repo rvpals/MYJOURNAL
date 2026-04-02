@@ -28,7 +28,12 @@ const DB = (() => {
     }
 
     function saveJournalList(list) {
-        localStorage.setItem(JOURNALS_META_KEY, JSON.stringify(list));
+        const json = JSON.stringify(list);
+        localStorage.setItem(JOURNALS_META_KEY, json);
+        // Sync to native SharedPreferences if available
+        if (window.AndroidBridge && typeof AndroidBridge.syncJournalList === 'function') {
+            AndroidBridge.syncJournalList(json);
+        }
     }
 
     function addJournalToList(id, name) {

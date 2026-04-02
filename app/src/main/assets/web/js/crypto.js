@@ -81,6 +81,12 @@ const Crypto = (() => {
             data: arrayToBase64(new Uint8Array(encrypted))
         };
         localStorage.setItem(verifyKey(journalId), JSON.stringify(verifyObj));
+
+        // Sync to native SharedPreferences if available
+        if (window.AndroidBridge && typeof AndroidBridge.syncCryptoKey === 'function') {
+            AndroidBridge.syncCryptoKey(journalId, localStorage.getItem(saltKey(journalId)),
+                JSON.stringify(verifyObj));
+        }
     }
 
     async function verifyPassword(password, journalId) {

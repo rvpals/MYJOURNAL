@@ -457,3 +457,85 @@ function stripHtml(html) {
     div.innerHTML = html;
     return div.textContent || div.innerText || '';
 }
+
+/**
+ * Gather all dashboard data as a JSON object for native Android rendering.
+ * Called after login to pass data to native DashboardActivity.
+ */
+function getDashboardDataJSON() {
+    const entries = DB.getEntries();
+    const week = getDateRange('week');
+    const month = getDateRange('month');
+    const year = getDateRange('year');
+
+    const tags = countFieldAll(entries, 'tags');
+    const categories = countFieldAll(entries, 'categories');
+    const places = countPlacesAll(entries);
+    const people = countPeopleAll(entries);
+
+    // Pinned entries
+    const pinned = entries.filter(e => e.pinned)
+        .sort((a, b) => (b.date || '').localeCompare(a.date || ''))
+        .slice(0, 20)
+        .map(e => ({
+            id: e.id,
+            date: e.date,
+            time: e.time,
+            title: e.title,
+            contentPreview: (e.content || '').substring(0, 100),
+            thumbnail: (e.images && e.images.length > 0) ? e.images[0].thumb : null
+        }));
+
+    // Recent entries
+    const recent = entries
+        .sort((a, b) => (b.date || '').localeCompare(a.date || ''))
+        .slice(0, 5)
+        .map(e => ({
+            id: e.id,
+            date: e.date,
+            time: e.time,
+            title: e.title,
+            contentPreview: (e.content || '').substring(0, 100)
+        }));
+
+    // Pinned custom views
+    const pinnedViews = (typeof getPinnedViews === 'function' ? getPinnedViews() : [])
+        .map(v => {
+            const count = typeof applyView === 'function' ? applyView(entries, v).length : 0;
+            return { id: v.id, name: v.name, count: count };
+        });
+
+    // Journal name
+    const journal = DB.getJournalList().find(j => j.id === DB.getJournalId());
+    const journalName = journal ? journal.name : '';
+
+    // Theme
+    const settings = DB.getSettings();
+    const theme = settings.theme || 'dark';
+
+    // Category/tag colors
+    const catColors = typeof getCategoryColors === 'function' ? getCategoryColors() : {};
+    const tagColors = typeof getTagColors === 'function' ? getTagColors() : {};
+    const useCatColors = typeof isUseCategoryColor === 'function' ? isUseCategoryColor() : false;
+    const useTagColors = typeof isUseTagColor === 'function' ? isUseTagColor() : false;
+
+    // Streak
+    const streak = calculateStreak(entries);
+
+    return JSON.stringify({
+        totalEntries: entries.length,
+        thisWeek: entries.filter(e => e.date >= week.from && e.date <= week.to).length,
+        thisMonth: entries.filter(e => e.date >= month.from && e.date <= month.to).length,
+        thisYear: entries.filter(e => e.date >= year.from && e.date <= year.to).length,
+        streak: streak,
+        topTags: tags.slice(0, 20).map(t => ({ name: t[0], count: t[1], color: useTagColors ? (tagColors[t[0]] || null) : null })),
+        topCategories: categories.slice(0, 20).map(c => ({ name: c[0], count: c[1], color: useCatColors ? (catColors[c[0]] || null) : null })),
+        topPlaces: places.slice(0, 20).map(p => ({ name: p[0], count: p[1] })),
+        topPeople: people.slice(0, 20).map(p => ({ name: p[0], count: p[1] })),
+        pinnedEntries: pinned,
+        recentEntries: recent,
+        pinnedViews: pinnedViews,
+        journalName: journalName,
+        theme: theme
+    });
+}

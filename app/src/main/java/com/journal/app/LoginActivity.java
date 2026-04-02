@@ -62,6 +62,7 @@ public class LoginActivity extends AppCompatActivity {
 
     private List<JournalInfo> journals = new ArrayList<>();
     private boolean isNewJournal = false;
+    private boolean biometricInProgress = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -397,11 +398,14 @@ public class LoginActivity extends AppCompatActivity {
     }
 
     private void biometricLogin() {
+        if (biometricInProgress) return;
+        biometricInProgress = true;
+
         int pos = journalSpinner.getSelectedItemPosition();
-        if (pos < 0 || pos >= journals.size()) return;
+        if (pos < 0 || pos >= journals.size()) { biometricInProgress = false; return; }
 
         JournalInfo journal = journals.get(pos);
-        if (!hasCredential(journal.id)) return;
+        if (!hasCredential(journal.id)) { biometricInProgress = false; return; }
 
         Executor executor = ContextCompat.getMainExecutor(this);
 
@@ -420,6 +424,7 @@ public class LoginActivity extends AppCompatActivity {
 
                     @Override
                     public void onAuthenticationError(int errorCode, @NonNull CharSequence errString) {
+                        biometricInProgress = false;
                         if (errorCode != BiometricPrompt.ERROR_USER_CANCELED
                                 && errorCode != BiometricPrompt.ERROR_NEGATIVE_BUTTON) {
                             showError("Biometric error: " + errString);

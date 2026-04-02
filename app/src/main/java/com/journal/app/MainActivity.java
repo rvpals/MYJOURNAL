@@ -51,8 +51,6 @@ public class MainActivity extends AppCompatActivity {
     private static final int FILE_CHOOSER_REQUEST = 1001;
     private static final int LOCATION_PERMISSION_REQUEST = 1002;
     private static final int CAMERA_PERMISSION_REQUEST = 1003;
-    private static final int DASHBOARD_REQUEST = 2001;
-
     private String pendingGeolocationOrigin;
     private GeolocationPermissions.Callback pendingGeolocationCallback;
 
@@ -102,9 +100,10 @@ public class MainActivity extends AppCompatActivity {
         settings.setMixedContentMode(WebSettings.MIXED_CONTENT_ALWAYS_ALLOW);
         settings.setAllowUniversalAccessFromFileURLs(true);
 
-        // Responsive layout
+        // Responsive layout — let viewport meta tag control width,
+        // don't shrink-to-fit wide content (allows horizontal scroll instead)
         settings.setUseWideViewPort(true);
-        settings.setLoadWithOverviewMode(true);
+        settings.setLoadWithOverviewMode(false);
 
         // Geolocation
         settings.setGeolocationEnabled(true);
@@ -328,33 +327,6 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        if (requestCode == DASHBOARD_REQUEST) {
-            if (data != null) {
-                String navigate = data.getStringExtra("navigate_to");
-                if ("lock".equals(navigate)) {
-                    // Return to native login
-                    Intent loginIntent = new Intent(this, LoginActivity.class);
-                    loginIntent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
-                    startActivity(loginIntent);
-                    finish();
-                    return;
-                }
-                if ("dashboard".equals(navigate)) {
-                    // Re-query dashboard data and relaunch
-                    launchNativeDashboard();
-                    return;
-                }
-                if (navigate != null) {
-                    // Show WebView and navigate to the requested page
-                    webView.setVisibility(View.VISIBLE);
-                    webView.evaluateJavascript("navigateTo('" + navigate + "')", null);
-                }
-            } else {
-                // User pressed back from dashboard with no result — exit app
-                finish();
-            }
-            return;
-        }
         if (requestCode == FILE_CHOOSER_REQUEST) {
             if (fileUploadCallback != null) {
                 Uri[] results = null;
@@ -404,32 +376,10 @@ public class MainActivity extends AppCompatActivity {
         webView.evaluateJavascript("handleAndroidBack()", result -> {
             if ("\"exit\"".equals(result)) {
                 runOnUiThread(() -> MainActivity.super.onBackPressed());
-            } else if ("\"dashboard\"".equals(result)) {
-                // Navigate to native dashboard
-                runOnUiThread(() -> launchNativeDashboard());
             }
         });
     }
 
-    void launchNativeDashboard() {
-        webView.evaluateJavascript(
-            "(function(){ return typeof getDashboardDataJSON === 'function' ? getDashboardDataJSON() : '{}'; })()",
-            value -> {
-                if (value != null && !"null".equals(value)) {
-                    String json = value;
-                    if (json.startsWith("\"")) {
-                        json = json.substring(1, json.length() - 1)
-                            .replace("\\\"", "\"")
-                            .replace("\\\\", "\\")
-                            .replace("\\n", "\n");
-                    }
-                    Intent intent = new Intent(MainActivity.this, DashboardActivity.class);
-                    intent.putExtra("dashboard_data", json);
-                    startActivityForResult(intent, DASHBOARD_REQUEST);
-                }
-            }
-        );
-    }
 
     // ========== Auto Login from Native LoginActivity ==========
 
@@ -475,8 +425,7 @@ public class MainActivity extends AppCompatActivity {
         js.append("    DB.setJournalId('").append(jid).append("');");
         js.append("    await DB.loadAll('").append(escapedPwd).append("', '").append(jid).append("');");
         js.append("    enterApp('").append(jid).append("');");
-        js.append("    var dashData = typeof getDashboardDataJSON === 'function' ? getDashboardDataJSON() : '{}';");
-        js.append("    AndroidBridge.onAutoLoginComplete(dashData);");
+        js.append("    AndroidBridge.onAutoLoginComplete('');");
         js.append("  } catch(e) {");
         js.append("    console.error('Auto-login failed: ' + e.message);");
         js.append("    AndroidBridge.onAutoLoginFailed(e.message || 'Unknown error');");
@@ -656,14 +605,7 @@ public class MainActivity extends AppCompatActivity {
         @JavascriptInterface
         public void onAutoLoginComplete(String dashboardJson) {
             runOnUiThread(() -> {
-                // Launch native dashboard as the home screen
-                if (dashboardJson != null && !dashboardJson.isEmpty() && !"{}".equals(dashboardJson)) {
-                    Intent intent = new Intent(MainActivity.this, DashboardActivity.class);
-                    intent.putExtra("dashboard_data", dashboardJson);
-                    startActivityForResult(intent, DASHBOARD_REQUEST);
-                } else {
-                    webView.setVisibility(View.VISIBLE);
-                }
+                webView.setVisibility(View.VISIBLE);
             });
         }
 
@@ -679,11 +621,7 @@ public class MainActivity extends AppCompatActivity {
 
         @JavascriptInterface
         public void onDashboardReady(String dashboardJson) {
-            runOnUiThread(() -> {
-                Intent intent = new Intent(MainActivity.this, DashboardActivity.class);
-                intent.putExtra("dashboard_data", dashboardJson);
-                startActivityForResult(intent, DASHBOARD_REQUEST);
-            });
+            // No-op: native dashboard removed, web dashboard handles display
         }
 
         /**

@@ -2491,6 +2491,7 @@ mark.search-highlight {
     border: var(--border-width) solid var(--border-color);
     box-shadow: var(--shadow);
     min-height: 200px;
+    overflow-x: auto;
 }
 
 .report-output table {
@@ -3490,6 +3491,8 @@ mark.search-highlight {
     margin-top: 1rem;
     padding-top: 1rem;
     border-top: 1px solid var(--border-color);
+    overflow-x: auto;
+    max-width: 100%;
 }
 
 .csv-import-section h4 {
@@ -3518,16 +3521,19 @@ mark.search-highlight {
     align-items: center;
     gap: 0.5rem;
     flex-wrap: wrap;
+    max-width: 100%;
 }
 
 .csv-col-name {
     font-weight: 700;
     font-size: 0.9rem;
-    min-width: 140px;
+    min-width: 80px;
+    max-width: 40%;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
     color: var(--text-primary);
+    flex-shrink: 1;
 }
 
 .csv-arrow {
@@ -3544,7 +3550,9 @@ mark.search-highlight {
     color: var(--text-primary);
     font-size: 0.85rem;
     font-family: 'Quicksand', sans-serif;
-    min-width: 180px;
+    min-width: 120px;
+    flex: 1;
+    max-width: 100%;
     transition: border-color var(--transition);
 }
 
