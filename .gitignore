@@ -8,6 +8,10 @@ build/
 *.iml
 local.properties
 
+# Signing
+*.jks
+keystore.properties
+
 # OS
 .DS_Store
 Thumbs.db

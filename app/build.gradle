@@ -6,6 +6,20 @@ android {
     namespace 'com.journal.app'
     compileSdk 34
 
+    signingConfigs {
+        release {
+            def props = new Properties()
+            def propsFile = file("${project.rootDir}/keystore.properties")
+            if (propsFile.exists()) {
+                props.load(new FileInputStream(propsFile))
+                storeFile file("${project.rootDir}/${props['storeFile']}")
+                storePassword props['storePassword']
+                keyAlias props['keyAlias']
+                keyPassword props['keyPassword']
+            }
+        }
+    }
+
     defaultConfig {
         applicationId "com.journal.app"
         minSdk 24
@@ -16,6 +30,7 @@ android {
 
     buildTypes {
         release {
+            signingConfig signingConfigs.release
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
