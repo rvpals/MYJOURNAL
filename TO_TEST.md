@@ -47,8 +47,9 @@
 - [ ] **Ranked panels** — Top tags, categories, places, people (ranked by count, top 10)
 - [ ] **Pinned entries** — Display, click to view
 - [ ] **Recent entries** — Display, click to view
-- [ ] **Dashboard search** — Live search results
+- [ ] **Dashboard search** — Live search results, whole-word toggle, ResultGrid rendering
 - [ ] **Quick actions** — Pinned custom views on dashboard
+- [ ] **Ranked panels** — RankedPanel component: list/card view toggle, show all/top 10, click to filter
 
 ## Custom Views
 
@@ -63,8 +64,8 @@
 
 - [ ] **Visual builder** — Field/operator/value conditions, add/remove rows
 - [ ] **Raw SQL** — Type raw SQL targeting any table (e.g., `SELECT * FROM icons`)
-- [ ] **Results grid** — Row numbers, clickable rows, truncated cell values
-- [ ] **Record detail overlay** — Click row to see full values, prev/next navigation
+- [ ] **Results grid** — ResultGrid component: row numbers, clickable rows, truncated cell values
+- [ ] **Record detail overlay** — RecordViewer component: click row to see full values, prev/next navigation
 - [ ] **CSV export** — Export results to CSV (double-quoted values, date-stamped filename)
 - [ ] **CSV export on Android** — Verify no crash (must use downloadFile, not blob URL)
 - [ ] **Custom view loader** — Dropdown to load view conditions into builder

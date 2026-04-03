@@ -34,12 +34,13 @@ MYJOURNAL/
 │   ├── js/
 │   │   ├── app.js          # Main controller: login, navigation, theme, Quill editor (~1,315 lines)
 │   │   ├── app_info.js     # Parses app_info.xml → APP_INFO + APP_CHANGELOG objects
+│   │   ├── components.js   # Reusable UI: ResultGrid, RankedPanel, RecordViewer (~345 lines)
 │   │   ├── crypto.js       # PBKDF2 + AES-256-GCM via Web Crypto API (~175 lines)
 │   │   ├── db.js           # sql.js SQLite abstraction, IndexedDB persistence, CRUD (~834 lines)
 │   │   ├── entries.js      # Entry form, list view, search, filter, pagination (~1,097 lines)
-│   │   ├── dashboard.js    # Stats aggregation, ranked lists, quick actions (~537 lines)
+│   │   ├── dashboard.js    # Stats aggregation, ranked lists, quick actions (~490 lines)
 │   │   ├── views.js        # Custom saved views: AND/OR/NOT filter, group, sort (~859 lines)
-│   │   ├── explorer.js     # SQL Explorer: query builder, raw SQL, CSV export (~761 lines)
+│   │   ├── explorer.js     # SQL Explorer: query builder, raw SQL, CSV export (~660 lines)
 │   │   ├── reports.js      # HTML/PDF/CSV report generation with templates (~577 lines)
 │   │   ├── settings.js     # All settings: preferences, themes, metadata, import/export (~1,941 lines)
 │   │   ├── weather.js      # Open-Meteo API, city search, GPS location (~149 lines)

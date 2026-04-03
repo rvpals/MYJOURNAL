@@ -87,6 +87,9 @@
                         <button class="btn-small" onclick="dashboardSearch()" title="Search">&#x1F50D;</button>
                         <button class="btn-small" onclick="clearDashboardSearch()" id="dashboard-search-clear" style="display:none" title="Clear">&times;</button>
                     </div>
+                    <div class="dashboard-search-options">
+                        <label class="dashboard-search-checkbox"><input type="checkbox" id="dashboard-search-wholeword"> Whole word</label>
+                    </div>
                     <div id="dashboard-search-status" class="dashboard-search-status" style="display:none"></div>
                     <div id="dashboard-search-results" class="dashboard-search-results" style="display:none"></div>
                 </div>
@@ -110,46 +113,10 @@
                 </div>
             </div>
             <div class="dashboard-panels" id="dashboard-panels">
-                <div class="panel">
-                    <div class="panel-header">
-                        <h3>Top Tags</h3>
-                        <div class="panel-header-actions">
-                            <button class="btn-small btn-show-all" id="btn-show-all-tags" onclick="toggleShowAll('tags')" style="display:none">Show All</button>
-                            <button class="btn-small" id="btn-view-tags" onclick="toggleRankedView('tags')">&#x1F504; View</button>
-                        </div>
-                    </div>
-                    <div id="top-tags" class="ranked-list"></div>
-                </div>
-                <div class="panel">
-                    <div class="panel-header">
-                        <h3>Top Categories</h3>
-                        <div class="panel-header-actions">
-                            <button class="btn-small btn-show-all" id="btn-show-all-categories" onclick="toggleShowAll('categories')" style="display:none">Show All</button>
-                            <button class="btn-small" id="btn-view-categories" onclick="toggleRankedView('categories')">&#x1F504; View</button>
-                        </div>
-                    </div>
-                    <div id="top-categories" class="ranked-list"></div>
-                </div>
-                <div class="panel">
-                    <div class="panel-header">
-                        <h3>Top Places</h3>
-                        <div class="panel-header-actions">
-                            <button class="btn-small btn-show-all" id="btn-show-all-places" onclick="toggleShowAll('places')" style="display:none">Show All</button>
-                            <button class="btn-small" id="btn-view-places" onclick="toggleRankedView('places')">&#x1F504; View</button>
-                        </div>
-                    </div>
-                    <div id="top-places" class="ranked-list"></div>
-                </div>
-                <div class="panel">
-                    <div class="panel-header">
-                        <h3>People</h3>
-                        <div class="panel-header-actions">
-                            <button class="btn-small btn-show-all" id="btn-show-all-people" onclick="toggleShowAll('people')" style="display:none">Show All</button>
-                            <button class="btn-small" id="btn-view-people" onclick="toggleRankedView('people')">&#x1F504; View</button>
-                        </div>
-                    </div>
-                    <div id="top-people" class="ranked-list"></div>
-                </div>
+                <div class="panel" id="panel-top-tags"></div>
+                <div class="panel" id="panel-top-categories"></div>
+                <div class="panel" id="panel-top-places"></div>
+                <div class="panel" id="panel-top-people"></div>
                 <div class="panel" id="panel-pinned-entries" style="display:none">
                     <h3>&#x1F5D2;&#xFE0F; Pinned Entries</h3>
                     <div id="pinned-entries"></div>
@@ -530,12 +497,7 @@
                 <div class="explorer-results-bar">
                     <button class="btn-secondary btn-small" onclick="exportExplorerCSV()">Export CSV</button>
                 </div>
-                <div class="explorer-results-scroll">
-                    <table class="explorer-table">
-                        <thead id="explorer-results-head"></thead>
-                        <tbody id="explorer-results-body"></tbody>
-                    </table>
-                </div>
+                <div id="explorer-results-grid"></div>
             </div>
         </div>
 
@@ -1173,6 +1135,7 @@
     <script src="js/app_info.js"></script>
     <script src="js/crypto.js"></script>
     <script src="js/db.js"></script>
+    <script src="js/components.js"></script>
     <script src="js/app.js"></script>
     <script src="js/entries.js"></script>
     <script src="js/views.js"></script>

@@ -256,7 +256,13 @@
 - 3D button styling with gradients and shadows
 - Active/press states with inset shadow + transform
 
-## 11. File Downloads
+## 11. Reusable UI Components (components.js)
+
+- **ResultGrid** — scrollable data table with configurable columns, row numbers, click handlers, highlight term support, and max-height scroll. Used in: dashboard search, SQL explorer results.
+- **RankedPanel** — self-contained ranked list/card panel with built-in list/card view toggle, show all/top N, localStorage-persisted view mode, click-to-filter. Used in: dashboard ranked panels (tags, categories, places, people).
+- **RecordViewer** — full-screen detail overlay for a single record with prev/next navigation, field formatters, highlight support. Used in: dashboard search row click, SQL explorer row click.
+
+## 12. File Downloads
 
 - **Web browser**: standard blob URL download or anchor click
 - **Android WebView**: MUST use `downloadFile()` → `AndroidBridge.saveFile()` (blob URLs crash WebView)

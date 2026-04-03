@@ -4,8 +4,7 @@
 
 // Store full ranked data for Show All toggle
 let dashboardFullData = { tags: [], categories: [], places: [], people: [] };
-let dashboardShowAll = { tags: false, categories: false, places: false, people: false };
-let dashboardViewMode = { tags: 'list', categories: 'list', places: 'list', people: 'list' };
+// dashboardShowAll and dashboardViewMode now managed by RankedPanel component
 
 function getDateRange(period) {
     const now = new Date();
@@ -57,11 +56,6 @@ async function refreshDashboardWeather() {
 }
 
 function refreshDashboard() {
-    // Restore saved view modes
-    dashboardViewMode.tags = localStorage.getItem('dashboard_view_tags') || 'list';
-    dashboardViewMode.categories = localStorage.getItem('dashboard_view_categories') || 'list';
-    dashboardViewMode.places = localStorage.getItem('dashboard_view_places') || 'list';
-    dashboardViewMode.people = localStorage.getItem('dashboard_view_people') || 'list';
     renderDashboardQuickActions();
     refreshDashboardWeather();
     const entries = DB.getEntries();
@@ -90,11 +84,26 @@ function refreshDashboard() {
     dashboardFullData.places = countPlacesAll(entries);
     dashboardFullData.people = countPeopleAll(entries);
 
-    // Render panels
-    renderRankedPanel('tags', 'top-tags', 'tag');
-    renderRankedPanel('categories', 'top-categories', 'category');
-    renderRankedPanel('places', 'top-places', 'place');
-    renderRankedPanel('people', 'top-people', 'person');
+    // Render ranked panels
+    RankedPanel.create({
+        id: 'tags', containerId: 'panel-top-tags', title: 'Top Tags',
+        filterType: 'tag', onItemClick: (name) => navigateToFilteredList('tag', name)
+    }).setData(dashboardFullData.tags).render();
+
+    RankedPanel.create({
+        id: 'categories', containerId: 'panel-top-categories', title: 'Top Categories',
+        filterType: 'category', onItemClick: (name) => navigateToFilteredList('category', name)
+    }).setData(dashboardFullData.categories).render();
+
+    RankedPanel.create({
+        id: 'places', containerId: 'panel-top-places', title: 'Top Places',
+        filterType: 'place', onItemClick: (name) => navigateToFilteredList('place', name)
+    }).setData(dashboardFullData.places).render();
+
+    RankedPanel.create({
+        id: 'people', containerId: 'panel-top-people', title: 'People',
+        filterType: 'person', onItemClick: (name) => navigateToFilteredList('person', name)
+    }).setData(dashboardFullData.people).render();
 
     // Pinned entries
     renderPinnedEntries(entries);
@@ -164,69 +173,6 @@ function countPeopleAll(entries) {
     return Object.entries(counts).sort((a, b) => b[1] - a[1]);
 }
 
-function renderRankedPanel(dataKey, elementId, filterType) {
-    const allItems = dashboardFullData[dataKey];
-    const showAll = dashboardShowAll[dataKey];
-    const items = showAll ? allItems : allItems.slice(0, 10);
-    const btn = document.getElementById('btn-show-all-' + dataKey);
-    const viewMode = dashboardViewMode[dataKey] || 'list';
-
-    const container = document.getElementById(elementId);
-    if (allItems.length === 0) {
-        container.innerHTML = '<div class="no-data">No data yet</div>';
-        if (btn) btn.style.display = 'none';
-        return;
-    }
-
-    if (viewMode === 'button') {
-        container.className = 'ranked-button-grid';
-        container.innerHTML = items.map(([name, count]) => {
-            const iconData = DB.getIcon(filterType, name);
-            const iconBlock = iconData
-                ? `<img src="${iconData}" class="ranked-btn-icon" alt="">`
-                : `<span class="ranked-btn-text-icon">${escapeHtml(name.substring(0, 2))}</span>`;
-            return `<div class="ranked-btn"${getItemColorStyle(filterType, name)} onclick="navigateToFilteredList('${filterType}', '${escapeHtml(name)}')" title="${escapeHtml(name)} (${count})">
-                ${iconBlock}
-                <span class="ranked-btn-label">${escapeHtml(name)}</span>
-                <span class="ranked-btn-count">${count}</span>
-            </div>`;
-        }).join('');
-    } else {
-        container.className = 'ranked-list';
-        container.innerHTML = items.map(([name, count]) => `
-            <div class="ranked-item ranked-item-clickable"${getItemColorStyle(filterType, name)} onclick="navigateToFilteredList('${filterType}', '${escapeHtml(name)}')">
-                <span class="rank-name">${getIconHtml(filterType, name)}${escapeHtml(name)}</span>
-                <span class="rank-count">${count}</span>
-            </div>
-        `).join('');
-    }
-
-    // Show/hide "Show All" button
-    if (btn) {
-        if (allItems.length > 10) {
-            btn.style.display = 'inline-block';
-            btn.textContent = showAll ? 'Top 10' : `Show All (${allItems.length})`;
-        } else {
-            btn.style.display = 'none';
-        }
-    }
-}
-
-function toggleRankedView(dataKey) {
-    const current = dashboardViewMode[dataKey] || 'list';
-    dashboardViewMode[dataKey] = current === 'list' ? 'button' : 'list';
-    localStorage.setItem('dashboard_view_' + dataKey, dashboardViewMode[dataKey]);
-    const filterTypeMap = { tags: 'tag', categories: 'category', places: 'place', people: 'person' };
-    const elementIdMap = { tags: 'top-tags', categories: 'top-categories', places: 'top-places', people: 'top-people' };
-    renderRankedPanel(dataKey, elementIdMap[dataKey], filterTypeMap[dataKey]);
-}
-
-function toggleShowAll(dataKey) {
-    dashboardShowAll[dataKey] = !dashboardShowAll[dataKey];
-    const filterTypeMap = { tags: 'tag', categories: 'category', places: 'place', people: 'person' };
-    const elementIdMap = { tags: 'top-tags', categories: 'top-categories', places: 'top-places', people: 'top-people' };
-    renderRankedPanel(dataKey, elementIdMap[dataKey], filterTypeMap[dataKey]);
-}
 
 function statNavigate(period) {
     navigateTo('entry-list');
@@ -341,6 +287,7 @@ function renderRecentEntries(entries) {
 // ========== Dashboard Search ==========
 
 let _dashboardSearchResultIds = [];
+let _dashboardSearchMatches = [];
 let _dashboardSearchTerm = '';
 
 function toggleDashboardSearch() {
@@ -378,15 +325,26 @@ function dashboardSearch() {
     // Use setTimeout to let the UI update before searching
     setTimeout(() => {
         const entries = DB.getEntries();
-        const lowerTerm = term.toLowerCase();
+        const wholeWord = document.getElementById('dashboard-search-wholeword').checked;
         const matches = [];
 
-        for (const e of entries) {
-            const titleMatch = (e.title || '').toLowerCase().includes(lowerTerm);
-            const contentMatch = (e.content || '').toLowerCase().includes(lowerTerm);
-            const richMatch = (e.richContent || '').toLowerCase().includes(lowerTerm);
-            if (titleMatch || contentMatch || richMatch) {
-                matches.push(e);
+        if (wholeWord) {
+            const escaped = term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+            const regex = new RegExp('\\b' + escaped + '\\b', 'i');
+            for (const e of entries) {
+                if (regex.test(e.title || '') || regex.test(e.content || '') || regex.test(e.richContent || '')) {
+                    matches.push(e);
+                }
+            }
+        } else {
+            const lowerTerm = term.toLowerCase();
+            for (const e of entries) {
+                const titleMatch = (e.title || '').toLowerCase().includes(lowerTerm);
+                const contentMatch = (e.content || '').toLowerCase().includes(lowerTerm);
+                const richMatch = (e.richContent || '').toLowerCase().includes(lowerTerm);
+                if (titleMatch || contentMatch || richMatch) {
+                    matches.push(e);
+                }
             }
         }
 
@@ -402,25 +360,29 @@ function dashboardSearch() {
 
         // Store search result IDs for prev/next navigation in viewer
         _dashboardSearchResultIds = matches.map(e => e.id);
+        _dashboardSearchMatches = matches;
 
-        resultsEl.innerHTML = matches.map(e => {
-            const date = e.date ? formatDate(e.date) : '';
-            const time = e.time ? formatTime(e.time) : '';
-            const title = highlightTerm(escapeHtml(e.title || 'Untitled'), term);
-            // Show content snippet around the match
-            const contentSnippet = getSearchSnippet(e.content || '', term, 120);
-            const richSnippet = (!contentSnippet && e.richContent) ? getSearchSnippet(stripHtml(e.richContent), term, 120) : '';
-            const snippet = contentSnippet || richSnippet;
+        const truncate = (s, n) => s && s.length > n ? s.substring(0, n) + '...' : (s || '');
 
-            return `<div class="dashboard-search-item" onclick="viewEntryFromSearch('${e.id}')">
-                <div class="dsr-header">
-                    <span class="dsr-date">${escapeHtml(date)}${time ? ' ' + escapeHtml(time) : ''}</span>
-                    <span class="dsr-title">${title}</span>
-                </div>
-                ${snippet ? `<div class="dsr-content">${highlightTerm(escapeHtml(snippet), term)}</div>` : ''}
-            </div>`;
-        }).join('');
-        resultsEl.style.display = 'block';
+        ResultGrid.render({
+            data: matches,
+            containerId: 'dashboard-search-results',
+            maxHeight: 400,
+            highlightTerm: term,
+            wholeWord: wholeWord,
+            columns: [
+                { key: 'date', label: 'Date', width: '90px', formatter: v => escapeHtml(v ? formatDate(v) : '') },
+                { key: 'time', label: 'Time', width: '60px', formatter: v => escapeHtml(v ? formatTime(v) : '') },
+                { key: 'title', label: 'Title', width: '180px', formatter: v => escapeHtml(v || 'Untitled') },
+                { key: 'content', label: 'Content', width: '250px', formatter: v => escapeHtml(truncate(v, 100)) },
+                { key: 'categories', label: 'Categories', width: '120px', formatter: v => escapeHtml(Array.isArray(v) ? v.join(', ') : (v || '')) },
+                { key: 'tags', label: 'Tags', width: '120px', formatter: v => escapeHtml(Array.isArray(v) ? v.join(', ') : (v || '')) },
+                { key: 'placeName', label: 'Place', width: '120px', formatter: v => escapeHtml(v || '') }
+            ],
+            onRowClick: (row, idx) => {
+                _showDashboardSearchRecord(idx, term, wholeWord);
+            }
+        });
     }, 50);
 }
 
@@ -430,19 +392,57 @@ function clearDashboardSearch() {
     document.getElementById('dashboard-search-results').style.display = 'none';
     document.getElementById('dashboard-search-clear').style.display = 'none';
     _dashboardSearchResultIds = [];
+    _dashboardSearchMatches = [];
+}
+
+function _showDashboardSearchRecord(idx, term, wholeWord) {
+    RecordViewer.show({
+        data: _dashboardSearchMatches,
+        index: idx,
+        highlightTerm: term,
+        wholeWord: wholeWord,
+        fields: [
+            { key: 'date', label: 'Date', formatter: v => escapeHtml(v ? formatDate(v) : '') },
+            { key: 'time', label: 'Time', formatter: v => escapeHtml(v ? formatTime(v) : '') },
+            { key: 'title', label: 'Title', formatter: v => escapeHtml(v || '') },
+            { key: 'content', label: 'Content', formatter: v => escapeHtml(v || '') },
+            { key: 'categories', label: 'Categories', formatter: v => escapeHtml(Array.isArray(v) ? v.join(', ') : (v || '')) },
+            { key: 'tags', label: 'Tags', formatter: v => escapeHtml(Array.isArray(v) ? v.join(', ') : (v || '')) },
+            { key: 'people', label: 'People', formatter: v => {
+                if (!Array.isArray(v)) return '';
+                return escapeHtml(v.map(p => ((p.firstName || '') + ' ' + (p.lastName || '')).trim()).join(', '));
+            }},
+            { key: 'placeName', label: 'Place', formatter: v => escapeHtml(v || '') },
+            { key: 'weather', label: 'Weather', formatter: v => {
+                if (!v) return '';
+                return escapeHtml(`${v.temp || ''}${v.unit || ''} ${v.description || ''}`);
+            }},
+            { key: 'dtCreated', label: 'Created', formatter: v => escapeHtml(v || '') },
+            { key: 'dtUpdated', label: 'Updated', formatter: v => escapeHtml(v || '') }
+        ]
+    });
 }
 
 function highlightTerm(html, term) {
     if (!term) return html;
     const escaped = term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-    const regex = new RegExp('(' + escaped + ')', 'gi');
+    const wholeWord = document.getElementById('dashboard-search-wholeword').checked;
+    const pattern = wholeWord ? '\\b(' + escaped + ')\\b' : '(' + escaped + ')';
+    const regex = new RegExp(pattern, 'gi');
     return html.replace(regex, '<mark>$1</mark>');
 }
 
 function getSearchSnippet(text, term, maxLen) {
     if (!text || !term) return '';
-    const lower = text.toLowerCase();
-    const idx = lower.indexOf(term.toLowerCase());
+    const wholeWord = document.getElementById('dashboard-search-wholeword').checked;
+    let idx;
+    if (wholeWord) {
+        const escaped = term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        const match = new RegExp('\\b' + escaped + '\\b', 'i').exec(text);
+        idx = match ? match.index : -1;
+    } else {
+        idx = text.toLowerCase().indexOf(term.toLowerCase());
+    }
     if (idx === -1) return '';
     const start = Math.max(0, idx - 40);
     const end = Math.min(text.length, idx + term.length + maxLen - 40);

@@ -26,6 +26,10 @@
 - ~~Web app WASM loading fails on file:// protocol (CORS blocks XHR)~~ **FIXED** — added inline base64 WASM fallback for file:// protocol
 - ~~New journal creation silently fails on web~~ **FIXED** — was caused by WASM CORS issue; added try-catch with error display and loading indicator
 
+## Notes
+
+- Dashboard ranked panels and Explorer results now use shared components (ResultGrid, RankedPanel, RecordViewer) from components.js — any rendering bugs in these areas should be checked against the component code, not the old inline implementations (which have been removed).
+
 ## Limitations
 
 - Web Crypto API requires HTTPS or localhost (no plain HTTP)

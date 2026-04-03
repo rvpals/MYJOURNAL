@@ -572,27 +572,41 @@ function getExplorerCellValue(entry, key) {
 
 function renderExplorerResults(entries) {
     const resultsEl = document.getElementById('explorer-results');
-    const headEl = document.getElementById('explorer-results-head');
-    const bodyEl = document.getElementById('explorer-results-body');
-
-    if (entries.length === 0) {
-        resultsEl.style.display = 'block';
-        headEl.innerHTML = '';
-        bodyEl.innerHTML = '<tr><td class="no-data" style="padding:1.5rem">No matching entries.</td></tr>';
-        return;
-    }
+    resultsEl.style.display = 'block';
 
     const cols = explorerSelectedCols.filter(k => EXPLORER_FIELDS.find(f => f.key === k));
-    const labels = cols.map(k => EXPLORER_FIELDS.find(f => f.key === k).label);
 
-    headEl.innerHTML = '<tr><th>#</th>' + labels.map(l => `<th>${escapeHtml(l)}</th>`).join('') + '<th></th></tr>';
+    ResultGrid.render({
+        data: entries,
+        containerId: 'explorer-results-grid',
+        maxHeight: 0,
+        emptyMessage: 'No matching entries.',
+        columns: cols.map(k => {
+            const f = EXPLORER_FIELDS.find(fd => fd.key === k);
+            return { key: k, label: f.label, formatter: (v, row) => escapeHtml(getExplorerCellValue(row, k)) };
+        }),
+        onRowClick: (row, idx) => _showExplorerRecord(idx)
+    });
+}
 
-    bodyEl.innerHTML = entries.map((e, i) => {
-        const cells = cols.map(k => `<td>${escapeHtml(getExplorerCellValue(e, k))}</td>`).join('');
-        return `<tr onclick="showExplorerDetail(${i})" class="explorer-row"><td class="explorer-row-num">${i + 1}</td>${cells}<td><button class="btn-small btn-danger-small" title="Delete journal entry" onclick="event.stopPropagation(); deleteExplorerEntry('${e.id}')">&times;</button></td></tr>`;
-    }).join('');
-
-    resultsEl.style.display = 'block';
+function _showExplorerRecord(idx) {
+    let fields;
+    if (explorerLastRawCols) {
+        fields = explorerLastRawCols.map(col => ({
+            key: col, label: col,
+            formatter: (v) => escapeHtml(v === null ? 'NULL' : String(v ?? ''))
+        }));
+    } else {
+        fields = EXPLORER_FIELDS.map(f => ({
+            key: f.key, label: f.label,
+            formatter: (v, row) => escapeHtml(getExplorerCellValueFull(row, f.key))
+        }));
+    }
+    RecordViewer.show({
+        data: explorerLastResults,
+        index: idx,
+        fields: fields
+    });
 }
 
 async function deleteExplorerEntry(id) {
@@ -603,54 +617,6 @@ async function deleteExplorerEntry(id) {
     runExplorerQuery();
 }
 
-function showExplorerDetail(idx) {
-    if (!explorerLastResults || idx < 0 || idx >= explorerLastResults.length) return;
-    const record = explorerLastResults[idx];
-
-    let rows;
-    if (explorerLastRawCols) {
-        // Raw SQL result — show all columns
-        rows = explorerLastRawCols.map(col => ({
-            label: col,
-            value: record[col] === null ? 'NULL' : String(record[col])
-        }));
-    } else {
-        // Entry-based result — show all EXPLORER_FIELDS with full values
-        rows = EXPLORER_FIELDS.map(f => ({
-            label: f.label,
-            value: getExplorerCellValueFull(record, f.key)
-        }));
-    }
-
-    const html = `<div class="explorer-detail-overlay" onclick="if(event.target===this)closeExplorerDetail()">
-        <div class="explorer-detail-panel">
-            <div class="explorer-detail-header">
-                <span>Record ${idx + 1} of ${explorerLastResults.length}</span>
-                <div class="explorer-detail-nav">
-                    ${idx > 0 ? `<button class="btn-small" onclick="event.stopPropagation(); showExplorerDetail(${idx - 1})">&larr; Prev</button>` : ''}
-                    ${idx < explorerLastResults.length - 1 ? `<button class="btn-small" onclick="event.stopPropagation(); showExplorerDetail(${idx + 1})">Next &rarr;</button>` : ''}
-                    <button class="btn-small" onclick="event.stopPropagation(); closeExplorerDetail()">&times;</button>
-                </div>
-            </div>
-            <div class="explorer-detail-body">
-                <table class="explorer-table explorer-detail-table">
-                    <tbody>
-                        ${rows.map(r => `<tr><td class="explorer-detail-label">${escapeHtml(r.label)}</td><td class="explorer-detail-value">${escapeHtml(r.value)}</td></tr>`).join('')}
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    </div>`;
-
-    // Remove any existing detail overlay
-    closeExplorerDetail();
-    document.body.insertAdjacentHTML('beforeend', html);
-}
-
-function closeExplorerDetail() {
-    const el = document.querySelector('.explorer-detail-overlay');
-    if (el) el.remove();
-}
 
 function getExplorerCellValueFull(entry, key) {
     switch (key) {
@@ -676,8 +642,6 @@ function getExplorerCellValueFull(entry, key) {
 
 function runRawSQL(sql) {
     const resultsEl = document.getElementById('explorer-results');
-    const headEl = document.getElementById('explorer-results-head');
-    const bodyEl = document.getElementById('explorer-results-body');
     const countEl = document.getElementById('explorer-result-count');
 
     try {
@@ -685,8 +649,7 @@ function runRawSQL(sql) {
         if (!results || results.length === 0 || !results[0].values || results[0].values.length === 0) {
             countEl.textContent = '0 results';
             resultsEl.style.display = 'block';
-            headEl.innerHTML = '';
-            bodyEl.innerHTML = '<tr><td class="no-data" style="padding:1.5rem">No results.</td></tr>';
+            ResultGrid.render({ data: [], containerId: 'explorer-results-grid', emptyMessage: 'No results.' });
             explorerLastResults = [];
             return;
         }
@@ -695,23 +658,28 @@ function runRawSQL(sql) {
         const rows = results[0].values;
         countEl.textContent = rows.length + ' result' + (rows.length !== 1 ? 's' : '');
 
-        headEl.innerHTML = '<tr><th>#</th>' + cols.map(c => `<th>${escapeHtml(c)}</th>`).join('') + '</tr>';
-        bodyEl.innerHTML = rows.map((row, i) => {
-            const cells = row.map(cell => `<td>${cell === null ? '<em>NULL</em>' : escapeHtml(truncateCell(String(cell)))}</td>`).join('');
-            return `<tr class="explorer-row" onclick="showExplorerDetail(${i})"><td class="explorer-row-num">${i + 1}</td>${cells}</tr>`;
-        }).join('');
-
-        resultsEl.style.display = 'block';
-
-        // Store for CSV export — convert to objects keyed by column name
+        // Convert to objects keyed by column name
         explorerLastResults = rows.map(row => {
             const obj = {};
             cols.forEach((c, idx) => obj[c] = row[idx]);
             return obj;
         });
-        // Override selected cols for CSV export
         explorerSelectedCols = cols.slice();
         explorerLastRawCols = cols.slice();
+
+        ResultGrid.render({
+            data: explorerLastResults,
+            containerId: 'explorer-results-grid',
+            maxHeight: 0,
+            emptyMessage: 'No results.',
+            columns: cols.map(c => ({
+                key: c, label: c,
+                formatter: (v) => v === null ? '<em>NULL</em>' : escapeHtml(truncateCell(String(v)))
+            })),
+            onRowClick: (row, idx) => _showExplorerRecord(idx)
+        });
+
+        resultsEl.style.display = 'block';
     } catch (e) {
         countEl.textContent = 'Error: ' + e.message;
         resultsEl.style.display = 'none';
@@ -757,5 +725,8 @@ function clearExplorerQuery() {
     if (sqlInput) sqlInput.value = '';
     document.getElementById('explorer-results').style.display = 'none';
     document.getElementById('explorer-result-count').textContent = '';
+    const gridEl = document.getElementById('explorer-results-grid');
+    if (gridEl) gridEl.innerHTML = '';
     explorerLastResults = [];
+    explorerLastRawCols = null;
 }

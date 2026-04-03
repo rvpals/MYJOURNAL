@@ -62,7 +62,7 @@
 - [x] SQL Explorer: CSV export, raw SQL for any table, record detail overlay, custom view loader
 - [x] Delete button tooltip in Explorer results
 
-### Current (uncommitted UI overhaul)
+### v1.4.0-dev (UI overhaul + component refactor)
 - [x] Native LoginActivity: journal selector, password, biometric login
 - [x] Native DashboardActivity: stats grid, pinned/recent entries, ranked panels
 - [x] Styled Android drawables: buttons (primary, secondary, accent, delete, biometric), inputs, cards, spinners, search/stat/entry/ranked backgrounds
@@ -71,6 +71,10 @@
 - [x] Web crypto.js: sync hooks for native SharedPreferences
 - [x] Web dashboard.js: getDashboardDataJSON() with streak for native dashboard
 - [x] Web db.js: journal list sync updates
+- [x] Reusable components.js: ResultGrid (data table), RankedPanel (ranked list/card with view toggle + show all), RecordViewer (detail overlay with prev/next)
+- [x] Dashboard: refactored ranked panels to use RankedPanel component, added whole-word search toggle, replaced inline search results with ResultGrid
+- [x] Explorer: replaced inline results table with ResultGrid, replaced detail overlay with RecordViewer
+- [x] Simplified index.html: removed hardcoded panel/table markup, replaced with component container divs
 
 ### Bug Fixes (2026-04-01)
 - [x] Fix: web login screen showing after native Android login — pass crypto keys via Intent extras, sync to localStorage in performAutoLogin()
