@@ -22,9 +22,9 @@
 
 - [ ] **Rich text editor** — Bold, italic, lists, links, image embed via Quill.js
 - [ ] **Image attachments** — Gallery picker, camera capture, image display in viewer, lightbox
-- [ ] **Categories** — Single-select dropdown, create new from form
-- [ ] **Tags** — Multi-select, auto-complete, create new from form
-- [ ] **People** — Multi-select, auto-complete
+- [x] **Categories** — Single-select dropdown, create new from form via quick-create panel (verified 2026-04-03)
+- [x] **Tags** — Multi-select, auto-complete, create new from form via quick-create panel (verified 2026-04-03)
+- [x] **People** — Multi-select, auto-complete, create new from form via quick-create panel (verified 2026-04-03)
 - [ ] **Location** — Place name input, geocoding search (Photon/Nominatim/Google), GPS coordinates
 - [ ] **Weather** — Fetch current weather, display in entry form and viewer
 - [ ] **Date/Time** — Manual entry, validation (strict YYYY-MM-DD)
@@ -32,9 +32,9 @@
 
 ## Entry List & Viewer
 
-- [ ] **List view** — Card mode and list/table mode toggle
-- [ ] **Search** — Debounced search across title, content, tags, categories
-- [ ] **Filters** — Date range, category, tag filters
+- [x] **List view** — Card mode and list/table mode toggle, ResultGrid component for table view (verified 2026-04-03)
+- [x] **Search** — Debounced search across title, content, tags, categories, highlight in ResultGrid (verified 2026-04-03)
+- [x] **Filters** — Date range, category, tag filters in CollapsiblePanel, Clear All button (verified 2026-04-03)
 - [ ] **Pagination** — 10/20/50/100/all entries per page
 - [ ] **Multi-select** — Batch delete mode
 - [ ] **Entry viewer** — Read-only view with all fields, prev/next navigation

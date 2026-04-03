@@ -58,9 +58,9 @@
 - Time: text input, HH:MM format
 - Title: text input
 - Content: dual-mode — Quill.js rich text editor OR plain textarea toggle
-- Categories: single-select dropdown from managed list, option to create new
-- Tags: multi-select with auto-complete from managed list, create new inline
-- People: multi-select with auto-complete from managed list
+- Categories: single-select dropdown from managed list, "+ New" quick-create panel to add inline
+- Tags: multi-select with auto-complete from managed list, "+ New" quick-create panel to add inline
+- People: multi-select with auto-complete from managed list, "+ New" quick-create panel (first/last name + description) to add inline
 - Place name: text input with geocoding search
 - Locations: array of {lat, lng, address} from geocoding results
 - Weather: fetch current weather button (Open-Meteo API), displays temp + condition
@@ -69,9 +69,9 @@
 
 ### Entry List
 - Card view: entry cards with date, title, category badge, tag chips, content preview
-- List/table view: compact rows with selected columns
-- Search: debounced (300ms), searches title, content, tags, categories
-- Filters: date range picker, category dropdown, tag dropdown
+- List/table view: ResultGrid component with dynamic columns, search highlighting, click-to-view
+- Search: debounced (300ms), searches title, content, tags, categories, highlights matches in list view
+- Filters: date range picker, category dropdown, tag dropdown — wrapped in CollapsiblePanel with pin support; "Clear All" button in criteria bar
 - Pagination: 10, 20, 50, 100, or all entries per page
 - Sort: by date (asc/desc), title, created date, updated date
 - Multi-select mode: checkbox per entry, batch delete with confirmation
@@ -258,9 +258,10 @@
 
 ## 11. Reusable UI Components (components.js)
 
-- **ResultGrid** — scrollable data table with configurable columns, row numbers, click handlers, highlight term support, and max-height scroll. Used in: dashboard search, SQL explorer results.
+- **ResultGrid** — scrollable data table with configurable columns, row numbers, click handlers, highlight term support, and max-height scroll. Used in: dashboard search, SQL explorer results, entry list (table view).
 - **RankedPanel** — self-contained ranked list/card panel with built-in list/card view toggle, show all/top N, localStorage-persisted view mode, click-to-filter. Used in: dashboard ranked panels (tags, categories, places, people).
 - **RecordViewer** — full-screen detail overlay for a single record with prev/next navigation, field formatters, highlight support. Used in: dashboard search row click, SQL explorer row click.
+- **CollapsiblePanel** — reusable collapsible container with header toggle and pin-to-expand button. Pin state persisted to localStorage. Used in: entry list search & filter controls.
 
 ## 12. File Downloads
 

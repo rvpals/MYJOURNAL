@@ -28,7 +28,8 @@
 
 ## Notes
 
-- Dashboard ranked panels and Explorer results now use shared components (ResultGrid, RankedPanel, RecordViewer) from components.js — any rendering bugs in these areas should be checked against the component code, not the old inline implementations (which have been removed).
+- Dashboard ranked panels, Explorer results, and Entry list table view now use shared components (ResultGrid, RankedPanel, RecordViewer, CollapsiblePanel) from components.js — any rendering bugs in these areas should be checked against the component code, not the old inline implementations (which have been removed).
+- Old filter-toggle-header / filter-fields-body CSS removed from both style.css and style-android.css — entry list filters now use CollapsiblePanel.
 
 ## Limitations
 

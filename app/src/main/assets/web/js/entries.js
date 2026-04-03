@@ -109,6 +109,7 @@ async function deleteEntry() {
 // ========== Entry List ==========
 
 function refreshEntryList() {
+    renderSearchFilterPanel();
     populateFilterDropdowns();
     renderViewsBar();
     // Apply default entry view if no view is already active
@@ -125,26 +126,34 @@ function refreshEntryList() {
     if (pageSel) pageSel.value = currentPageSize;
     updateViewModeButton();
     updateColToggleForViewMode();
-    // Collapse filter fields by default on Android
-    if (document.body.classList.contains('android')) {
-        const header = document.querySelector('.filter-toggle-header');
-        const body = document.getElementById('filter-fields-body');
-        if (header && body) {
-            header.classList.add('collapsed');
-            body.classList.add('collapsed');
-        }
-    }
     currentPageNum = 1;
     filterEntries();
 }
 
-function toggleFilterFields() {
-    const header = document.querySelector('.filter-toggle-header');
-    const body = document.getElementById('filter-fields-body');
-    if (!header || !body) return;
-    const collapsed = !body.classList.contains('collapsed');
-    body.classList.toggle('collapsed', collapsed);
-    header.classList.toggle('collapsed', collapsed);
+function renderSearchFilterPanel() {
+    CollapsiblePanel.render({
+        id: 'entry-search-filter',
+        containerId: 'search-filter-panel',
+        title: 'Search & Filters',
+        icon: '&#x1F50D;',
+        bodyHTML: `<div class="search-filter-inner">
+            <div class="search-input-wrap">
+                <input type="text" id="search-input" placeholder="Search entries..." oninput="onSearchInput()">
+                <div id="search-progress" class="search-progress"></div>
+            </div>
+            <div class="filter-fields-row">
+                <select id="filter-category" onchange="filterEntries()">
+                    <option value="">All Categories</option>
+                </select>
+                <select id="filter-tag" onchange="filterEntries()">
+                    <option value="">All Tags</option>
+                </select>
+                <input type="date" id="filter-date-from" onchange="filterEntries()" title="From date">
+                <input type="date" id="filter-date-to" onchange="filterEntries()" title="To date">
+                <button class="btn-small" onclick="clearFilters()">Clear</button>
+            </div>
+        </div>`
+    });
 }
 
 function toggleViewMode() {
@@ -294,7 +303,7 @@ function updateFilterCriteriaBox(count, filters) {
     }
 
     box.style.display = 'flex';
-    box.innerHTML = `<span class="fc-count">${count} ${count === 1 ? 'entry' : 'entries'}</span><span class="fc-sep">|</span>${chips.join('')}`;
+    box.innerHTML = `<span class="fc-count">${count} ${count === 1 ? 'entry' : 'entries'}</span><span class="fc-sep">|</span>${chips.join('')}<button class="btn-small fc-clear-btn" onclick="clearFilters()" title="Clear all filters">&times; Clear All</button>`;
 }
 
 function updateEntriesPageTitle(pageCount, totalCount) {
@@ -326,7 +335,7 @@ function renderEntryList(entries, startOffset) {
     const show = (key) => fields[key] !== false;
 
     if (entryViewMode === 'list') {
-        container.innerHTML = renderEntryTable(entries, offset, show);
+        renderEntryTable(entries, offset, show);
     } else {
         container.innerHTML = entries.map((e, idx) => renderSingleEntryCard(e, offset + idx + 1, show)).join('');
     }
@@ -334,41 +343,71 @@ function renderEntryList(entries, startOffset) {
     updateSelectCount();
 }
 
-function renderEntryTable(entries, offset, show) {
-    let html = '<table class="entry-table"><thead><tr>';
-    html += '<th class="et-num">#</th>';
-    if (show('date')) html += '<th>Date</th>';
-    if (show('time')) html += '<th>Time</th>';
-    if (show('title')) html += '<th>Title</th>';
-    if (show('content')) html += '<th>Content</th>';
-    if (show('categories')) html += '<th>Categories</th>';
-    if (show('tags')) html += '<th>Tags</th>';
-    if (show('places')) html += '<th>Place</th>';
-    if (show('weather')) html += '<th>Weather</th>';
-    html += '<th class="et-actions"></th>';
-    html += '</tr></thead><tbody>';
-
-    entries.forEach((e, idx) => {
-        const num = offset + idx + 1;
-        const checked = selectedEntryIds.has(e.id) ? ' class="et-selected"' : '';
-        const clickAction = selectMode ? `toggleEntrySelect('${e.id}')` : `viewEntry('${e.id}')`;
-
-        html += `<tr${checked} onclick="${clickAction}" style="cursor:pointer">`;
-        html += `<td class="et-num">${num}</td>`;
-        if (show('date')) html += `<td class="et-date">${formatDate(e.date)}</td>`;
-        if (show('time')) html += `<td class="et-time">${e.time ? formatTime(e.time) : ''}</td>`;
-        if (show('title')) html += `<td class="et-title">${escapeHtml(e.title)}</td>`;
-        if (show('content')) html += `<td class="et-content">${escapeHtml((e.content || '').substring(0, 80))}</td>`;
-        if (show('categories')) html += `<td class="et-tags">${(e.categories || []).map(c => `<span class="tag-item tag-clickable"${getItemColorStyle('category', c)} onclick="filterByCategory(event, '${escapeHtml(c)}')">${getIconHtml('category', c)}${escapeHtml(c)}</span>`).join(' ')}</td>`;
-        if (show('tags')) html += `<td class="et-tags">${(e.tags || []).map(t => `<span class="tag-item tag-clickable"${getItemColorStyle('tag', t)} onclick="filterByTag(event, '${escapeHtml(t)}')">${getIconHtml('tag', t)}${escapeHtml(t)}</span>`).join(' ')}</td>`;
-        if (show('places')) html += `<td class="et-place">${escapeHtml(e.placeName || '')}</td>`;
-        if (show('weather')) html += `<td class="et-weather">${e.weather ? escapeHtml(Weather.formatWeather(e.weather)) : ''}</td>`;
-        html += `<td class="et-actions"><button class="entry-card-delete" style="opacity:1;position:static;" onclick="event.stopPropagation(); deleteEntryFromList('${e.id}')" title="Delete entry">&#x1F5D1; DEL</button></td>`;
-        html += '</tr>';
+function _buildEntryListColumns(show) {
+    const cols = [];
+    if (show('date')) cols.push({
+        key: 'date', label: 'Date',
+        formatter: (v) => formatDate(v)
     });
+    if (show('time')) cols.push({
+        key: 'time', label: 'Time',
+        formatter: (v) => v ? formatTime(v) : ''
+    });
+    if (show('title')) cols.push({
+        key: 'title', label: 'Title',
+        formatter: (v) => escapeHtml(v || '')
+    });
+    if (show('content')) cols.push({
+        key: 'content', label: 'Content',
+        formatter: (v) => escapeHtml((v || '').substring(0, 80))
+    });
+    if (show('categories')) cols.push({
+        key: 'categories', label: 'Categories', noHighlight: true,
+        formatter: (v) => (v || []).map(c =>
+            `<span class="tag-item tag-clickable"${getItemColorStyle('category', c)} onclick="event.stopPropagation(); filterByCategory(event, '${escapeHtml(c)}')">${getIconHtml('category', c)}${escapeHtml(c)}</span>`
+        ).join(' ')
+    });
+    if (show('tags')) cols.push({
+        key: 'tags', label: 'Tags', noHighlight: true,
+        formatter: (v) => (v || []).map(t =>
+            `<span class="tag-item tag-clickable"${getItemColorStyle('tag', t)} onclick="event.stopPropagation(); filterByTag(event, '${escapeHtml(t)}')">${getIconHtml('tag', t)}${escapeHtml(t)}</span>`
+        ).join(' ')
+    });
+    if (show('places')) cols.push({
+        key: 'placeName', label: 'Place',
+        formatter: (v) => escapeHtml(v || '')
+    });
+    if (show('weather')) cols.push({
+        key: 'weather', label: 'Weather',
+        formatter: (v) => v ? escapeHtml(Weather.formatWeather(v)) : ''
+    });
+    // Delete action column
+    cols.push({
+        key: '_action', label: '', noHighlight: true,
+        formatter: (v, row) => `<button class="entry-card-delete" style="opacity:1;position:static;" onclick="event.stopPropagation(); deleteEntryFromList('${row.id}')" title="Delete entry">&#x1F5D1; DEL</button>`
+    });
+    return cols;
+}
 
-    html += '</tbody></table>';
-    return html;
+function renderEntryTable(entries, offset, show) {
+    const searchTerm = (document.getElementById('search-input') || {}).value || '';
+
+    ResultGrid.render({
+        data: entries,
+        containerId: 'entries-container',
+        columns: _buildEntryListColumns(show),
+        rowNumOffset: offset,
+        maxHeight: 0,
+        emptyMessage: 'No entries found.',
+        highlightTerm: searchTerm,
+        onRowClick: (row) => {
+            if (selectMode) {
+                toggleEntrySelect(row.id);
+            } else {
+                viewEntry(row.id);
+            }
+        }
+    });
 }
 
 function renderGroupedEntryList(entries, groupByField) {

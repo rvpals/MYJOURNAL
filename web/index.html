@@ -245,14 +245,30 @@
                 <fieldset class="form-fieldset">
                     <legend>Misc</legend>
                     <div class="form-group">
-                        <label for="entry-category">Category</label>
+                        <label class="form-label-row">
+                            <span>Category</span>
+                            <button type="button" class="btn-small btn-inline-new" onclick="toggleQuickCreate('category')">+ New</button>
+                        </label>
+                        <div id="quick-create-category" class="quick-create-panel" style="display:none">
+                            <input type="text" id="quick-new-category" placeholder="New category name">
+                            <button type="button" class="btn-small btn-primary" onclick="quickAddCategory()">Add</button>
+                            <button type="button" class="btn-small" onclick="toggleQuickCreate('category')">Cancel</button>
+                        </div>
                         <div id="category-select" class="multi-select">
                             <!-- populated dynamically -->
                         </div>
                     </div>
 
                     <div class="form-group">
-                        <label for="entry-tags">Tags</label>
+                        <label class="form-label-row">
+                            <span>Tags</span>
+                            <button type="button" class="btn-small btn-inline-new" onclick="toggleQuickCreate('tag')">+ New</button>
+                        </label>
+                        <div id="quick-create-tag" class="quick-create-panel" style="display:none">
+                            <input type="text" id="quick-new-tag" placeholder="New tag name">
+                            <button type="button" class="btn-small btn-primary" onclick="quickAddTag()">Add</button>
+                            <button type="button" class="btn-small" onclick="toggleQuickCreate('tag')">Cancel</button>
+                        </div>
                         <div class="tag-input-container">
                             <div id="tag-list" class="tag-list"></div>
                             <input type="text" id="entry-tags-input" placeholder="Type a tag and press Enter" autocomplete="off">
@@ -261,7 +277,21 @@
                     </div>
 
                     <div class="form-group">
-                        <label>People</label>
+                        <label class="form-label-row">
+                            <span>People</span>
+                            <button type="button" class="btn-small btn-inline-new" onclick="toggleQuickCreate('person')">+ New</button>
+                        </label>
+                        <div id="quick-create-person" class="quick-create-panel" style="display:none">
+                            <div class="quick-create-row">
+                                <input type="text" id="quick-new-person-first" placeholder="First name">
+                                <input type="text" id="quick-new-person-last" placeholder="Last name">
+                            </div>
+                            <input type="text" id="quick-new-person-desc" placeholder="Description (optional)">
+                            <div class="quick-create-actions">
+                                <button type="button" class="btn-small btn-primary" onclick="quickAddPerson()">Add</button>
+                                <button type="button" class="btn-small" onclick="toggleQuickCreate('person')">Cancel</button>
+                            </div>
+                        </div>
                         <div id="selected-people-list" class="tag-list people-tag-list"></div>
                         <div id="people-select" class="multi-select people-multi-select">
                             <!-- populated dynamically -->
@@ -339,25 +369,8 @@
                     <button class="btn-secondary" onclick="hideViewBuilder()">Cancel</button>
                 </div>
             </div>
-            <div class="list-toolbar">
-                <div class="search-input-wrap">
-                    <input type="text" id="search-input" placeholder="Search entries..." oninput="onSearchInput()">
-                    <div id="search-progress" class="search-progress"></div>
-                </div>
-                <div class="filter-toggle-header" onclick="toggleFilterFields()">
-                    <span>Filters</span><span class="collapse-arrow">&#9660;</span>
-                </div>
-                <div id="filter-fields-body" class="filter-fields-body">
-                    <select id="filter-category" onchange="filterEntries()">
-                        <option value="">All Categories</option>
-                    </select>
-                    <select id="filter-tag" onchange="filterEntries()">
-                        <option value="">All Tags</option>
-                    </select>
-                    <input type="date" id="filter-date-from" onchange="filterEntries()" title="From date">
-                    <input type="date" id="filter-date-to" onchange="filterEntries()" title="To date">
-                    <button class="btn-small" onclick="clearFilters()">Clear</button>
-                </div>
+            <div id="search-filter-panel"></div>
+            <div class="list-toolbar-row">
                 <button class="btn-small" id="btn-select-mode" onclick="toggleSelectMode()">Select</button>
                 <button class="btn-small" id="btn-view-mode" onclick="toggleViewMode()" title="Toggle Card/List view">&#x1F4CB; Card</button>
                 <select id="page-size-select" class="page-size-select" onchange="onPageSizeChange()" title="Records per page">

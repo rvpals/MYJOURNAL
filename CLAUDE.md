@@ -34,7 +34,7 @@ MYJOURNAL/
 │   ├── js/
 │   │   ├── app.js          # Main controller: login, navigation, theme, Quill editor (~1,315 lines)
 │   │   ├── app_info.js     # Parses app_info.xml → APP_INFO + APP_CHANGELOG objects
-│   │   ├── components.js   # Reusable UI: ResultGrid, RankedPanel, RecordViewer (~345 lines)
+│   │   ├── components.js   # Reusable UI: ResultGrid, RankedPanel, RecordViewer, CollapsiblePanel (~467 lines)
 │   │   ├── crypto.js       # PBKDF2 + AES-256-GCM via Web Crypto API (~175 lines)
 │   │   ├── db.js           # sql.js SQLite abstraction, IndexedDB persistence, CRUD (~834 lines)
 │   │   ├── entries.js      # Entry form, list view, search, filter, pagination (~1,097 lines)

@@ -343,3 +343,125 @@ const RecordViewer = {
         if (el) el.remove();
     }
 };
+
+
+/**
+ * CollapsiblePanel — reusable collapsible container with pin-to-expand support.
+ *
+ * Collapsed by default. Click header to toggle. Pin button keeps it always expanded.
+ * Pin state is persisted to localStorage.
+ */
+const CollapsiblePanel = {
+    _storageKey: 'cp_pinned',
+
+    _getPinned() {
+        try { return JSON.parse(localStorage.getItem(this._storageKey) || '[]'); }
+        catch { return []; }
+    },
+
+    _savePinned(arr) {
+        localStorage.setItem(this._storageKey, JSON.stringify(arr));
+    },
+
+    /**
+     * Render a collapsible panel and inject into a container element.
+     *
+     * @param {Object} opts
+     * @param {string}  opts.id           — unique panel id (used for pin persistence)
+     * @param {string}  opts.containerId  — id of wrapper element (innerHTML replaced)
+     * @param {string}  opts.title        — panel heading text
+     * @param {string}  [opts.icon]       — emoji/icon before title
+     * @param {string}  opts.bodyHTML     — inner HTML content of the panel body
+     * @param {boolean} [opts.collapsed]  — override initial state (default: true unless pinned)
+     */
+    render(opts) {
+        const { id, containerId, title, icon = '', bodyHTML = '' } = opts;
+        const el = document.getElementById(containerId);
+        if (!el) return;
+
+        const pinned = this._getPinned();
+        const isPinned = pinned.includes(id);
+        const collapsed = opts.collapsed !== undefined ? opts.collapsed : !isPinned;
+
+        const colClass = collapsed ? ' collapsed' : '';
+        const pinClass = isPinned ? ' pinned' : '';
+        const pinTitle = isPinned ? 'Unpin (stay expanded)' : 'Pin (stay expanded)';
+
+        el.innerHTML = `<div class="cp-section" data-cp-id="${id}">
+            <span class="cp-pin${pinClass}" onclick="CollapsiblePanel._togglePin('${id}')" title="${pinTitle}">&#128204;</span>
+            <h3 class="cp-header${colClass}" onclick="CollapsiblePanel._toggle('${id}')">
+                ${icon ? `<span class="cp-icon">${icon}</span>` : ''}${escapeHtml(title)}<span class="collapse-arrow">&#9660;</span>
+            </h3>
+            <div class="cp-body${colClass}">${bodyHTML}</div>
+        </div>`;
+    },
+
+    /**
+     * Update only the body content without re-rendering the full panel.
+     * Preserves collapsed/pinned state.
+     */
+    updateBody(id, bodyHTML) {
+        const section = document.querySelector(`.cp-section[data-cp-id="${id}"]`);
+        if (!section) return;
+        const body = section.querySelector('.cp-body');
+        if (body) body.innerHTML = bodyHTML;
+    },
+
+    _getSection(id) {
+        return document.querySelector(`.cp-section[data-cp-id="${id}"]`);
+    },
+
+    _toggle(id) {
+        const section = this._getSection(id);
+        if (!section) return;
+        const header = section.querySelector('.cp-header');
+        const body = section.querySelector('.cp-body');
+        const collapsed = !body.classList.contains('collapsed');
+        header.classList.toggle('collapsed', collapsed);
+        body.classList.toggle('collapsed', collapsed);
+    },
+
+    _togglePin(id) {
+        let pinned = this._getPinned();
+        const isPinned = pinned.includes(id);
+        if (isPinned) {
+            pinned = pinned.filter(k => k !== id);
+        } else {
+            pinned.push(id);
+        }
+        this._savePinned(pinned);
+
+        const section = this._getSection(id);
+        if (!section) return;
+        const pin = section.querySelector('.cp-pin');
+        pin.classList.toggle('pinned', !isPinned);
+        pin.title = !isPinned ? 'Unpin (stay expanded)' : 'Pin (stay expanded)';
+
+        // Expand when pinning
+        if (!isPinned) {
+            section.querySelector('.cp-header').classList.remove('collapsed');
+            section.querySelector('.cp-body').classList.remove('collapsed');
+        }
+    },
+
+    /** Check if a panel is currently pinned. */
+    isPinned(id) {
+        return this._getPinned().includes(id);
+    },
+
+    /** Expand a panel programmatically. */
+    expand(id) {
+        const section = this._getSection(id);
+        if (!section) return;
+        section.querySelector('.cp-header').classList.remove('collapsed');
+        section.querySelector('.cp-body').classList.remove('collapsed');
+    },
+
+    /** Collapse a panel programmatically. */
+    collapse(id) {
+        const section = this._getSection(id);
+        if (!section) return;
+        section.querySelector('.cp-header').classList.add('collapsed');
+        section.querySelector('.cp-body').classList.add('collapsed');
+    }
+};

@@ -75,6 +75,12 @@
 - [x] Dashboard: refactored ranked panels to use RankedPanel component, added whole-word search toggle, replaced inline search results with ResultGrid
 - [x] Explorer: replaced inline results table with ResultGrid, replaced detail overlay with RecordViewer
 - [x] Simplified index.html: removed hardcoded panel/table markup, replaced with component container divs
+- [x] CollapsiblePanel component: reusable collapsible container with pin-to-expand, localStorage persistence
+- [x] Entry list: search & filter controls wrapped in CollapsiblePanel, old filter-toggle removed
+- [x] Entry list: table/list view replaced with ResultGrid component (search term highlighting, dynamic columns)
+- [x] Entry list: "Clear All" button in filter criteria bar when filters are active
+- [x] Entry form: quick-create buttons (+ New) for Category, Tags, and People with inline create panels
+- [x] Removed old filter-toggle-header/filter-fields-body CSS from style.css and style-android.css
 
 ### Bug Fixes (2026-04-01)
 - [x] Fix: web login screen showing after native Android login — pass crypto keys via Intent extras, sync to localStorage in performAutoLogin()

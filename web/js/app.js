@@ -661,6 +661,90 @@ function removeEntryPerson(first, last) {
     }
 }
 
+// ========== Quick Create (from entry form) ==========
+
+function toggleQuickCreate(type) {
+    const panel = document.getElementById('quick-create-' + type);
+    if (!panel) return;
+    const visible = panel.style.display !== 'none';
+    panel.style.display = visible ? 'none' : 'flex';
+    if (!visible) {
+        // Focus the first input
+        const input = panel.querySelector('input[type="text"]');
+        if (input) { input.value = ''; input.focus(); }
+    }
+}
+
+async function quickAddCategory() {
+    const input = document.getElementById('quick-new-category');
+    const name = input.value.trim();
+    if (!name) return;
+
+    const categories = DB.getCategories();
+    if (categories.includes(name)) {
+        alert('Category already exists.');
+        return;
+    }
+
+    categories.push(name);
+    await DB.setCategories(categories);
+    input.value = '';
+    document.getElementById('quick-create-category').style.display = 'none';
+    populateCategorySelect();
+    // Auto-select the new category
+    const cb = document.querySelector(`#category-select input[value="${CSS.escape(name)}"]`);
+    if (cb) cb.checked = true;
+}
+
+async function quickAddTag() {
+    const input = document.getElementById('quick-new-tag');
+    const name = input.value.trim();
+    if (!name) return;
+
+    if (currentEntryTags.includes(name)) {
+        alert('Tag already added to this entry.');
+        return;
+    }
+
+    // Add to the entry's tag list
+    currentEntryTags.push(name);
+    renderTags();
+    input.value = '';
+    document.getElementById('quick-create-tag').style.display = 'none';
+}
+
+async function quickAddPerson() {
+    const firstInput = document.getElementById('quick-new-person-first');
+    const lastInput = document.getElementById('quick-new-person-last');
+    const descInput = document.getElementById('quick-new-person-desc');
+    const firstName = firstInput.value.trim();
+    const lastName = lastInput.value.trim();
+    const description = descInput.value.trim();
+
+    if (!firstName || !lastName) {
+        alert('First name and last name are required.');
+        return;
+    }
+
+    const people = DB.getPeople();
+    const exists = people.some(p => p.firstName === firstName && p.lastName === lastName);
+    if (!exists) {
+        await DB.addPerson(firstName, lastName, description);
+    }
+
+    // Auto-select the person for this entry
+    if (!currentEntryPeople.some(p => p.firstName === firstName && p.lastName === lastName)) {
+        currentEntryPeople.push({ firstName, lastName });
+    }
+
+    firstInput.value = '';
+    lastInput.value = '';
+    descInput.value = '';
+    document.getElementById('quick-create-person').style.display = 'none';
+    populatePeopleSelect();
+    renderSelectedPeople();
+}
+
 // ========== Locations ==========
 
 function migrateLocations(entry) {

@@ -75,6 +75,28 @@ Full-screen overlay showing all fields of a single record with prev/next navigat
 
 ---
 
+### CollapsiblePanel
+Reusable collapsible container with header toggle and pin-to-expand. Collapsed by default; pinned panels stay expanded (persisted to localStorage).
+
+**Usage:** `CollapsiblePanel.render(opts)`
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `id` | string | — | Unique panel id (pin state key) |
+| `containerId` | string | — | Wrapper element id (innerHTML replaced) |
+| `title` | string | — | Panel heading text |
+| `icon` | string | `''` | Emoji/icon before title |
+| `bodyHTML` | string | `''` | Inner HTML content |
+| `collapsed` | boolean | auto | Override initial state (default: true unless pinned) |
+
+**Static methods:** `CollapsiblePanel.updateBody(id, html)`, `.expand(id)`, `.collapse(id)`, `.isPinned(id)`
+
+**CSS classes:** `cp-section`, `cp-header`, `cp-icon`, `cp-body`, `cp-pin`
+
+**Used in:** Entry list search & filter controls
+
+---
+
 ## Planned
 
 ### SearchInput
