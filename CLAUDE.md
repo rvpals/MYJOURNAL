@@ -1,3 +1,9 @@
+---
+tags: [architecture, project-structure, tech-stack, database-schema, AndroidBridge, build, conventions, themes, encryption]
+related_files: [REQUIREMENT.md, COMPONENTS.md, README.md]
+summary: "Project architecture reference — directory structure, tech stack, database schema, AndroidBridge API, build instructions, and coding conventions."
+---
+
 # MYJOURNAL — Project Guide
 
 ## Overview
@@ -86,7 +92,7 @@ The `copyWebAssets` Gradle task copies `/web` → `app/src/main/assets/web/` bef
 **entries** — id, date, time, title, content, richContent, categories (JSON), tags (JSON), people (JSON), placeName, locations (JSON), weather (JSON), pinned, dtCreated, dtUpdated
 **images** — id, entryId, name, data (base64), thumb, sortOrder
 **categories** — name (PK)
-**icons** — type + name (composite PK), data (SVG/emoji)
+**icons** — type + name (composite PK), data (PNG data URL). Types: category, tag, person (64x64), category_hd, tag_hd, person_hd (128x128 for image buttons)
 **people** — firstName + lastName (composite PK), description
 **settings** — key (PK), value
 **schema_version** — version (INT)

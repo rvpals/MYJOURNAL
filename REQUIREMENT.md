@@ -1,3 +1,9 @@
+---
+tags: [requirements, features, authentication, biometric, entries, dashboard, views, explorer, reports, settings, weather, Android, components, downloads]
+related_files: [CLAUDE.md, COMPONENTS.md, TODO.md]
+summary: "Complete functional requirements for all 12 feature areas — authentication, storage, entries, dashboard, views, explorer, reports, settings, weather, Android platform, components, downloads."
+---
+
 # REQUIREMENTS — MYJOURNAL
 
 ## 1. Authentication & Security
@@ -205,7 +211,11 @@
 - Tags: add, rename, delete, assign color (color picker with swatches)
 - "Use category/tag colors" toggles — colors applied in entry list and dashboard
 - People: add, edit, delete (first name, last name, description)
-- Icons: custom SVG/emoji icons for categories and tags
+- Icons: custom image icons for categories, tags, and people
+  - Standard: 64x64 PNG data URL for chips and list views
+  - HD: 128x128 PNG data URL for full-image 3D buttons (stored as `type_hd` in icons table)
+  - Upload auto-generates both sizes if source image >=96px; small sources get standard only
+  - 3-tier fallback in RankedPanel card view: HD image button → standard icon + text → 2-letter text abbreviation
 - Entry field visibility toggles (show/hide fields in entry form)
 
 ### Data Management

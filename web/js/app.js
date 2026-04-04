@@ -1398,6 +1398,10 @@ function getIconHtml(type, name) {
     return `<img src="${data}" class="tag-icon" alt="">`;
 }
 
+function getIconHD(type, name) {
+    return DB.getIcon(type + '_hd', name);
+}
+
 function getItemColorStyle(type, name) {
     if (type === 'category' && typeof isUseCategoryColor === 'function' && isUseCategoryColor()) {
         const colors = typeof getCategoryColors === 'function' ? getCategoryColors() : {};

@@ -1,3 +1,9 @@
+---
+tags: [readme, overview, GitHub]
+related_files: [CLAUDE.md]
+summary: "Minimal public-facing project overview for GitHub. Prefer CLAUDE.md for detailed architecture."
+---
+
 # MYJOURNAL - Android Journal App
 
 Personal journal and activity log Android app with encrypted local storage.

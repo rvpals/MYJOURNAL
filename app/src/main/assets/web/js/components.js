@@ -188,6 +188,15 @@ const RankedPanel = {
                     bodyHtml = '<div class="no-data">No data yet</div>';
                 } else if (vm === 'card') {
                     bodyHtml = '<div class="ranked-button-grid">' + items.map(([name, count]) => {
+                        // 3-tier fallback: HD image button → small icon + text → text-only
+                        const hdData = typeof getIconHD === 'function' ? getIconHD(filterType, name) : null;
+                        if (hdData) {
+                            const clickAttr = onItemClick ? ` onclick="RankedPanel._itemClick('${panelId}', '${escapeHtml(name)}')"` : '';
+                            return `<div class="ranked-btn ranked-btn-img"${clickAttr} title="${escapeHtml(name)} (${count})">
+                                <img src="${hdData}" class="ranked-btn-img-face" alt="${escapeHtml(name)}">
+                                <span class="ranked-btn-img-count">${count}</span>
+                            </div>`;
+                        }
                         const iconFn = getIcon || (typeof getIconHtml === 'function' ? (n) => {
                             const data = DB.getIcon(filterType, n);
                             return data ? `<img src="${data}" class="ranked-btn-icon" alt="">` : `<span class="ranked-btn-text-icon">${escapeHtml(n.substring(0, 2))}</span>`;

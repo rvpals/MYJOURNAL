@@ -1,3 +1,9 @@
+---
+tags: [testing, checklist, QA, verification, regression, manual-test, critical-path]
+related_files: [ISSUES.md, TODO.md, REQUIREMENT.md]
+summary: "Feature-by-feature test checklist with pass/fail status covering critical path, all UI areas, Android activities, and cross-platform."
+---
+
 # TO TEST — MYJOURNAL
 
 ## Critical Path (must work)
@@ -50,7 +56,7 @@
 - [ ] **Dashboard nav grid** — 2x2 buttons (New Entry, Entry List, Report, SQL Explorer) navigate correctly, 3D styling
 - [ ] **Dashboard search** — Live search results, whole-word toggle, ResultGrid rendering
 - [ ] **Quick actions** — Pinned custom views on dashboard
-- [ ] **Ranked panels** — RankedPanel component: list/card view toggle, show all/top 10, click to filter
+- [ ] **Ranked panels** — RankedPanel component: list/card view toggle, show all/top 10, click to filter, HD image button rendering
 
 ## Custom Views
 
@@ -88,7 +94,8 @@
 - [ ] **Categories editor** — Add, rename, delete, color picker
 - [ ] **Tags editor** — Add, rename, delete, color picker
 - [ ] **People editor** — Add, edit, delete (first/last name, description)
-- [ ] **Icons editor** — Custom icons for categories/tags
+- [ ] **Icons editor** — Custom icons for categories/tags, HD image upload (128x128 for image buttons)
+- [ ] **HD icon buttons** — Upload large image (>=96px), verify 3D image button renders in dashboard ranked panels, verify fallback to text when no HD icon
 - [ ] **Pre-fill templates** — Create, edit, delete, apply to new entry
 - [ ] **Report templates** — CRUD for HTML templates
 - [ ] **Password change** — Old password verification, re-encrypt database

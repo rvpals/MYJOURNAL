@@ -1661,6 +1661,56 @@ mark.search-highlight {
     line-height: 1.3;
 }
 
+/* Ranked Button — HD Image Variant */
+
+.ranked-btn.ranked-btn-img {
+    padding: 0;
+    overflow: hidden;
+    min-width: 5rem;
+    max-width: 6rem;
+    aspect-ratio: 1;
+    border: 2px solid var(--border-color);
+    border-bottom: 4px solid rgba(0,0,0,0.2);
+    border-radius: var(--radius);
+    background: linear-gradient(180deg, rgba(255,255,255,0.1) 0%, rgba(0,0,0,0.08) 100%), var(--bg-card);
+    box-shadow: 0 3px 8px rgba(0,0,0,0.18), 0 1px 3px rgba(0,0,0,0.12), inset 0 1px 0 rgba(255,255,255,0.1);
+}
+
+.ranked-btn.ranked-btn-img:hover {
+    border-color: var(--accent);
+    transform: translateY(-3px);
+    box-shadow: 0 6px 16px rgba(0,0,0,0.25), 0 2px 6px rgba(0,0,0,0.15), inset 0 1px 0 rgba(255,255,255,0.15);
+}
+
+.ranked-btn.ranked-btn-img:active {
+    transform: translateY(1px);
+    border-bottom-width: 2px;
+    box-shadow: inset 0 2px 6px rgba(0,0,0,0.25);
+}
+
+.ranked-btn-img-face {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: calc(var(--radius) - 2px);
+    display: block;
+}
+
+.ranked-btn-img-count {
+    position: absolute;
+    top: -4px;
+    right: -4px;
+    background: var(--accent);
+    color: #fff;
+    font-size: 0.6rem;
+    font-weight: 700;
+    padding: 1px 5px;
+    border-radius: 8px;
+    line-height: 1.3;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+    z-index: 1;
+}
+
 /* Ranked List View */
 
 .ranked-item {

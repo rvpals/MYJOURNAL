@@ -1,3 +1,9 @@
+---
+tags: [bugs, issues, limitations, fixed-bugs, WebView-crash, blob-URL, WASM, encryption, known-problems]
+related_files: [TO_TEST.md, TODO.md, CLAUDE.md]
+summary: "Known bugs, platform limitations, fixed issues with dates, and architectural constraints."
+---
+
 # ISSUES — MYJOURNAL
 
 ## Known Issues
@@ -32,6 +38,7 @@
 - Old filter-toggle-header / filter-fields-body CSS removed from both style.css and style-android.css — entry list filters now use CollapsiblePanel.
 - Navbar no longer has Entry List, Report, or SQL Explorer links — navigation moved to dashboard 2x2 button grid.
 - Theme cycle button removed from navbar — theme selection is in Settings > Display & Appearance > Theme.
+- HD icons use `type_hd` suffix in the same `icons` table (e.g., `tag_hd`). No schema change. Upload generates both 64x64 and 128x128 if source image >=96px. RankedPanel card view checks HD first, then standard icon, then text fallback.
 
 ## Limitations
 

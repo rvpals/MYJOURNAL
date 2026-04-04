@@ -269,26 +269,37 @@ function browseIcon(type, name) {
     document.getElementById('icon-file-input').click();
 }
 
+function _resizeToCanvas(img, size) {
+    const canvas = document.createElement('canvas');
+    canvas.width = size;
+    canvas.height = size;
+    const ctx = canvas.getContext('2d');
+    const scale = Math.min(size / img.width, size / img.height);
+    const w = img.width * scale;
+    const h = img.height * scale;
+    ctx.drawImage(img, (size - w) / 2, (size - h) / 2, w, h);
+    return canvas.toDataURL('image/png');
+}
+
 function onIconFileSelected(event) {
     const file = event.target.files[0];
     if (!file || !_iconPickerTarget) return;
     const reader = new FileReader();
     reader.onload = async function(e) {
-        // Resize icon to max 64x64 for storage efficiency
         const img = new Image();
         img.onload = async function() {
-            const size = 64;
-            const canvas = document.createElement('canvas');
-            canvas.width = size;
-            canvas.height = size;
-            const ctx = canvas.getContext('2d');
-            // Draw centered and scaled to fit
-            const scale = Math.min(size / img.width, size / img.height);
-            const w = img.width * scale;
-            const h = img.height * scale;
-            ctx.drawImage(img, (size - w) / 2, (size - h) / 2, w, h);
-            const dataUrl = canvas.toDataURL('image/png');
-            await DB.setIcon(_iconPickerTarget.type, _iconPickerTarget.name, dataUrl);
+            const { type, name } = _iconPickerTarget;
+            // Standard 64x64 icon for chips/lists
+            const dataUrl = _resizeToCanvas(img, 64);
+            await DB.setIcon(type, name, dataUrl);
+            // HD 128x128 icon for image buttons (only if source is large enough)
+            if (img.width >= 96 || img.height >= 96) {
+                const hdUrl = _resizeToCanvas(img, 128);
+                await DB.setIcon(type + '_hd', name, hdUrl);
+            } else {
+                // Source too small for HD — remove any stale HD icon
+                await DB.removeIcon(type + '_hd', name);
+            }
             _iconPickerTarget = null;
             renderCategoriesList();
             renderTagsIconList();
@@ -302,6 +313,7 @@ function onIconFileSelected(event) {
 
 async function clearIcon(type, name) {
     await DB.removeIcon(type, name);
+    await DB.removeIcon(type + '_hd', name);
     renderCategoriesList();
     renderTagsIconList();
     renderPeopleList();

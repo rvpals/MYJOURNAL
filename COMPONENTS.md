@@ -1,3 +1,9 @@
+---
+tags: [components, ResultGrid, RankedPanel, RecordViewer, CollapsiblePanel, API, CSS-classes, reusable-UI]
+related_files: [REQUIREMENT.md, CLAUDE.md]
+summary: "API documentation for reusable UI components — constructor options, methods, CSS classes, usage locations, and planned components."
+---
+
 # COMPONENTS — MYJOURNAL
 
 Reusable UI components in `web/js/components.js` with styles in `web/css/style.css`.
@@ -49,7 +55,12 @@ Self-contained ranked list/card panel with built-in view toggle and show-all.
 
 **Static methods:** `RankedPanel.get(id)`, `RankedPanel.toggleView(id)`, `RankedPanel.toggleShowAll(id)`
 
-**CSS classes:** `rp-panel`, `rp-body`, `panel-header`, `panel-header-actions`, `ranked-list`, `ranked-button-grid`, `ranked-item`, `ranked-btn`
+**CSS classes:** `rp-panel`, `rp-body`, `panel-header`, `panel-header-actions`, `ranked-list`, `ranked-button-grid`, `ranked-item`, `ranked-btn`, `ranked-btn-img`, `ranked-btn-img-face`, `ranked-btn-img-count`
+
+**Card view 3-tier fallback:**
+1. HD image (`type_hd` icon exists) → `.ranked-btn-img` — image fills entire 3D button, count badge in corner, no text label
+2. Standard icon (64x64 icon exists) → `.ranked-btn` with `.ranked-btn-icon` img + text label
+3. No icon → `.ranked-btn` with `.ranked-btn-text-icon` 2-letter abbreviation + text label
 
 **Used in:** Dashboard ranked panels (tags, categories, places, people)
 

@@ -1,3 +1,9 @@
+---
+tags: [todo, backlog, changelog, version-history, completed-features, planned-features]
+related_files: [REQUIREMENT.md, ISSUES.md, TO_TEST.md]
+summary: "Version-by-version feature completion history (v0.9–v1.4) and remaining backlog items."
+---
+
 # TODO — MYJOURNAL
 
 ## Completed Features
@@ -90,6 +96,15 @@
 - [x] Fix: web login screen showing after native Android login — pass crypto keys via Intent extras, sync to localStorage in performAutoLogin()
 - [x] Fix: biometric prompt appearing twice on fingerprint login — check hasNativeLogin() in onJournalSelect()
 - [x] Fix: CSV import field mapping UI overflow on Android — reduce min-widths, add flex/overflow-x to container
+
+### v1.4.0+ (2026-04-04, HD icons + documentation)
+- [x] HD icon support: upload stores both 64x64 (chips/lists) and 128x128 (image buttons) when source >=96px
+- [x] 3-tier icon fallback in RankedPanel card view: HD image button → icon+text → text abbreviation
+- [x] `.ranked-btn-img` CSS: full-image 3D buttons with cover fit, depth shadow, hover lift, press inset
+- [x] `getIconHD()` helper for HD icon retrieval via `type_hd` convention
+- [x] `clearIcon()` now removes both standard and HD icon variants
+- [x] Documentation: created `index.md` central navigation map with semantic summaries, context boundaries, quick-lookup table
+- [x] Documentation: added YAML frontmatter (tags, related_files, summary) to all 7 .md files
 
 ## Remaining / TODO
 
