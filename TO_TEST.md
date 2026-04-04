@@ -14,7 +14,7 @@
 - [x] **LoginActivity → MainActivity** — Credential passing, auto-login via JS injection (crypto keys passed via Intent extras 2026-04-01)
 - [x] **MainActivity → DashboardActivity** — Dashboard data JSON transfer, clickable items return navigation (converted to native 2026-04-01)
 - [x] **DashboardActivity** — Stats grid (total, week, month, year), pinned entries, recent entries, ranked panels (tags, categories, places, people)
-- [ ] **AboutActivity** — App info display, clickable email/URL/Play Store links
+- [ ] **AboutActivity** — App info display, clickable email/URL/Play Store links, v1.4.0 + v1.3.1 changelog entries
 - [ ] **Back button** — Proper navigation between activities and WebView pages
 - [ ] **AndroidBridge** — saveFile, biometric, credential storage, sync functions
 
@@ -47,6 +47,7 @@
 - [ ] **Ranked panels** — Top tags, categories, places, people (ranked by count, top 10)
 - [ ] **Pinned entries** — Display, click to view
 - [ ] **Recent entries** — Display, click to view
+- [ ] **Dashboard nav grid** — 2x2 buttons (New Entry, Entry List, Report, SQL Explorer) navigate correctly, 3D styling
 - [ ] **Dashboard search** — Live search results, whole-word toggle, ResultGrid rendering
 - [ ] **Quick actions** — Pinned custom views on dashboard
 - [ ] **Ranked panels** — RankedPanel component: list/card view toggle, show all/top 10, click to filter

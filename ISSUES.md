@@ -30,6 +30,8 @@
 
 - Dashboard ranked panels, Explorer results, and Entry list table view now use shared components (ResultGrid, RankedPanel, RecordViewer, CollapsiblePanel) from components.js — any rendering bugs in these areas should be checked against the component code, not the old inline implementations (which have been removed).
 - Old filter-toggle-header / filter-fields-body CSS removed from both style.css and style-android.css — entry list filters now use CollapsiblePanel.
+- Navbar no longer has Entry List, Report, or SQL Explorer links — navigation moved to dashboard 2x2 button grid.
+- Theme cycle button removed from navbar — theme selection is in Settings > Display & Appearance > Theme.
 
 ## Limitations
 

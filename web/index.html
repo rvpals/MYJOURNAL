@@ -56,15 +56,8 @@
                 <button class="btn-icon nav-row1-btn" onclick="lockApp()" title="Lock">&#x1F512;</button>
             </div>
             <div class="nav-row2">
-                <button class="btn-icon btn-new-entry" onclick="navigateTo('entry-form')" title="New Entry">&#x1F4DD;</button>
                 <div class="nav-row2-right">
                     <div class="nav-links">
-                        <a href="#" class="nav-link" data-page="entry-list" onclick="navigateTo('entry-list')"><span class="nav-icon">&#x1F4D6;</span><span class="nav-label-text">Entries</span></a>
-                        <a href="#" class="nav-link" data-page="reports" onclick="navigateTo('reports')"><span class="nav-icon">&#x1F4C4;</span><span class="nav-label-text">Reports</span></a>
-                        <a href="#" class="nav-link" data-page="explorer" onclick="navigateTo('explorer')"><span class="nav-icon">&#x1F50D;</span><span class="nav-label-text">Explorer</span></a>
-                    </div>
-                    <div class="nav-actions">
-                        <button id="btn-theme" class="btn-icon" onclick="cycleTheme()" title="Cycle theme">&#x1F3A8;</button>
                     </div>
                 </div>
             </div>
@@ -77,6 +70,12 @@
                 <h2>Dashboard</h2>
                 <div id="dashboard-weather" class="dashboard-weather-compact" style="display:none"></div>
                 <div class="col-toggle" data-target="dashboard-panels" id="col-toggle-dashboard"></div>
+            </div>
+            <div class="dashboard-nav-grid">
+                <button class="btn btn-primary" onclick="navigateTo('entry-form')">&#x1F4DD; New Entry</button>
+                <button class="btn btn-secondary" onclick="navigateTo('entry-list')">&#x1F4D6; Entry List</button>
+                <button class="btn btn-secondary" onclick="navigateTo('reports')">&#x1F4C4; Report</button>
+                <button class="btn btn-secondary" onclick="navigateTo('explorer')">&#x1F50D; SQL Explorer</button>
             </div>
             <div id="dashboard-quick-actions" class="dashboard-quick-actions"></div>
             <fieldset class="dashboard-search-group" id="dashboard-search-group">
@@ -94,22 +93,19 @@
                     <div id="dashboard-search-results" class="dashboard-search-results" style="display:none"></div>
                 </div>
             </fieldset>
+            <hr style="border:none; border-top:1px solid transparent; margin:0.75rem 0">
             <div class="stats-grid">
-                <div class="stat-card stat-card-clickable" onclick="statNavigate('total')">
-                    <div class="stat-value" id="stat-total">0</div>
-                    <div class="stat-label">Total Entries</div>
-                </div>
                 <div class="stat-card stat-card-clickable" onclick="statNavigate('week')">
-                    <div class="stat-value" id="stat-week">0</div>
-                    <div class="stat-label">This Week</div>
+                    <span class="stat-value" id="stat-week">0</span>
+                    <span class="stat-label">This Week</span>
                 </div>
                 <div class="stat-card stat-card-clickable" onclick="statNavigate('month')">
-                    <div class="stat-value" id="stat-month">0</div>
-                    <div class="stat-label">This Month</div>
+                    <span class="stat-value" id="stat-month">0</span>
+                    <span class="stat-label">This Month</span>
                 </div>
                 <div class="stat-card stat-card-clickable" onclick="statNavigate('year')">
-                    <div class="stat-value" id="stat-year">0</div>
-                    <div class="stat-label">This Year</div>
+                    <span class="stat-value" id="stat-year">0</span>
+                    <span class="stat-label">This Year</span>
                 </div>
             </div>
             <div class="dashboard-panels" id="dashboard-panels">
@@ -620,6 +616,10 @@
                 <div class="form-group" style="margin-top:0.75rem">
                     <label for="max-pinned-entries">Max Pinned Entries</label>
                     <input type="number" id="max-pinned-entries" min="1" max="100" value="10" style="width:100px" onchange="saveMaxPinnedEntries()">
+                </div>
+                <div class="form-group" style="margin-top:0.75rem">
+                    <label for="max-ranking-entries">Max Entries in Ranking Cards</label>
+                    <input type="number" id="max-ranking-entries" min="1" max="100" value="5" style="width:100px" onchange="saveMaxRankingEntries()">
                 </div>
                 <div class="form-group" style="margin-top:0.75rem">
                     <label>Default Entry List Order</label>

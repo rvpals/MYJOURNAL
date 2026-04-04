@@ -89,6 +89,11 @@
 
 ## 4. Dashboard
 
+### Navigation Grid
+- 2x2 button grid at top of dashboard: New Entry, Entry List, Report, SQL Explorer
+- 3D styled buttons with gradient, shadow, border-bottom, hover lift, press inset
+- Entry List, Report, SQL Explorer links removed from navbar — accessible only via dashboard
+
 ### Stats
 - Total entries count
 - Entries this week / this month / this year

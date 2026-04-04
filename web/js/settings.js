@@ -112,6 +112,7 @@ function refreshSettings() {
     refreshViewerFont();
     refreshDateTimeFormat();
     refreshMaxPinnedEntries();
+    refreshMaxRankingEntries();
     refreshDefaultEntryListOrder();
     refreshThemeSelect();
     renderTemplatesList();
@@ -1488,6 +1489,24 @@ function saveMaxPinnedEntries() {
 
 function getMaxPinnedEntries() {
     return parseInt(localStorage.getItem('max_pinned_entries')) || 10;
+}
+
+// ========== Max Ranking Entries ==========
+
+function refreshMaxRankingEntries() {
+    const input = document.getElementById('max-ranking-entries');
+    if (input) input.value = getMaxRankingEntries();
+}
+
+function saveMaxRankingEntries() {
+    const input = document.getElementById('max-ranking-entries');
+    const val = Math.max(1, Math.min(100, parseInt(input.value) || 5));
+    input.value = val;
+    localStorage.setItem('max_ranking_entries', val);
+}
+
+function getMaxRankingEntries() {
+    return parseInt(localStorage.getItem('max_ranking_entries')) || 5;
 }
 
 // ========== Entry List Fields ==========

@@ -62,7 +62,7 @@
 - [x] SQL Explorer: CSV export, raw SQL for any table, record detail overlay, custom view loader
 - [x] Delete button tooltip in Explorer results
 
-### v1.4.0-dev (UI overhaul + component refactor)
+### v1.4.0 (2026-04-03, UI overhaul + component refactor)
 - [x] Native LoginActivity: journal selector, password, biometric login
 - [x] Native DashboardActivity: stats grid, pinned/recent entries, ranked panels
 - [x] Styled Android drawables: buttons (primary, secondary, accent, delete, biometric), inputs, cards, spinners, search/stat/entry/ranked backgrounds
@@ -81,6 +81,10 @@
 - [x] Entry list: "Clear All" button in filter criteria bar when filters are active
 - [x] Entry form: quick-create buttons (+ New) for Category, Tags, and People with inline create panels
 - [x] Removed old filter-toggle-header/filter-fields-body CSS from style.css and style-android.css
+- [x] Dashboard 2x2 navigation grid: New Entry, Entry List, Report, SQL Explorer (3D styled buttons)
+- [x] Removed theme cycle button from navbar
+- [x] Moved Entry List, Report, SQL Explorer links from navbar to dashboard
+- [x] Updated app_info.xml: name "My Journal", version 1.4.0, added v1.4.0 and v1.3.1 changelogs
 
 ### Bug Fixes (2026-04-01)
 - [x] Fix: web login screen showing after native Android login — pass crypto keys via Intent extras, sync to localStorage in performAutoLogin()

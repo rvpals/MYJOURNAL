@@ -4,7 +4,7 @@
 
 Android WebView-based encrypted journal app. Native Java shell handles authentication, biometrics, file I/O, and a native dashboard. The web layer (HTML/CSS/JS SPA) handles all core journal functionality. All data stored locally in AES-256-GCM encrypted SQLite (sql.js WASM) via IndexedDB.
 
-**Version:** 1.4.0-dev | **Package:** com.journal.app | **Min SDK:** 24 | **Target SDK:** 34
+**Version:** 1.4.0 | **Package:** com.journal.app | **Min SDK:** 24 | **Target SDK:** 34
 
 ## Project Structure
 

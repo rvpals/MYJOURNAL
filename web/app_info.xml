@@ -1,21 +1,44 @@
 <?xml version="1.0" encoding="utf-8"?>
 <app-info>
-    <name>Journal</name>
-    <version>1.0a</version>
+    <name>My Journal</name>
+    <version>1.4.0</version>
     <email>rvpals@gmail.com</email>
     <url>https://github.com/rvpals</url>
     <company-url>https://play.google.com/store/apps/details?id=com.journal.app</company-url>
     <description>A personal journal and activity log with encrypted local storage. Create entries with rich text, tags, categories, places, and weather data. Supports multiple password-protected journals, custom report templates, and data export/import.</description>
 
     <changelog>
-        <release version="v1.0a" date="2026-04-01">
+        <release version="v1.4.0" date="2026-04-03">
+            <change>Native LoginActivity: journal selector, password entry, biometric login</change>
+            <change>Native DashboardActivity: stats grid, pinned/recent entries, ranked panels</change>
+            <change>Reusable UI components: ResultGrid, RankedPanel, RecordViewer, CollapsiblePanel</change>
+            <change>Entry list refactored: search &amp; filters in CollapsiblePanel, table view via ResultGrid</change>
+            <change>Entry form quick-create buttons for Category, Tags, and People</change>
+            <change>Dashboard 2x2 navigation grid: New Entry, Entry List, Report, SQL Explorer</change>
+            <change>People feature: first/last name, description, multi-select per entry</change>
+            <change>Custom icons for tags and categories</change>
+            <change>Dashboard search with live results and whole-word toggle</change>
+            <change>Settings reorganized into tabs: Preferences, Templates, Edit Metadata, Data Management</change>
+            <change>Category and tag colors with color picker swatches</change>
+            <change>Metadata export/import (categories, tags, people, icons, settings, templates, views)</change>
+            <change>SQL Explorer: CSV export, raw SQL for any table, record detail overlay, custom view loader</change>
+            <change>Separated CSS: style.css (web) + style-android.css (Android-only overrides)</change>
+            <change>Fixed: web login showing after native Android login</change>
+            <change>Fixed: biometric prompt appearing twice on fingerprint login</change>
+            <change>Fixed: CSV import field mapping UI overflow on Android</change>
+        </release>
+        <release version="v1.3.1" date="2026-03-27">
             <change>Added pin/unpin entries with Pinned Entries panel on dashboard</change>
             <change>Added max pinned entries setting in Preferences (1-100, default 10)</change>
-            <change>Added Default Entry View option in custom views editor (only one allowed)</change>
-            <change>Added entry viewer font family and size settings in Preferences with live preview</change>
+            <change>Added Default Entry View option in custom views editor</change>
+            <change>Added entry viewer font family and size settings with live preview</change>
             <change>Added Android swipe left/right on entry view for prev/next navigation</change>
-            <change>Added Android collapsible filter fields on entry list (starts collapsed)</change>
-            <change>Dashboard pinned custom view buttons now show matching entry count badges</change>
+            <change>Added collapsible filter fields on entry list</change>
+            <change>Added date &amp; time display format settings (6 date formats, 12h/24h time)</change>
+            <change>Added entry viewer 3D icon buttons with gradient and shadow effects</change>
+            <change>Added cleanup tool: find dateless entries and duplicate detection</change>
+            <change>Added biometric authentication via AndroidX BiometricPrompt</change>
+            <change>Fixed: formatDate() returning "Invalid Date" for bad values</change>
         </release>
         <release version="v1.2.0" date="2026-03-25">
             <change>Added Custom Views page with advanced filtering (AND/OR/NOT), grouping, multi-field sorting, display mode</change>

@@ -60,9 +60,6 @@ function refreshDashboard() {
     refreshDashboardWeather();
     const entries = DB.getEntries();
 
-    // Total entries
-    document.getElementById('stat-total').textContent = entries.length;
-
     // This week (Monday to Sunday)
     const week = getDateRange('week');
     const thisWeek = entries.filter(e => e.date >= week.from && e.date <= week.to).length;
@@ -85,19 +82,21 @@ function refreshDashboard() {
     dashboardFullData.people = countPeopleAll(entries);
 
     // Render ranked panels
+    const rankingTopN = getMaxRankingEntries();
+
     RankedPanel.create({
         id: 'tags', containerId: 'panel-top-tags', title: 'Top Tags',
-        filterType: 'tag', onItemClick: (name) => navigateToFilteredList('tag', name)
+        filterType: 'tag', topN: rankingTopN, onItemClick: (name) => navigateToFilteredList('tag', name)
     }).setData(dashboardFullData.tags).render();
 
     RankedPanel.create({
         id: 'categories', containerId: 'panel-top-categories', title: 'Top Categories',
-        filterType: 'category', onItemClick: (name) => navigateToFilteredList('category', name)
+        filterType: 'category', topN: rankingTopN, onItemClick: (name) => navigateToFilteredList('category', name)
     }).setData(dashboardFullData.categories).render();
 
     RankedPanel.create({
         id: 'places', containerId: 'panel-top-places', title: 'Top Places',
-        filterType: 'place', onItemClick: (name) => navigateToFilteredList('place', name)
+        filterType: 'place', topN: rankingTopN, onItemClick: (name) => navigateToFilteredList('place', name)
     }).setData(dashboardFullData.places).render();
 
     RankedPanel.create({
