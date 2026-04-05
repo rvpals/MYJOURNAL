@@ -36,6 +36,15 @@ function getWeatherEmoji(code) {
     return '\u26A1';
 }
 
+function openWeatherSettings() {
+    navigateTo('settings');
+    switchSettingsTab('prefs');
+    setTimeout(() => {
+        const fieldset = document.querySelector('#weather-city-search');
+        if (fieldset) fieldset.closest('fieldset').scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }, 100);
+}
+
 async function refreshDashboardWeather() {
     const container = document.getElementById('dashboard-weather');
     if (!container) return;
@@ -45,6 +54,9 @@ async function refreshDashboardWeather() {
         const unit = Weather.getTempUnit();
         const w = await Weather.fetchCurrent(loc.lat, loc.lng, unit);
         container.style.display = 'flex';
+        container.style.cursor = 'pointer';
+        container.onclick = openWeatherSettings;
+        container.title = 'Click to change weather location';
         container.innerHTML =
             `<span class="dw-icon">${getWeatherEmoji(w.code)}</span>` +
             `<span class="dw-temp">${w.temp}\u00B0${w.unit}</span>` +

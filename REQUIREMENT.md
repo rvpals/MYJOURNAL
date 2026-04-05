@@ -87,7 +87,7 @@ summary: "Complete functional requirements for all 12 feature areas — authenti
 - Read-only display of all entry fields
 - Rich content rendered as HTML
 - Image gallery with lightbox (full-screen, prev/next navigation)
-- Action buttons: Pin/Unpin, Edit, Print (PDF), Delete, Back
+- Action buttons: Pin/Unpin, Edit, Print (PDF), Delete, Back — icon-only with title tooltips
 - Prev/Next navigation between entries (swipe on Android)
 - 3D styled buttons with gradient backgrounds, shadows, hover/press effects
 - Date/Time displayed using user's configured format
@@ -219,13 +219,13 @@ summary: "Complete functional requirements for all 12 feature areas — authenti
 - Entry field visibility toggles (show/hide fields in entry form)
 
 ### Data Management
-- **Export**: Encrypted SQLite, Plain SQLite, JSON, CSV
-- **Import**: SQLite (encrypted or plain), JSON, CSV
+- **Consolidated UI**: Export and Import each have a dropdown selector + action button (replaces individual buttons)
+- **Export dropdown**: Export Encrypted, Export Unencrypted, Export CSV File, Export MetaData — with 📤 icon button
+- **Import dropdown**: Import Data, Import CSV File, Import MetaData — with 📥 icon button
 - **CSV Import**: Column mapping UI, date/time format configuration, duplicate detection
 - **Metadata Export**: JSON containing categories, tags, people, icons, settings, report templates, pre-fill templates, custom views (excludes entries/images)
-- **Metadata Import**: Overwrite warning, full replace, auto-reload
+- **Metadata Import**: Overwrite warning, full replace, in-place UI refresh (no page reload)
 - **Password Change**: Verify old password, re-encrypt entire database
-- **Cleanup**: Find entries with missing/invalid dates, find duplicate entries (same date + content), preview before delete
 
 ### Pre-fill Templates
 - Saved templates that auto-fill entry form fields
@@ -241,6 +241,7 @@ summary: "Complete functional requirements for all 12 feature areas — authenti
 - Weather data stored per-entry as JSON
 - Weather location persisted in settings
 - Display: weather badge in entry cards, full details in viewer
+- Dashboard weather: inset 3D styled display, clickable to navigate to Settings > Weather Location
 
 ## 10. Android Platform
 

@@ -14,6 +14,10 @@ summary: "Known bugs, platform limitations, fixed issues with dates, and archite
 - **Image storage is inefficient** — full base64 images stored in SQLite; no server-side or file-system storage option
 - **gdrive.js is a placeholder** — Google Drive sync is not implemented
 
+## Fixed (2026-04-04)
+
+- ~~Metadata import shows blank screen after "app will refresh" message~~ **FIXED** — `window.location.reload()` fails in WebView file:// protocol; replaced with in-place `refreshSettings()` + theme reapply + `navigateTo('settings')`
+
 ## Fixed (2026-04-01)
 
 - ~~Web login screen showing after native Android login~~ **FIXED** — crypto keys (salt/verify) passed via Intent extras and synced to localStorage in performAutoLogin()
@@ -39,6 +43,9 @@ summary: "Known bugs, platform limitations, fixed issues with dates, and archite
 - Navbar no longer has Entry List, Report, or SQL Explorer links — navigation moved to dashboard 2x2 button grid.
 - Theme cycle button removed from navbar — theme selection is in Settings > Display & Appearance > Theme.
 - HD icons use `type_hd` suffix in the same `icons` table (e.g., `tag_hd`). No schema change. Upload generates both 64x64 and 128x128 if source image >=96px. RankedPanel card view checks HD first, then standard icon, then text fallback.
+- Data Management now uses dropdown selects instead of individual buttons. Export/Import Metadata moved from Edit Metadata tab to Data Management dropdowns.
+- `cleanupDatelessEntries()` function removed — Cleanup Dateless button no longer exists.
+- Entry viewer buttons (Edit, Print, Delete, Back) are icon-only; text labels removed.
 
 ## Limitations
 

@@ -43,7 +43,7 @@ summary: "Feature-by-feature test checklist with pass/fail status covering criti
 - [x] **Filters** — Date range, category, tag filters in CollapsiblePanel, Clear All button (verified 2026-04-03)
 - [ ] **Pagination** — 10/20/50/100/all entries per page
 - [ ] **Multi-select** — Batch delete mode
-- [ ] **Entry viewer** — Read-only view with all fields, prev/next navigation
+- [ ] **Entry viewer** — Read-only view with all fields, prev/next navigation, icon-only action buttons (Edit/Print/Delete/Back)
 - [ ] **Android swipe** — Swipe left/right to navigate entries on Android
 - [ ] **Date/Time format** — Verify all 6 date formats and 12h/24h time display
 
@@ -54,6 +54,7 @@ summary: "Feature-by-feature test checklist with pass/fail status covering criti
 - [ ] **Pinned entries** — Display, click to view
 - [ ] **Recent entries** — Display, click to view
 - [ ] **Dashboard nav grid** — 2x2 buttons (New Entry, Entry List, Report, SQL Explorer) navigate correctly, 3D styling
+- [ ] **Dashboard weather** — Inset 3D styling, click to navigate to Settings > Weather Location
 - [ ] **Dashboard search** — Live search results, whole-word toggle, ResultGrid rendering
 - [ ] **Quick actions** — Pinned custom views on dashboard
 - [ ] **Ranked panels** — RankedPanel component: list/card view toggle, show all/top 10, click to filter, HD image button rendering
@@ -99,9 +100,9 @@ summary: "Feature-by-feature test checklist with pass/fail status covering criti
 - [ ] **Pre-fill templates** — Create, edit, delete, apply to new entry
 - [ ] **Report templates** — CRUD for HTML templates
 - [ ] **Password change** — Old password verification, re-encrypt database
-- [ ] **Data export** — Encrypted SQLite, plain SQLite, JSON, CSV
-- [ ] **Data import** — SQLite, JSON, CSV with column mapping (CSV field mapping overflow fixed 2026-04-01)
-- [ ] **Metadata export/import** — JSON with categories, tags, people, icons, settings, templates, views
+- [ ] **Data export** — Export dropdown (Encrypted, Unencrypted, CSV, MetaData) + Export button with 📤 icon
+- [ ] **Data import** — Import dropdown (Data, CSV, MetaData) + Import button with 📥 icon
+- [ ] **Metadata import** — Verify no blank screen after import (fixed: in-place refresh instead of page reload)
 
 ## Cross-Platform
 

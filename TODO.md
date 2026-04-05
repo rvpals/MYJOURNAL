@@ -106,6 +106,16 @@ summary: "Version-by-version feature completion history (v0.9–v1.4) and remain
 - [x] Documentation: created `index.md` central navigation map with semantic summaries, context boundaries, quick-lookup table
 - [x] Documentation: added YAML frontmatter (tags, related_files, summary) to all 7 .md files
 
+### v1.4.0+ (2026-04-04, UI consolidation + fixes)
+- [x] Data Management: consolidated export/import buttons into dropdown+button rows (Export dropdown + Import dropdown)
+- [x] Data Management: moved Export/Import Metadata from Edit Metadata tab into Data Management dropdowns
+- [x] Data Management: removed Cleanup Dateless button and `cleanupDatelessEntries()` function
+- [x] Data Management: added icons to Export (📤) and Import (📥) buttons
+- [x] Fix: metadata import blank screen — replaced `window.location.reload()` with in-place `refreshSettings()` (WebView file:// reload crashes)
+- [x] Dashboard: weather info styled with inset 3D look (inset box-shadow, bg-secondary, border)
+- [x] Dashboard: clicking weather info navigates to Settings > Preferences > Weather Location
+- [x] Entry viewer: removed text labels from Edit/Print/Delete/Back buttons, icon-only with title tooltips
+
 ## Remaining / TODO
 
 - [ ] Re-test all features after UI overhaul (web + Android)

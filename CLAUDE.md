@@ -44,11 +44,11 @@ MYJOURNAL/
 │   │   ├── crypto.js       # PBKDF2 + AES-256-GCM via Web Crypto API (~175 lines)
 │   │   ├── db.js           # sql.js SQLite abstraction, IndexedDB persistence, CRUD (~834 lines)
 │   │   ├── entries.js      # Entry form, list view, search, filter, pagination (~1,097 lines)
-│   │   ├── dashboard.js    # Stats aggregation, ranked lists, quick actions (~490 lines)
+│   │   ├── dashboard.js    # Stats aggregation, ranked lists, quick actions (~552 lines)
 │   │   ├── views.js        # Custom saved views: AND/OR/NOT filter, group, sort (~859 lines)
 │   │   ├── explorer.js     # SQL Explorer: query builder, raw SQL, CSV export (~660 lines)
 │   │   ├── reports.js      # HTML/PDF/CSV report generation with templates (~577 lines)
-│   │   ├── settings.js     # All settings: preferences, themes, metadata, import/export (~1,941 lines)
+│   │   ├── settings.js     # All settings: preferences, themes, metadata, import/export (~1,925 lines)
 │   │   ├── weather.js      # Open-Meteo API, city search, GPS location (~149 lines)
 │   │   └── gdrive.js       # Google Drive integration (placeholder/partial)
 │   ├── lib/

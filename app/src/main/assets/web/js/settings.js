@@ -504,10 +504,15 @@ async function importMetadata(event) {
             await DB.setSettings(metadata.settings);
         }
 
-        alert('Metadata imported successfully. The app will now refresh.');
+        alert('Metadata imported successfully.');
 
-        // Re-login to apply all changes
-        window.location.reload();
+        // Re-apply theme and refresh settings UI in-place
+        const s = DB.getSettings();
+        if (s.theme) {
+            document.documentElement.setAttribute('data-theme', s.theme);
+        }
+        refreshSettings();
+        navigateTo('settings');
 
     } catch (err) {
         alert('Import failed: ' + err.message);
@@ -534,6 +539,25 @@ function downloadBinaryFile(uint8Array, filename, mimeType) {
         a.click();
         document.body.removeChild(a);
         URL.revokeObjectURL(url);
+    }
+}
+
+function executeExportAction() {
+    const action = document.getElementById('export-action-select').value;
+    switch (action) {
+        case 'encrypted': exportData(true); break;
+        case 'unencrypted': exportData(false); break;
+        case 'csv': exportCsvFromSettings(); break;
+        case 'metadata': exportMetadata(); break;
+    }
+}
+
+function executeImportAction() {
+    const action = document.getElementById('import-action-select').value;
+    switch (action) {
+        case 'data': document.getElementById('import-file').click(); break;
+        case 'csv': document.getElementById('import-csv-file').click(); break;
+        case 'metadata': document.getElementById('metadata-import-file').click(); break;
     }
 }
 
@@ -1813,77 +1837,6 @@ function importTemplate(event) {
         document.getElementById('template-editor').value = text;
     });
     event.target.value = '';
-}
-
-// ========== Cleanup Dateless Entries ==========
-
-async function cleanupDatelessEntries() {
-    const entries = DB.getEntries();
-    let totalDeleted = 0;
-
-    // --- Phase 1: Dateless entries ---
-    const dateless = entries.filter(e => !isValidDate(e.date));
-
-    if (dateless.length > 0) {
-        const examples = dateless.slice(0, 3).map((e, i) => {
-            const title = e.title || '(Untitled)';
-            const dateInfo = e.date ? ` [date: "${e.date}"]` : ' [no date]';
-            const content = (e.content || '').substring(0, 50);
-            const preview = content ? ` — "${content}${e.content && e.content.length > 50 ? '...' : ''}"` : '';
-            return `  ${i + 1}. "${title}"${dateInfo}${preview}`;
-        }).join('\n');
-        const moreText = dateless.length > 3 ? `\n  ...and ${dateless.length - 3} more` : '';
-
-        if (confirm(
-            `Found ${dateless.length} ${dateless.length === 1 ? 'entry' : 'entries'} with missing or invalid date.\n\n` +
-            `Examples:\n${examples}${moreText}\n\n` +
-            `Delete ${dateless.length === 1 ? 'this entry' : 'all ' + dateless.length + ' entries'}? This cannot be undone.`
-        )) {
-            await DB.deleteEntriesByIds(dateless.map(e => e.id));
-            totalDeleted += dateless.length;
-        }
-    }
-
-    // --- Phase 2: Duplicate entries (same date + same content) ---
-    const remaining = DB.getEntries(); // re-read after phase 1
-    const seen = new Map(); // key -> first entry id
-    const duplicateIds = [];
-    const duplicateExamples = [];
-
-    for (const e of remaining) {
-        const key = (e.date || '') + '|' + (e.content || '').trim();
-        if (seen.has(key)) {
-            duplicateIds.push(e.id);
-            if (duplicateExamples.length < 3) {
-                const title = e.title || '(Untitled)';
-                const date = e.date ? formatDate(e.date) : '(no date)';
-                const content = (e.content || '').substring(0, 40);
-                const preview = content ? ` — "${content}${e.content && e.content.length > 40 ? '...' : ''}"` : '';
-                duplicateExamples.push(`  ${duplicateExamples.length + 1}. "${title}" (${date})${preview}`);
-            }
-        } else {
-            seen.set(key, e.id);
-        }
-    }
-
-    if (duplicateIds.length > 0) {
-        const moreText = duplicateIds.length > 3 ? `\n  ...and ${duplicateIds.length - 3} more` : '';
-        if (confirm(
-            `Found ${duplicateIds.length} duplicate ${duplicateIds.length === 1 ? 'entry' : 'entries'} (same date + same content).\n\n` +
-            `Examples:\n${duplicateExamples.join('\n')}${moreText}\n\n` +
-            `Delete ${duplicateIds.length === 1 ? 'this duplicate' : 'all ' + duplicateIds.length + ' duplicates'}? The original entries will be kept. This cannot be undone.`
-        )) {
-            await DB.deleteEntriesByIds(duplicateIds);
-            totalDeleted += duplicateIds.length;
-        }
-    }
-
-    // --- Summary ---
-    if (totalDeleted > 0) {
-        alert(`Cleanup complete: ${totalDeleted} ${totalDeleted === 1 ? 'entry' : 'entries'} deleted.`);
-    } else if (dateless.length === 0 && duplicateIds.length === 0) {
-        alert('No issues found. All entries have valid dates and no duplicates.');
-    }
 }
 
 // ========== About ==========

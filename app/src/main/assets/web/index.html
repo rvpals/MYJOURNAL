@@ -161,21 +161,17 @@
                 </div>
                 <div class="ev-bottom-sep"></div>
                 <div class="entry-view-actions ev-btn-bar">
-                    <button class="ev-action-btn ev-btn-edit" onclick="editViewedEntry()">
+                    <button class="ev-action-btn ev-btn-edit" onclick="editViewedEntry()" title="Edit">
                         <span class="ev-btn-icon">&#x270F;&#xFE0F;</span>
-                        <span class="ev-btn-text">Edit</span>
                     </button>
-                    <button class="ev-action-btn ev-btn-print" onclick="openPrintModal()">
+                    <button class="ev-action-btn ev-btn-print" onclick="openPrintModal()" title="Print">
                         <span class="ev-btn-icon">&#x1F5A8;&#xFE0F;</span>
-                        <span class="ev-btn-text">Print</span>
                     </button>
-                    <button class="ev-action-btn ev-btn-delete" onclick="deleteViewedEntry()">
+                    <button class="ev-action-btn ev-btn-delete" onclick="deleteViewedEntry()" title="Delete">
                         <span class="ev-btn-icon">&#x1F5D1;&#xFE0F;</span>
-                        <span class="ev-btn-text">Delete</span>
                     </button>
-                    <button class="ev-action-btn ev-btn-back" onclick="navigateBack()">
+                    <button class="ev-action-btn ev-btn-back" onclick="navigateBack()" title="Back">
                         <span class="ev-btn-icon">&#x2B05;&#xFE0F;</span>
-                        <span class="ev-btn-text">Back</span>
                     </button>
                 </div>
             </div>
@@ -914,12 +910,7 @@
             <div class="settings-tab-content" id="stab-content-cattags">
 
             <div class="metadata-io-bar">
-                <div class="metadata-io-buttons">
-                    <button class="btn-3d btn-metadata-io" onclick="exportMetadata()">&#x1F4E4; Export Metadata</button>
-                    <button class="btn-3d btn-metadata-io" onclick="document.getElementById('metadata-import-file').click()">&#x1F4E5; Import Metadata</button>
-                    <input type="file" id="metadata-import-file" accept=".json" style="display:none" onchange="importMetadata(event)">
-                </div>
-                <p class="metadata-io-desc">Includes categories, tags, people, custom icons, themes, preferences, report templates, pre-fill templates, custom views, and all settings. Does not include journal entries or images.</p>
+                <p class="metadata-io-desc">To export/import metadata (categories, tags, people, icons, themes, preferences, templates, views, and all settings), use the Data tab &gt; Data Management section.</p>
             </div>
 
             <div class="settings-section">
@@ -995,15 +986,27 @@
 
                 <fieldset class="settings-group-box">
                     <legend>&#x1F4BE; Data Management</legend>
-                    <div class="settings-actions">
-                        <button class="btn-secondary" onclick="exportData(true)">Export Encrypted</button>
-                        <button class="btn-secondary" onclick="exportData(false)">Export Unencrypted</button>
-                        <button class="btn-secondary" onclick="exportCsvFromSettings()">Export CSV</button>
-                        <button class="btn-secondary" onclick="document.getElementById('import-file').click()">Import Data</button>
-                        <input type="file" id="import-file" accept=".sqlite.enc,.sqlite,.json" style="display:none" onchange="importData(event)">
-                        <button class="btn-secondary" onclick="document.getElementById('import-csv-file').click()">Import CSV</button>
-                        <input type="file" id="import-csv-file" accept=".csv,.txt,text/csv,text/plain,text/comma-separated-values,application/csv" style="display:none" onchange="startCsvImport(event)">
-                        <button class="btn-danger" onclick="cleanupDatelessEntries()">&#x1F9F9; Cleanup Dateless</button>
+                    <div class="data-mgmt-rows">
+                        <div class="data-mgmt-row">
+                            <select id="export-action-select" class="data-mgmt-select">
+                                <option value="encrypted">Export Encrypted</option>
+                                <option value="unencrypted">Export Unencrypted</option>
+                                <option value="csv">Export CSV File</option>
+                                <option value="metadata">Export MetaData</option>
+                            </select>
+                            <button class="btn-secondary" onclick="executeExportAction()">&#x1F4E4; Export</button>
+                        </div>
+                        <div class="data-mgmt-row">
+                            <select id="import-action-select" class="data-mgmt-select">
+                                <option value="data">Import Data</option>
+                                <option value="csv">Import CSV File</option>
+                                <option value="metadata">Import MetaData</option>
+                            </select>
+                            <button class="btn-secondary" onclick="executeImportAction()">&#x1F4E5; Import</button>
+                            <input type="file" id="import-file" accept=".sqlite.enc,.sqlite,.json" style="display:none" onchange="importData(event)">
+                            <input type="file" id="import-csv-file" accept=".csv,.txt,text/csv,text/plain,text/comma-separated-values,application/csv" style="display:none" onchange="startCsvImport(event)">
+                            <input type="file" id="metadata-import-file" accept=".json" style="display:none" onchange="importMetadata(event)">
+                        </div>
                     </div>
                     <div id="csv-import-section" class="csv-import-section" style="display:none">
                         <h4>Map CSV Columns to Journal Fields</h4>
