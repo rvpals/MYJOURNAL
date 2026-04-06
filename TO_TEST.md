@@ -53,7 +53,7 @@ summary: "Feature-by-feature test checklist with pass/fail status covering criti
 - [ ] **Ranked panels** — Top tags, categories, places, people (ranked by count, top 10)
 - [ ] **Pinned entries** — Display, click to view
 - [ ] **Recent entries** — Display, click to view
-- [ ] **Dashboard nav grid** — 2x2 buttons (New Entry, Entry List, Report, SQL Explorer) navigate correctly, 3D styling
+- [ ] **Dashboard nav grid** — 2-column buttons (New Entry, Entry List, Report, SQL Explorer, Calendar) navigate correctly, 3D styling
 - [ ] **Dashboard weather** — Inset 3D styling, click to navigate to Settings > Weather Location
 - [ ] **Dashboard search** — Live search results, whole-word toggle, ResultGrid rendering
 - [ ] **Quick actions** — Pinned custom views on dashboard
@@ -106,13 +106,13 @@ summary: "Feature-by-feature test checklist with pass/fail status covering criti
 
 ## Dashboard Widgets
 
-- [ ] **Create widget** — Open widget editor from Settings > Widgets tab, set name, description, icon, background color
-- [ ] **Widget filters** — Add filter rows (date/text/array fields with appropriate operators), verify entries are filtered correctly
-- [ ] **Widget functions** — Add aggregate functions (Count, Sum, Max, Min, Average) on entries/tags/categories/people/places
-- [ ] **Widget preview** — Preview button shows live widget card with computed results
-- [ ] **Widget on dashboard** — Enabled widgets render as cards on dashboard with correct aggregate values
-- [ ] **Widget edit/delete** — Edit existing widget, delete with confirmation
-- [ ] **Widget persistence** — Widgets survive app restart (stored in DB widgets table)
+- [x] **Create widget** — Open widget editor from Settings > Widgets tab, set name, description, icon, background color (verified 2026-04-05)
+- [x] **Widget filters** — Add filter rows (date/text/array fields with appropriate operators), verify entries are filtered correctly (verified 2026-04-05)
+- [x] **Widget functions** — Add aggregate functions (Count, Sum, Max, Min, Average) on entries/tags/categories/people/places (verified 2026-04-05)
+- [x] **Widget preview** — Preview button shows live widget card with computed results (verified 2026-04-05)
+- [x] **Widget on dashboard** — Enabled widgets render as cards on dashboard with correct aggregate values (verified 2026-04-05)
+- [x] **Widget edit/delete** — Edit existing widget, delete with confirmation (verified 2026-04-05)
+- [x] **Widget persistence** — Widgets survive app restart (stored in DB widgets table) (verified 2026-04-05)
 
 ## Bootstrap Module
 
@@ -144,6 +144,21 @@ summary: "Feature-by-feature test checklist with pass/fail status covering criti
 - [ ] **Export from Explorer** — iCalendar export button appears in Explorer results bar
 - [ ] **Entry-based only** — Shows alert for non-entry raw SQL results
 - [ ] **Valid .ics** — Exported file is valid iCalendar with VEVENT per entry (date, time, title, location, description)
+
+## Calendar View
+
+- [ ] **Monthly view** — Calendar grid shows current month (Mon-Sun), day numbers, entry count badges with correct counts
+- [ ] **Weekly view** — 7-column grid shows entry titles listed per day, click title to view entry
+- [ ] **Navigation** — Prev/next month/week buttons work, "Today" button returns to current date
+- [ ] **Go to date** — Text input accepts YYYY-MM-DD, navigates to correct month/week, invalid dates show red border
+- [ ] **Day selection** — Click day cell to highlight it and show ResultGrid with that day's entries below calendar
+- [ ] **Entry count badges** — Green (1 entry), blue (2-3), red (4+) badges display correctly
+- [ ] **Today highlight** — Current day has accent border in both month and week views
+- [ ] **ResultGrid results** — Clicking entry row in results navigates to entry viewer, columns show time/title/categories/tags
+- [ ] **Mode toggle** — Month/Week buttons switch views, active button highlighted
+- [ ] **Dashboard button** — "CALENDAR" button appears in dashboard nav grid, navigates to calendar page
+- [ ] **Theme support** — Calendar renders correctly across all 12 themes
+- [ ] **Responsive** — Calendar is usable on small screens (mobile breakpoint adjustments)
 
 ## Cross-Platform
 

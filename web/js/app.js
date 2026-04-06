@@ -283,6 +283,7 @@ function navigateTo(pageId) {
     if (pageId === 'entry-form') prepareEntryForm();
     if (pageId === 'reports') prepareReports();
     if (pageId === 'explorer') initExplorer();
+    if (pageId === 'calendar') initCalendar();
     if (pageId === 'settings') { refreshSettings(); initCollapsibleSettings(); }
 
     return false;

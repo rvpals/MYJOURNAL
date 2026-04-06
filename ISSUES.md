@@ -40,7 +40,8 @@ summary: "Known bugs, platform limitations, fixed issues with dates, and archite
 
 - Dashboard ranked panels, Explorer results, and Entry list table view now use shared components (ResultGrid, RankedPanel, RecordViewer, CollapsiblePanel) from components.js — any rendering bugs in these areas should be checked against the component code, not the old inline implementations (which have been removed).
 - Old filter-toggle-header / filter-fields-body CSS removed from both style.css and style-android.css — entry list filters now use CollapsiblePanel.
-- Navbar no longer has Entry List, Report, or SQL Explorer links — navigation moved to dashboard 2x2 button grid.
+- Navbar no longer has Entry List, Report, or SQL Explorer links — navigation moved to dashboard button grid.
+- Dashboard nav grid now has 5 buttons (2x3 grid): New Entry, Entry List, Report, SQL Explorer, Calendar.
 - Theme cycle button removed from navbar — theme selection is in Settings > Display & Appearance > Theme.
 - HD icons use `type_hd` suffix in the same `icons` table (e.g., `tag_hd`). No schema change. Upload generates both 64x64 and 128x128 if source image >=96px. RankedPanel card view checks HD first, then standard icon, then text fallback.
 - Data Management now uses dropdown selects instead of individual buttons. Export/Import Metadata moved from Edit Metadata tab to Data Management dropdowns.

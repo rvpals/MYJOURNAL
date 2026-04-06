@@ -105,9 +105,9 @@ summary: "Complete functional requirements for all 12 feature areas — authenti
 ## 4. Dashboard
 
 ### Navigation Grid
-- 2x2 button grid at top of dashboard: New Entry, Entry List, Report, SQL Explorer
+- 2-column button grid at top of dashboard: New Entry, Entry List, Report, SQL Explorer, Calendar
 - 3D styled buttons with gradient, shadow, border-bottom, hover lift, press inset
-- Entry List, Report, SQL Explorer links removed from navbar — accessible only via dashboard
+- Entry List, Report, SQL Explorer, Calendar links removed from navbar — accessible only via dashboard
 
 ### Stats
 - Total entries count
@@ -156,6 +156,26 @@ summary: "Complete functional requirements for all 12 feature areas — authenti
 - 2x2 stats grid, pinned entries, recent entries, ranked panels
 - Clickable rows return navigation intent to MainActivity
 - Color-coded ranking badges
+
+## 4b. Calendar View
+
+- Accessible from "Calendar" button in dashboard navigation grid
+- Two view modes: Monthly (default) and Weekly, toggled via buttons
+- **Monthly view**: 7-column grid (Monday to Sunday) showing all days of the current month
+  - Each day cell shows the day number and a color-coded entry count badge (green=1, blue=2-3, red=4+)
+  - Empty days before the 1st are rendered as blank cells
+  - Today is highlighted with accent border
+- **Weekly view**: 7-column grid showing one week (Monday to Sunday)
+  - Each day shows the day number, entry count badge, and a list of entry titles
+  - Clicking an entry title navigates directly to the entry viewer
+- **Navigation**: Previous/Next buttons to move by month or week, "Today" button to return to current date
+- **Go to date**: Text input (YYYY-MM-DD format) with "Go" button to jump to a specific date; invalid input shows red border feedback
+- **Day selection**: Clicking a day cell highlights it and renders a ResultGrid below the calendar with that day's entries
+  - ResultGrid columns: Time, Title, Categories (with icon+color), Tags (with icon+color)
+  - Clicking an entry row navigates to the entry viewer
+  - Updates `viewEntryList` for prev/next navigation in viewer
+- Entry data fetched via `DB.getEntries()` and filtered client-side by date range
+- Full CSS theme support via variables; responsive design with mobile breakpoints
 
 ## 5. Custom Views
 

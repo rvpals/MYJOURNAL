@@ -137,6 +137,18 @@ summary: "Version-by-version feature completion history (v0.9–v1.4) and remain
 - [x] Native auto-login updated to use Bootstrap store instead of localStorage
 - [x] Metadata export/import updated: includes category descriptions, tag descriptions, and widgets
 
+### v1.4.0+ (2026-04-05, Calendar View)
+- [x] Calendar View: monthly calendar grid (Mon-Sun) with entry count badges per day
+- [x] Calendar View: weekly view with 7-column grid showing entry titles per day
+- [x] Calendar View: month/week navigation (prev/next buttons), "Today" button
+- [x] Calendar View: go-to-date text input (YYYY-MM-DD) for jumping to specific dates
+- [x] Calendar View: day selection shows entries below calendar via ResultGrid component
+- [x] Calendar View: color-coded badges (green=1, blue=2-3, red=4+ entries)
+- [x] Calendar View: today highlighting with accent border, selected day highlight
+- [x] Calendar View: "CALENDAR" button added to dashboard navigation grid
+- [x] Calendar View: responsive layout with mobile breakpoints
+- [x] Calendar View: full theme support via CSS variables
+
 ## Remaining / TODO
 
 - [ ] Re-test all features after widget/Bootstrap changes (web + Android)

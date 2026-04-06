@@ -32,7 +32,7 @@ MYJOURNAL/
 │   │   │   └── xml/file_paths.xml # FileProvider for camera
 │   │   └── assets/web/            # ← copied from /web at build time (copyWebAssets task)
 ├── web/                            # Shared web SPA (loaded by WebView)
-│   ├── index.html                  # Single-page app, all views as hidden divs (~1,185 lines)
+│   ├── index.html                  # Single-page app, all views as hidden divs (~1,200 lines)
 │   ├── app_info.xml                # App metadata & changelog (single source of truth)
 │   ├── css/
 │   │   ├── style.css               # 12 themes via CSS variables, all component styles
@@ -48,6 +48,7 @@ MYJOURNAL/
 │   │   ├── dashboard.js    # Stats aggregation, ranked lists, widgets, quick actions
 │   │   ├── views.js        # Custom saved views: AND/OR/NOT filter, group, sort
 │   │   ├── explorer.js     # SQL Explorer: query builder, raw SQL, CSV/iCalendar export
+│   │   ├── calendar.js     # Calendar View: monthly/weekly grid, day selection, entry results
 │   │   ├── reports.js      # HTML/PDF/CSV report generation with templates
 │   │   ├── settings.js     # All settings: preferences, themes, metadata, widgets, import/export
 │   │   ├── weather.js      # Open-Meteo API, city search, GPS location

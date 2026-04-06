@@ -76,6 +76,7 @@
                 <button class="btn btn-secondary" onclick="navigateTo('entry-list')">&#x1F4D6; Entry List</button>
                 <button class="btn btn-secondary" onclick="navigateTo('reports')">&#x1F4C4; Report</button>
                 <button class="btn btn-secondary" onclick="navigateTo('explorer')">&#x1F50D; SQL Explorer</button>
+                <button class="btn btn-secondary" onclick="navigateTo('calendar')">&#x1F4C5; Calendar</button>
             </div>
             <div id="dashboard-quick-actions" class="dashboard-quick-actions"></div>
             <fieldset class="dashboard-search-group" id="dashboard-search-group">
@@ -508,6 +509,19 @@
                     <button class="btn-secondary btn-small" onclick="exportExplorerICalendar()">Export iCalendar</button>
                 </div>
                 <div id="explorer-results-grid"></div>
+            </div>
+        </div>
+
+        <!-- CALENDAR PAGE -->
+        <div id="page-calendar" class="page page-wide">
+            <div class="page-header page-header-row">
+                <h2>Calendar</h2>
+            </div>
+            <div id="calendar-header" class="calendar-header"></div>
+            <div id="calendar-grid" class="calendar-grid"></div>
+            <div id="calendar-results" class="calendar-results" style="display:none">
+                <h3 id="calendar-results-label" class="calendar-results-label"></h3>
+                <div id="calendar-results-grid"></div>
             </div>
         </div>
 
@@ -1282,6 +1296,7 @@
     <script src="js/reports.js"></script>
     <script src="js/weather.js"></script>
     <script src="js/explorer.js"></script>
+    <script src="js/calendar.js"></script>
     <script src="js/widgets.js"></script>
     <script src="js/settings.js"></script>
 </body>
