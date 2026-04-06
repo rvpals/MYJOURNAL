@@ -64,6 +64,7 @@
                         <a href="#" class="nav-menu-item" data-page="calendar" onclick="navMenuGo('calendar')">&#x1F4C5; Calendar</a>
                         <a href="#" class="nav-menu-item" data-page="settings" onclick="navMenuGo('settings')">&#x2699;&#xFE0F; Settings</a>
                         <div class="nav-menu-divider"></div>
+                        <a href="#" class="nav-menu-item" onclick="event.preventDefault(); closeNavMenu(); openHelp()">&#x2753; Help</a>
                         <a href="#" class="nav-menu-item" onclick="event.preventDefault(); closeNavMenu(); openAbout()">&#x2139;&#xFE0F; About</a>
                         <a href="#" class="nav-menu-item nav-menu-lock" onclick="event.preventDefault(); closeNavMenu(); lockApp()">&#x1F512; Lock</a>
                     </div>
@@ -1248,6 +1249,15 @@
                 <button class="btn-primary" onclick="printEntryPdf()">Generate PDF</button>
                 <button class="btn-secondary" onclick="closePrintModal()">Cancel</button>
             </div>
+        </div>
+    </div>
+
+    <!-- Help Modal -->
+    <div id="help-modal" class="help-modal" style="display:none" onclick="closeHelpModal(event)">
+        <div class="help-modal-content" onclick="event.stopPropagation()">
+            <h2 class="help-modal-title">&#x2753; Help</h2>
+            <div id="help-modal-body" class="help-modal-body"></div>
+            <button class="btn-secondary help-close-btn" onclick="closeHelpModal()">Close</button>
         </div>
     </div>
 

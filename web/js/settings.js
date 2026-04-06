@@ -1934,6 +1934,148 @@ function importTemplate(event) {
 
 // ========== About ==========
 
+// ========== Help Modal ==========
+
+function getHelpContent() {
+    const s = (id, title, body) =>
+        `<div class="help-section" id="help-section-${id}"><h3 onclick="toggleHelpSection(this)">${title} <span class="help-arrow">&#9654;</span></h3><div class="help-body">${body}</div></div>`;
+    return [
+        s('getting-started', 'Getting Started',
+            '<p><strong>My Journal</strong> is a private, encrypted journal app. All your data is stored locally on your device and protected with AES-256 encryption.</p>' +
+            '<h4>First Time Setup</h4><ol>' +
+            '<li>Create a new journal by tapping <strong>New Journal</strong> on the login screen.</li>' +
+            '<li>Choose a strong password \u2014 this encrypts all your data.</li>' +
+            '<li>Optionally enable biometric login (fingerprint/face) for faster access.</li></ol>' +
+            '<h4>Logging In</h4><ul>' +
+            '<li>Select your journal from the dropdown and enter your password.</li>' +
+            '<li>If biometric login is enabled, you can unlock with your fingerprint or face.</li>' +
+            '<li>Use the <strong>Lock</strong> option in the menu to lock the app without closing it.</li></ul>'),
+        s('dashboard', 'Dashboard',
+            '<p>The Dashboard is your home screen, showing an overview of your journal activity.</p><ul>' +
+            '<li><strong>Stats</strong> \u2014 entry counts for this week, month, and year. Tap a stat to see those entries.</li>' +
+            '<li><strong>Quick Actions</strong> \u2014 shortcuts to create entries, open the calendar, etc.</li>' +
+            '<li><strong>Search</strong> \u2014 expand the search bar to find text across all entries.</li>' +
+            '<li><strong>Widgets</strong> \u2014 custom summary cards you define (see Widgets section).</li>' +
+            '<li><strong>Ranked Lists</strong> \u2014 top categories, tags, and people by usage.</li>' +
+            '<li><strong>Pinned &amp; Recent</strong> \u2014 quick access to pinned entries and your latest entries.</li></ul>' +
+            '<p>You can set a wallpaper background for the dashboard in <strong>Settings &gt; Preferences</strong>.</p>'),
+        s('entries', 'Creating &amp; Editing Entries',
+            '<p>Tap the <strong>\uD83D\uDCDD</strong> button in the top bar to create a new entry.</p>' +
+            '<h4>Entry Fields</h4><ul>' +
+            '<li><strong>Date &amp; Time</strong> \u2014 defaults to now; change to backdate an entry.</li>' +
+            '<li><strong>Title</strong> \u2014 a short summary of your entry.</li>' +
+            '<li><strong>Content</strong> \u2014 rich text editor with bold, italic, lists, headings, and more.</li>' +
+            '<li><strong>Categories</strong> \u2014 classify entries (e.g., Work, Personal, Travel).</li>' +
+            '<li><strong>Tags</strong> \u2014 add keywords for flexible filtering.</li>' +
+            '<li><strong>People</strong> \u2014 mention people associated with the entry.</li>' +
+            '<li><strong>Location</strong> \u2014 add a place name or use GPS to capture your location.</li>' +
+            '<li><strong>Weather</strong> \u2014 automatically fetch current weather or enter manually.</li>' +
+            '<li><strong>Images</strong> \u2014 attach photos from camera or gallery.</li></ul>' +
+            '<h4>Rich Text Editor</h4>' +
+            '<p>The editor supports formatting via the toolbar: bold, italic, underline, headings, bullet/numbered lists, blockquotes, code blocks, and links. You can also paste images directly.</p>' +
+            '<h4>Pinning Entries</h4>' +
+            '<p>Pin important entries so they appear in the Dashboard\'s pinned section. Toggle the pin from the entry viewer or entry list.</p>'),
+        s('entry-list', 'Entry List &amp; Search',
+            '<p>The Entry List shows all your entries with filtering and search capabilities.</p><ul>' +
+            '<li><strong>Search</strong> \u2014 search by text across titles and content.</li>' +
+            '<li><strong>Filters</strong> \u2014 filter by category, tag, person, location, date range, and more.</li>' +
+            '<li><strong>Sort</strong> \u2014 sort by date, title, or last updated.</li>' +
+            '<li><strong>Pagination</strong> \u2014 navigate through entries in pages.</li></ul>' +
+            '<p>Tap an entry to view it. From the viewer, you can edit, delete, pin, or export the entry.</p>'),
+        s('calendar', 'Calendar View',
+            '<p>The Calendar provides a visual overview of your entries by date.</p><ul>' +
+            '<li><strong>Monthly View</strong> \u2014 see which days have entries. Days with entries are highlighted.</li>' +
+            '<li><strong>Weekly View</strong> \u2014 a more detailed week-by-week layout.</li>' +
+            '<li><strong>Day Selection</strong> \u2014 tap any day to see all entries for that date.</li></ul>' +
+            '<p>Use the arrow buttons to navigate between months/weeks.</p>'),
+        s('views', 'Custom Views',
+            '<p>Custom Views let you save complex filter combinations for quick reuse.</p><ul>' +
+            '<li><strong>Filter Logic</strong> \u2014 combine filters with AND, OR, and NOT operators.</li>' +
+            '<li><strong>Grouping</strong> \u2014 group results by category, tag, date, etc.</li>' +
+            '<li><strong>Sorting</strong> \u2014 define custom sort orders.</li>' +
+            '<li><strong>Save &amp; Reuse</strong> \u2014 save views and access them from the dashboard quick actions.</li></ul>' +
+            '<p>Create views in <strong>Settings &gt; Templates &gt; Custom Views</strong>.</p>'),
+        s('reports', 'Reports',
+            '<p>Generate formatted reports from your journal entries.</p><ul>' +
+            '<li><strong>Templates</strong> \u2014 choose from built-in templates or create your own in <strong>Settings &gt; Templates &gt; Report Templates</strong>.</li>' +
+            '<li><strong>Date Range</strong> \u2014 select entries by date range.</li>' +
+            '<li><strong>Export Formats</strong> \u2014 export as HTML, PDF, or CSV.</li></ul>'),
+        s('explorer', 'SQL Explorer',
+            '<p>The SQL Explorer provides advanced querying for power users.</p><ul>' +
+            '<li><strong>Query Builder</strong> \u2014 build queries visually without writing SQL.</li>' +
+            '<li><strong>Raw SQL</strong> \u2014 write custom SQL queries directly against your journal database.</li>' +
+            '<li><strong>Export</strong> \u2014 export query results as CSV or iCalendar format.</li></ul>' +
+            '<h4>Available Tables</h4>' +
+            '<p><code>entries</code>, <code>images</code>, <code>categories</code>, <code>tags</code>, <code>people</code>, <code>widgets</code>, <code>settings</code></p>' +
+            '<h4>Common Entry Fields</h4>' +
+            '<p><code>id</code>, <code>date</code>, <code>time</code>, <code>title</code>, <code>content</code>, <code>categories</code>, <code>tags</code>, <code>people</code>, <code>placeName</code>, <code>pinned</code>, <code>dtCreated</code>, <code>dtUpdated</code></p>'),
+        s('widgets', 'Widgets',
+            '<p>Widgets are custom dashboard cards that show filtered entry summaries.</p><ul>' +
+            '<li><strong>Filters</strong> \u2014 define which entries the widget counts/summarizes.</li>' +
+            '<li><strong>Functions</strong> \u2014 choose aggregate functions (count, latest date, etc.).</li>' +
+            '<li><strong>Appearance</strong> \u2014 set a background color and icon.</li>' +
+            '<li><strong>Dashboard Toggle</strong> \u2014 enable or disable widgets on the dashboard.</li></ul>' +
+            '<p>Manage widgets in <strong>Settings &gt; Widgets</strong> or tap the widget editor from the dashboard.</p>'),
+        s('settings', 'Settings',
+            '<h4>Preferences</h4><ul>' +
+            '<li><strong>Theme</strong> \u2014 choose from 12 themes (Light, Dark, Ocean, Forest, etc.).</li>' +
+            '<li><strong>Wallpaper</strong> \u2014 set a background image for the dashboard.</li>' +
+            '<li><strong>Weather</strong> \u2014 configure weather provider and default location.</li>' +
+            '<li><strong>Geocoding</strong> \u2014 choose location search provider (Photon, Nominatim, or Google).</li></ul>' +
+            '<h4>Templates</h4><ul>' +
+            '<li><strong>Custom Views</strong> \u2014 saved filter/sort/group configurations.</li>' +
+            '<li><strong>Pre-fill Templates</strong> \u2014 entry templates with pre-filled fields.</li>' +
+            '<li><strong>Report Templates</strong> \u2014 HTML templates for report generation.</li></ul>' +
+            '<h4>Edit Metadata</h4><ul>' +
+            '<li><strong>Categories, Tags, People</strong> \u2014 manage your metadata items, add descriptions and icons.</li></ul>' +
+            '<h4>Data Management</h4><ul>' +
+            '<li><strong>Export</strong> \u2014 back up your entire journal as an encrypted file.</li>' +
+            '<li><strong>Import</strong> \u2014 restore from a backup file.</li>' +
+            '<li><strong>Change Password</strong> \u2014 update your journal encryption password.</li>' +
+            '<li><strong>Backup Folder</strong> \u2014 set a folder for automatic backups (Android).</li></ul>'),
+        s('security', 'Security &amp; Privacy',
+            '<ul><li><strong>Encryption</strong> \u2014 all data is encrypted with AES-256-GCM using a key derived from your password (PBKDF2 with 100,000 iterations).</li>' +
+            '<li><strong>Local Storage</strong> \u2014 no data is sent to any server. Everything stays on your device.</li>' +
+            '<li><strong>Biometric Lock</strong> \u2014 optionally use fingerprint or face unlock for convenience.</li>' +
+            '<li><strong>Auto-lock</strong> \u2014 the app locks when you leave, requiring re-authentication.</li></ul>' +
+            '<p><strong>Important:</strong> If you forget your password and don\'t have a backup, your data cannot be recovered. Keep your password safe and back up regularly.</p>'),
+        s('tips', 'Tips &amp; Shortcuts',
+            '<ul><li>Use <strong>categories</strong> for broad classification and <strong>tags</strong> for specific topics.</li>' +
+            '<li>Pin frequently referenced entries for quick dashboard access.</li>' +
+            '<li>Create <strong>widgets</strong> to track habits or goals (e.g., count entries tagged "Exercise" this month).</li>' +
+            '<li>Use <strong>Custom Views</strong> to save your most-used filters.</li>' +
+            '<li>Export backups regularly to protect against data loss.</li>' +
+            '<li>Tap the dashboard stats (This Week, This Month, This Year) to jump directly to those entries.</li></ul>')
+    ].join('');
+}
+
+let helpContentLoaded = false;
+
+function openHelp() {
+    const modal = document.getElementById('help-modal');
+    const body = document.getElementById('help-modal-body');
+    if (!helpContentLoaded) {
+        body.innerHTML = getHelpContent();
+        helpContentLoaded = true;
+    } else {
+        body.querySelectorAll('.help-section').forEach(s => s.classList.remove('open'));
+    }
+    modal.style.display = 'flex';
+}
+
+function toggleHelpSection(h3) {
+    const section = h3.closest('.help-section');
+    section.classList.toggle('open');
+}
+
+function closeHelpModal(event) {
+    if (!event || event.target.id === 'help-modal') {
+        document.getElementById('help-modal').style.display = 'none';
+    }
+}
+
+// ========== About Modal ==========
+
 function openAbout() {
     // Use the web About modal on all platforms (includes Change History)
     const info = APP_INFO;
