@@ -2,6 +2,7 @@ package com.journal.app;
 
 import android.Manifest;
 import android.app.Activity;
+import android.content.ContentResolver;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
@@ -20,12 +21,15 @@ import android.webkit.DownloadListener;
 import android.webkit.JsResult;
 import android.widget.Toast;
 
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.biometric.BiometricManager;
 import androidx.biometric.BiometricPrompt;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
+import androidx.documentfile.provider.DocumentFile;
 
 import android.webkit.JavascriptInterface;
 
@@ -60,9 +64,34 @@ public class MainActivity extends AppCompatActivity {
     private String autoLoginVerify;
     private String autoLoginJournalList;
 
+    private static final String BACKUP_PREFS = "backup_prefs";
+    private static final String BACKUP_FOLDER_URI_KEY = "backup_folder_uri";
+    private ActivityResultLauncher<Intent> folderPickerLauncher;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        // Register SAF folder picker launcher
+        folderPickerLauncher = registerForActivityResult(
+                new ActivityResultContracts.StartActivityForResult(), result -> {
+                    if (result.getResultCode() == Activity.RESULT_OK && result.getData() != null) {
+                        Uri treeUri = result.getData().getData();
+                        if (treeUri != null) {
+                            // Persist permission across app restarts
+                            getContentResolver().takePersistableUriPermission(treeUri,
+                                    Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
+                            getSharedPreferences(BACKUP_PREFS, MODE_PRIVATE)
+                                    .edit().putString(BACKUP_FOLDER_URI_KEY, treeUri.toString()).apply();
+                            // Notify web layer
+                            String name = getBackupFolderDisplayName(treeUri);
+                            String escaped = name.replace("\\", "\\\\").replace("'", "\\'");
+                            runOnUiThread(() -> webView.evaluateJavascript(
+                                    "if(typeof onBackupFolderSelected==='function')onBackupFolderSelected('" + escaped + "')", null));
+                        }
+                    }
+                });
+
         setContentView(R.layout.activity_main);
 
         // Check for auto-login from LoginActivity
@@ -127,7 +156,7 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onPageFinished(WebView view, String url) {
                 super.onPageFinished(view, url);
-                // Sync journal metadata from web localStorage to SharedPreferences
+                // Sync journal metadata from web Bootstrap store to SharedPreferences
                 syncJournalMetadata();
                 // Auto-login if launched from native LoginActivity
                 if (autoLoginJournalId != null && autoLoginPassword != null) {
@@ -221,6 +250,12 @@ public class MainActivity extends AppCompatActivity {
                     return false;
                 }
                 return true;
+            }
+
+            @Override
+            public boolean onConsoleMessage(android.webkit.ConsoleMessage cm) {
+                android.util.Log.d("WebConsole", cm.message() + " -- line " + cm.lineNumber() + " of " + cm.sourceId());
+                return super.onConsoleMessage(cm);
             }
 
             @Override
@@ -399,25 +434,28 @@ public class MainActivity extends AppCompatActivity {
         // Escape single quotes in password for JS injection
         String escapedPwd = pwd.replace("\\", "\\\\").replace("'", "\\'").replace("\n", "\\n");
 
-        // Build JS to sync native crypto keys to web localStorage before auto-login.
+        // Build JS to sync native crypto keys to web Bootstrap store before auto-login.
         // This ensures the web Crypto module sees the same salt/verify as native.
         StringBuilder js = new StringBuilder();
         js.append("(async function() {");
         js.append("  try {");
 
-        // Sync journal list to web localStorage
+        // Wait for Bootstrap to be ready
+        js.append("    if (typeof Bootstrap !== 'undefined' && !Bootstrap.isReady()) await Bootstrap.init();");
+
+        // Sync journal list to web Bootstrap store
         if (journalList != null) {
             String escapedList = journalList.replace("\\", "\\\\").replace("'", "\\'");
-            js.append("    localStorage.setItem('journal_list', '").append(escapedList).append("');");
+            js.append("    Bootstrap.set('journal_list', '").append(escapedList).append("');");
         }
 
-        // Sync crypto keys (salt + verify token) to web localStorage
+        // Sync crypto keys (salt + verify token) to web Bootstrap store
         if (salt != null) {
-            js.append("    localStorage.setItem('journal_salt_").append(jid).append("', '").append(salt).append("');");
+            js.append("    Bootstrap.set('journal_salt_").append(jid).append("', '").append(salt).append("');");
         }
         if (verify != null) {
             String escapedVerify = verify.replace("\\", "\\\\").replace("'", "\\'");
-            js.append("    localStorage.setItem('journal_verify_").append(jid).append("', '").append(escapedVerify).append("');");
+            js.append("    Bootstrap.set('journal_verify_").append(jid).append("', '").append(escapedVerify).append("');");
         }
 
         // Now auto-login: set credentials, load DB, enter app
@@ -436,22 +474,27 @@ public class MainActivity extends AppCompatActivity {
     }
 
     /**
-     * Sync journal metadata from WebView localStorage to SharedPreferences.
+     * Sync journal metadata from WebView Bootstrap store to SharedPreferences.
      * This keeps the native LoginActivity's data in sync with the web app.
+     * Uses Bootstrap (IndexedDB-backed) instead of localStorage.
      */
     private void syncJournalMetadata() {
         String js = "(function() {" +
+                "  if (typeof Bootstrap === 'undefined' || !Bootstrap.isReady()) return null;" +
                 "  var result = {};" +
-                "  result.journal_list = localStorage.getItem('journal_list') || '[]';" +
-                "  result.last_journal_id = localStorage.getItem('last_journal_id') || '';" +
-                "  result.auto_open = localStorage.getItem('auto_open_last_journal') === 'true';" +
-                "  result.auto_biometric = localStorage.getItem('auto_biometric') === 'true';" +
+                "  result.journal_list = Bootstrap.get('journal_list') || '[]';" +
+                "  result.last_journal_id = Bootstrap.get('last_journal_id') || '';" +
+                "  result.auto_open = Bootstrap.get('auto_open_last_journal') === 'true';" +
+                "  result.auto_biometric = Bootstrap.get('auto_biometric') === 'true';" +
                 "  var keys = {};" +
-                "  for (var i = 0; i < localStorage.length; i++) {" +
-                "    var k = localStorage.key(i);" +
-                "    if (k.startsWith('journal_salt_') || k.startsWith('journal_verify_')) {" +
-                "      keys[k] = localStorage.getItem(k);" +
-                "    }" +
+                "  var prefixes = ['journal_salt_', 'journal_verify_'];" +
+                "  var journals = JSON.parse(result.journal_list);" +
+                "  for (var i = 0; i < journals.length; i++) {" +
+                "    var id = journals[i].id;" +
+                "    var salt = Bootstrap.get('journal_salt_' + id);" +
+                "    var verify = Bootstrap.get('journal_verify_' + id);" +
+                "    if (salt) keys['journal_salt_' + id] = salt;" +
+                "    if (verify) keys['journal_verify_' + id] = verify;" +
                 "  }" +
                 "  result.crypto_keys = keys;" +
                 "  return JSON.stringify(result);" +
@@ -498,6 +541,27 @@ public class MainActivity extends AppCompatActivity {
                 // Sync failed silently — not critical
             }
         });
+    }
+
+    // ========== Backup Folder Helpers ==========
+
+    private String getBackupFolderDisplayName(Uri treeUri) {
+        try {
+            DocumentFile docFile = DocumentFile.fromTreeUri(this, treeUri);
+            if (docFile != null && docFile.getName() != null) {
+                return docFile.getName();
+            }
+        } catch (Exception ignored) {}
+        // Fallback: show last segment of URI path
+        String path = treeUri.getPath();
+        if (path != null) {
+            int idx = path.lastIndexOf('/');
+            if (idx >= 0 && idx < path.length() - 1) return path.substring(idx + 1);
+            // Try colon-separated (e.g. "primary:Documents/MyBackups")
+            idx = path.lastIndexOf(':');
+            if (idx >= 0 && idx < path.length() - 1) return path.substring(idx + 1);
+        }
+        return treeUri.toString();
     }
 
     // ========== Biometric Authentication ==========
@@ -721,6 +785,155 @@ public class MainActivity extends AppCompatActivity {
         @JavascriptInterface
         public void authenticate(String callbackName) {
             runOnUiThread(() -> promptBiometric(callbackName));
+        }
+
+        // ===== Backup Folder Methods =====
+
+        @JavascriptInterface
+        public void selectBackupFolder() {
+            runOnUiThread(() -> {
+                Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT_TREE);
+                intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_GRANT_WRITE_URI_PERMISSION
+                        | Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION);
+                folderPickerLauncher.launch(intent);
+            });
+        }
+
+        @JavascriptInterface
+        public String getBackupFolderName() {
+            String uriStr = getSharedPreferences(BACKUP_PREFS, MODE_PRIVATE)
+                    .getString(BACKUP_FOLDER_URI_KEY, null);
+            if (uriStr == null) return "";
+            try {
+                Uri treeUri = Uri.parse(uriStr);
+                // Verify permission is still valid
+                boolean hasPermission = false;
+                for (android.content.UriPermission perm : getContentResolver().getPersistedUriPermissions()) {
+                    if (perm.getUri().equals(treeUri) && perm.isWritePermission()) {
+                        hasPermission = true;
+                        break;
+                    }
+                }
+                if (!hasPermission) {
+                    getSharedPreferences(BACKUP_PREFS, MODE_PRIVATE)
+                            .edit().remove(BACKUP_FOLDER_URI_KEY).apply();
+                    return "";
+                }
+                return getBackupFolderDisplayName(treeUri);
+            } catch (Exception e) {
+                return "";
+            }
+        }
+
+        @JavascriptInterface
+        public boolean hasBackupFolder() {
+            String name = getBackupFolderName();
+            return name != null && !name.isEmpty();
+        }
+
+        @JavascriptInterface
+        public void clearBackupFolder() {
+            String uriStr = getSharedPreferences(BACKUP_PREFS, MODE_PRIVATE)
+                    .getString(BACKUP_FOLDER_URI_KEY, null);
+            if (uriStr != null) {
+                try {
+                    Uri treeUri = Uri.parse(uriStr);
+                    getContentResolver().releasePersistableUriPermission(treeUri,
+                            Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
+                } catch (Exception ignored) {}
+            }
+            getSharedPreferences(BACKUP_PREFS, MODE_PRIVATE)
+                    .edit().remove(BACKUP_FOLDER_URI_KEY).apply();
+        }
+
+        @JavascriptInterface
+        public String listBackupFolderFiles() {
+            String uriStr = getSharedPreferences(BACKUP_PREFS, MODE_PRIVATE)
+                    .getString(BACKUP_FOLDER_URI_KEY, null);
+            if (uriStr == null) return "[]";
+            try {
+                Uri treeUri = Uri.parse(uriStr);
+                DocumentFile folder = DocumentFile.fromTreeUri(MainActivity.this, treeUri);
+                if (folder == null || !folder.canRead()) return "[]";
+
+                org.json.JSONArray arr = new org.json.JSONArray();
+                for (DocumentFile file : folder.listFiles()) {
+                    String name = file.getName();
+                    if (name != null && name.endsWith("_backup.json")) {
+                        org.json.JSONObject obj = new org.json.JSONObject();
+                        obj.put("name", name);
+                        obj.put("size", file.length());
+                        obj.put("lastModified", file.lastModified());
+                        arr.put(obj);
+                    }
+                }
+                return arr.toString();
+            } catch (Exception e) {
+                return "[]";
+            }
+        }
+
+        @JavascriptInterface
+        public String readBackupFolderFile(String filename) {
+            String uriStr = getSharedPreferences(BACKUP_PREFS, MODE_PRIVATE)
+                    .getString(BACKUP_FOLDER_URI_KEY, null);
+            if (uriStr == null) return "";
+            try {
+                Uri treeUri = Uri.parse(uriStr);
+                DocumentFile folder = DocumentFile.fromTreeUri(MainActivity.this, treeUri);
+                if (folder == null || !folder.canRead()) return "";
+
+                for (DocumentFile file : folder.listFiles()) {
+                    if (filename.equals(file.getName())) {
+                        java.io.InputStream is = getContentResolver().openInputStream(file.getUri());
+                        if (is == null) return "";
+                        java.io.ByteArrayOutputStream baos = new java.io.ByteArrayOutputStream();
+                        byte[] buf = new byte[8192];
+                        int len;
+                        while ((len = is.read(buf)) != -1) {
+                            baos.write(buf, 0, len);
+                        }
+                        is.close();
+                        return baos.toString("UTF-8");
+                    }
+                }
+                return "";
+            } catch (Exception e) {
+                return "";
+            }
+        }
+
+        @JavascriptInterface
+        public boolean saveFileToBackupFolder(String filename, String base64Data, String mimeType) {
+            String uriStr = getSharedPreferences(BACKUP_PREFS, MODE_PRIVATE)
+                    .getString(BACKUP_FOLDER_URI_KEY, null);
+            if (uriStr == null) return false;
+            try {
+                Uri treeUri = Uri.parse(uriStr);
+                DocumentFile folder = DocumentFile.fromTreeUri(MainActivity.this, treeUri);
+                if (folder == null || !folder.canWrite()) return false;
+
+                DocumentFile file = folder.createFile(mimeType, filename);
+                if (file == null) return false;
+
+                byte[] data = Base64.decode(base64Data, Base64.DEFAULT);
+                java.io.OutputStream os = getContentResolver().openOutputStream(file.getUri());
+                if (os == null) return false;
+                os.write(data);
+                os.close();
+
+                runOnUiThread(() ->
+                    Toast.makeText(MainActivity.this,
+                            "Backup saved: " + filename, Toast.LENGTH_LONG).show()
+                );
+                return true;
+            } catch (Exception e) {
+                runOnUiThread(() ->
+                    Toast.makeText(MainActivity.this,
+                            "Backup failed: " + e.getMessage(), Toast.LENGTH_SHORT).show()
+                );
+                return false;
+            }
         }
     }
 }

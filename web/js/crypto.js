@@ -11,12 +11,12 @@ const Crypto = (() => {
     function verifyKey(journalId) { return `journal_verify_${journalId}`; }
 
     async function getSalt(journalId) {
-        let salt = localStorage.getItem(saltKey(journalId));
+        let salt = Bootstrap.get(saltKey(journalId));
         if (!salt) {
             const arr = new Uint8Array(16);
             crypto.getRandomValues(arr);
             salt = arrayToBase64(arr);
-            localStorage.setItem(saltKey(journalId), salt);
+            Bootstrap.set(saltKey(journalId), salt);
         }
         return base64ToArray(salt);
     }
@@ -80,17 +80,17 @@ const Crypto = (() => {
             iv: arrayToBase64(iv),
             data: arrayToBase64(new Uint8Array(encrypted))
         };
-        localStorage.setItem(verifyKey(journalId), JSON.stringify(verifyObj));
+        Bootstrap.set(verifyKey(journalId), JSON.stringify(verifyObj));
 
         // Sync to native SharedPreferences if available
         if (window.AndroidBridge && typeof AndroidBridge.syncCryptoKey === 'function') {
-            AndroidBridge.syncCryptoKey(journalId, localStorage.getItem(saltKey(journalId)),
+            AndroidBridge.syncCryptoKey(journalId, Bootstrap.get(saltKey(journalId)),
                 JSON.stringify(verifyObj));
         }
     }
 
     async function verifyPassword(password, journalId) {
-        const verifyStr = localStorage.getItem(verifyKey(journalId));
+        const verifyStr = Bootstrap.get(verifyKey(journalId));
         if (!verifyStr) return false;
         try {
             const verifyObj = JSON.parse(verifyStr);
@@ -111,7 +111,7 @@ const Crypto = (() => {
     }
 
     function isSetup(journalId) {
-        return localStorage.getItem(verifyKey(journalId)) !== null;
+        return Bootstrap.get(verifyKey(journalId)) !== null;
     }
 
     async function changePassword(oldPassword, newPassword, journalId) {
@@ -124,8 +124,8 @@ const Crypto = (() => {
     }
 
     function removeJournalKeys(journalId) {
-        localStorage.removeItem(saltKey(journalId));
-        localStorage.removeItem(verifyKey(journalId));
+        Bootstrap.remove(saltKey(journalId));
+        Bootstrap.remove(verifyKey(journalId));
     }
 
     // Helpers

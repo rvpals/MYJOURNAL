@@ -351,7 +351,7 @@ public class LoginActivity extends AppCompatActivity {
         intent.putExtra("password", password);
         intent.putExtra("auto_login", true);
 
-        // Pass native crypto keys so web localStorage can be synced
+        // Pass native crypto keys so web Bootstrap store can be synced
         String salt = prefs.getString("salt_" + journalId, null);
         String verify = prefs.getString("verify_" + journalId, null);
         if (salt != null) intent.putExtra("crypto_salt", salt);

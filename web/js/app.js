@@ -29,8 +29,8 @@ function populateJournalSelect() {
     ).join('');
 
     // Auto-select last opened journal if preference is on
-    const autoOpen = localStorage.getItem('auto_open_last_journal') === 'true';
-    const lastId = localStorage.getItem('last_journal_id');
+    const autoOpen = Bootstrap.get('auto_open_last_journal') === 'true';
+    const lastId = Bootstrap.get('last_journal_id');
     if (autoOpen && lastId && journals.find(j => j.id === lastId)) {
         select.value = lastId;
     }
@@ -61,7 +61,7 @@ function onJournalSelect() {
     updateBiometricLoginButton();
 
     // Auto-trigger biometric if enabled (skip if native login already handled auth)
-    if (isSetup && localStorage.getItem('auto_biometric') === 'true' && isBiometricSupported() &&
+    if (isSetup && Bootstrap.get('auto_biometric') === 'true' && isBiometricSupported() &&
         typeof AndroidBridge !== 'undefined' && AndroidBridge.hasCredential(journalId) &&
         !(typeof AndroidBridge.hasNativeLogin === 'function' && AndroidBridge.hasNativeLogin())) {
         setTimeout(() => biometricLogin(), 300);
@@ -188,7 +188,7 @@ async function handleLogin() {
 
 function enterApp(journalId) {
     // Remember last opened journal
-    localStorage.setItem('last_journal_id', journalId);
+    Bootstrap.set('last_journal_id', journalId);
 
     document.getElementById('page-login').classList.remove('active');
     document.getElementById('page-login').style.display = 'none';
@@ -530,25 +530,65 @@ function loadEntryTemplate() {
 
 function populateCategorySelect() {
     const container = document.getElementById('category-select');
-    const categories = DB.getCategories();
-    container.innerHTML = categories.map(cat => `
-        <div class="multi-select-item">
-            <input type="checkbox" id="cat-${CSS.escape(cat)}" value="${cat}">
-            <label for="cat-${CSS.escape(cat)}">${getIconHtml('category', cat)}${cat}</label>
-        </div>
-    `).join('');
+    const categories = DB.getCategoriesWithDesc();
+    container.innerHTML = categories.map(catObj => {
+        const cat = catObj.name;
+        const desc = catObj.description || '';
+        return `<div class="multi-select-item">
+            <input type="checkbox" id="cat-${CSS.escape(cat)}" value="${cat}" data-desc="${escapeHtml(desc)}" onchange="updateCategoryHints()">
+            <label for="cat-${CSS.escape(cat)}" title="${escapeHtml(desc)}">${getIconHtml('category', cat)}${cat}</label>
+        </div>`;
+    }).join('');
+    updateCategoryHints();
+}
+
+function updateCategoryHints() {
+    const hint = document.getElementById('category-hint');
+    if (!hint) return;
+    const checked = document.querySelectorAll('#category-select input[type="checkbox"]:checked');
+    const hints = [];
+    checked.forEach(cb => {
+        const desc = cb.dataset.desc;
+        if (desc) hints.push(`<strong>${escapeHtml(cb.value)}</strong>: ${escapeHtml(desc)}`);
+    });
+    if (hints.length) {
+        hint.innerHTML = hints.join('<br>');
+        hint.style.display = 'block';
+    } else {
+        hint.style.display = 'none';
+    }
 }
 
 function renderTags() {
     const list = document.getElementById('tag-list');
-    list.innerHTML = currentEntryTags.map(tag => `
-        <span class="tag-item">${getIconHtml('tag', tag)}${escapeHtml(tag)}<span class="tag-remove" onclick="removeTag('${escapeHtml(tag)}')">&times;</span></span>
-    `).join('');
+    const tagDescs = DB.getTagDescriptions();
+    list.innerHTML = currentEntryTags.map(tag => {
+        const desc = tagDescs[tag] || '';
+        return `<span class="tag-item" title="${escapeHtml(desc)}">${getIconHtml('tag', tag)}${escapeHtml(tag)}<span class="tag-remove" onclick="removeTag('${escapeHtml(tag)}')">&times;</span></span>`;
+    }).join('');
+    updateTagHints();
+}
+
+function updateTagHints() {
+    const hint = document.getElementById('tag-hint');
+    if (!hint) return;
+    const tagDescs = DB.getTagDescriptions();
+    const hints = [];
+    for (const tag of currentEntryTags) {
+        const desc = tagDescs[tag];
+        if (desc) hints.push(`<strong>${escapeHtml(tag)}</strong>: ${escapeHtml(desc)}`);
+    }
+    if (hints.length) {
+        hint.innerHTML = hints.join('<br>');
+        hint.style.display = 'block';
+    } else {
+        hint.style.display = 'none';
+    }
 }
 
 function removeTag(tag) {
     currentEntryTags = currentEntryTags.filter(t => t !== tag);
-    renderTags();
+    renderTags(); // renderTags calls updateTagHints
 }
 
 function updateTagSuggestions() {
@@ -575,9 +615,11 @@ function showTagDropdown() {
         return;
     }
 
-    dropdown.innerHTML = matches.slice(0, 10).map(t =>
-        `<div class="tag-dropdown-item" onmousedown="selectTagFromDropdown('${escapeHtml(t)}')">${getIconHtml('tag', t)}${escapeHtml(t)}</div>`
-    ).join('');
+    const tagDescs = DB.getTagDescriptions();
+    dropdown.innerHTML = matches.slice(0, 10).map(t => {
+        const desc = tagDescs[t] ? `<span class="tag-dropdown-desc">${escapeHtml(tagDescs[t])}</span>` : '';
+        return `<div class="tag-dropdown-item" onmousedown="selectTagFromDropdown('${escapeHtml(t)}')">${getIconHtml('tag', t)}${escapeHtml(t)}${desc}</div>`;
+    }).join('');
     dropdown.style.display = 'block';
 }
 
@@ -610,16 +652,18 @@ function populatePeopleSelect() {
     const people = DB.getPeople();
     container.innerHTML = people.map(p => {
         const fullName = p.firstName + ' ' + p.lastName;
+        const desc = p.description || '';
         const isSelected = currentEntryPeople.some(ep => ep.firstName === p.firstName && ep.lastName === p.lastName);
         const icon = getIconHtml('person', fullName);
         return `<div class="multi-select-item">
-            <input type="checkbox" id="person-${CSS.escape(fullName)}" value="${escapeHtml(fullName)}" data-first="${escapeHtml(p.firstName)}" data-last="${escapeHtml(p.lastName)}" ${isSelected ? 'checked' : ''} onchange="onPersonToggle(this)">
-            <label for="person-${CSS.escape(fullName)}">${icon}${escapeHtml(fullName)}</label>
+            <input type="checkbox" id="person-${CSS.escape(fullName)}" value="${escapeHtml(fullName)}" data-first="${escapeHtml(p.firstName)}" data-last="${escapeHtml(p.lastName)}" data-desc="${escapeHtml(desc)}" ${isSelected ? 'checked' : ''} onchange="onPersonToggle(this)">
+            <label for="person-${CSS.escape(fullName)}" title="${escapeHtml(desc)}">${icon}${escapeHtml(fullName)}</label>
         </div>`;
     }).join('');
     if (people.length === 0) {
         container.innerHTML = '<p class="settings-hint">No people yet. Add people in Settings &gt; Edit Metadata.</p>';
     }
+    updatePeopleHints();
 }
 
 function onPersonToggle(cb) {
@@ -633,6 +677,24 @@ function onPersonToggle(cb) {
         currentEntryPeople = currentEntryPeople.filter(p => !(p.firstName === first && p.lastName === last));
     }
     renderSelectedPeople();
+    updatePeopleHints();
+}
+
+function updatePeopleHints() {
+    const hint = document.getElementById('people-hint');
+    if (!hint) return;
+    const checked = document.querySelectorAll('#people-select input[type="checkbox"]:checked');
+    const hints = [];
+    checked.forEach(cb => {
+        const desc = cb.dataset.desc;
+        if (desc) hints.push(`<strong>${escapeHtml(cb.value)}</strong>: ${escapeHtml(desc)}`);
+    });
+    if (hints.length) {
+        hint.innerHTML = hints.join('<br>');
+        hint.style.display = 'block';
+    } else {
+        hint.style.display = 'none';
+    }
 }
 
 function renderSelectedPeople() {
@@ -659,6 +721,7 @@ function removeEntryPerson(first, last) {
             if (cb.dataset.first === first && cb.dataset.last === last) cb.checked = false;
         });
     }
+    updatePeopleHints();
 }
 
 // ========== Quick Create (from entry form) ==========
@@ -1202,13 +1265,13 @@ function refreshBiometricToggle() {
     const autoToggle = document.getElementById('auto-biometric-toggle');
     if (autoRow && autoToggle) {
         autoRow.style.display = '';
-        autoToggle.checked = localStorage.getItem('auto_biometric') === 'true';
+        autoToggle.checked = Bootstrap.get('auto_biometric') === 'true';
     }
 }
 
 function toggleAutoBiometric() {
     const toggle = document.getElementById('auto-biometric-toggle');
-    localStorage.setItem('auto_biometric', toggle.checked ? 'true' : 'false');
+    Bootstrap.set('auto_biometric', toggle.checked ? 'true' : 'false');
 }
 
 function toggleBiometric() {
@@ -1233,7 +1296,14 @@ function toggleBiometric() {
 
 // ========== Init ==========
 
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
+    // Initialize Bootstrap (IndexedDB preferences store) before anything else
+    await Bootstrap.init();
+
+    // Re-initialize module-level vars that read Bootstrap before init()
+    if (typeof currentPageSize !== 'undefined') currentPageSize = parseInt(Bootstrap.get('entries_page_size')) || 20;
+    if (typeof entryViewMode !== 'undefined') entryViewMode = Bootstrap.get('entry_view_mode') || 'card';
+
     // Detect Android WebView and add class for compact navbar
     if (window.AndroidBridge) {
         document.body.classList.add('android');
@@ -1296,16 +1366,16 @@ document.addEventListener('DOMContentLoaded', () => {
 function initColumnToggles() {
     document.querySelectorAll('.col-toggle').forEach(container => {
         const id = container.id;
-        const saved = parseInt(localStorage.getItem('col_' + id)) || 1;
+        const saved = parseInt(Bootstrap.get('col_' + id)) || 1;
         container.innerHTML = `<button class="col-toggle-btn" onclick="cycleColumns('${id}')" title="${saved} column${saved > 1 ? 's' : ''}">&#9645; ${saved}</button>`;
         applyColumns(id, saved);
     });
 }
 
 function cycleColumns(toggleId) {
-    const current = parseInt(localStorage.getItem('col_' + toggleId)) || 1;
+    const current = parseInt(Bootstrap.get('col_' + toggleId)) || 1;
     const next = current >= 3 ? 1 : current + 1;
-    localStorage.setItem('col_' + toggleId, next);
+    Bootstrap.set('col_' + toggleId, next);
     const container = document.getElementById(toggleId);
     container.querySelector('.col-toggle-btn').title = next + ' column' + (next > 1 ? 's' : '');
     container.querySelector('.col-toggle-btn').innerHTML = '&#9645; ' + next;
@@ -1344,7 +1414,7 @@ function formatDate(dateStr) {
     const d = new Date(dateStr + 'T00:00:00');
     if (isNaN(d.getTime())) return '';
 
-    const fmt = localStorage.getItem('ev_date_format') || 'short';
+    const fmt = Bootstrap.get('ev_date_format') || 'short';
     const pad = (n) => String(n).padStart(2, '0');
     const y = d.getFullYear(), m = d.getMonth(), day = d.getDate();
 
@@ -1366,7 +1436,7 @@ function formatDate(dateStr) {
 
 function formatTime(timeStr) {
     if (!timeStr) return '';
-    const fmt = localStorage.getItem('ev_time_format') || '12h';
+    const fmt = Bootstrap.get('ev_time_format') || '12h';
     const parts = timeStr.match(/^(\d{1,2}):(\d{2})$/);
     if (!parts) return timeStr;
     const h = parseInt(parts[1]), m = parts[2];

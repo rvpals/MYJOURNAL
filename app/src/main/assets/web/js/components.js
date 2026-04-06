@@ -126,7 +126,7 @@ const RankedPanel = {
      * Create or retrieve a panel instance.
      *
      * @param {Object} opts
-     * @param {string}  opts.id            — unique panel id (used for localStorage key + lookup)
+     * @param {string}  opts.id            — unique panel id (used for Bootstrap key + lookup)
      * @param {string}  opts.containerId   — id of the wrapper element to render into (replaces innerHTML)
      * @param {string}  opts.title         — panel heading text
      * @param {string}  [opts.icon]        — emoji/icon before title
@@ -160,7 +160,7 @@ const RankedPanel = {
             _opts: opts,
             _data: [],          // array of [name, count]
             _showAll: false,
-            _viewMode: localStorage.getItem('rp_view_' + id) || 'list',
+            _viewMode: Bootstrap.get('rp_view_' + id) || 'list',
 
             setData(data) {
                 this._data = data;
@@ -244,7 +244,7 @@ const RankedPanel = {
         const inst = this._instances[id];
         if (!inst) return;
         inst._viewMode = inst._viewMode === 'list' ? 'card' : 'list';
-        localStorage.setItem('rp_view_' + id, inst._viewMode);
+        Bootstrap.set('rp_view_' + id, inst._viewMode);
         inst.render();
     },
 
@@ -358,18 +358,18 @@ const RecordViewer = {
  * CollapsiblePanel — reusable collapsible container with pin-to-expand support.
  *
  * Collapsed by default. Click header to toggle. Pin button keeps it always expanded.
- * Pin state is persisted to localStorage.
+ * Pin state is persisted to Bootstrap (IndexedDB).
  */
 const CollapsiblePanel = {
     _storageKey: 'cp_pinned',
 
     _getPinned() {
-        try { return JSON.parse(localStorage.getItem(this._storageKey) || '[]'); }
+        try { return JSON.parse(Bootstrap.get(this._storageKey) || '[]'); }
         catch { return []; }
     },
 
     _savePinned(arr) {
-        localStorage.setItem(this._storageKey, JSON.stringify(arr));
+        Bootstrap.set(this._storageKey, JSON.stringify(arr));
     },
 
     /**

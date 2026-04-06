@@ -9,11 +9,11 @@ function switchSettingsTab(tabId) {
     document.querySelectorAll('.settings-tab-content').forEach(c => c.classList.remove('active'));
     document.getElementById('stab-' + tabId).classList.add('active');
     document.getElementById('stab-content-' + tabId).classList.add('active');
-    localStorage.setItem('settingsTab', tabId);
+    Bootstrap.set('settingsTab', tabId);
 }
 
 function restoreSettingsTab() {
-    const saved = localStorage.getItem('settingsTab');
+    const saved = Bootstrap.get('settingsTab');
     if (saved) switchSettingsTab(saved);
 }
 
@@ -118,6 +118,8 @@ function refreshSettings() {
     renderTemplatesList();
     renderEntryTemplatesList();
     if (typeof refreshCustomViewsPage === 'function') refreshCustomViewsPage();
+    refreshBackupFolderUI();
+    refreshWidgetList();
     restoreSettingsTab();
 }
 
@@ -186,26 +188,55 @@ function refreshColorToggles() {
     if (tagToggle) tagToggle.checked = isUseTagColor();
 }
 
+let _editingCategory = null;
+
 function renderCategoriesList() {
     const container = document.getElementById('categories-list');
-    const categories = DB.getCategories();
+    const categories = DB.getCategoriesWithDesc();
     const colors = getCategoryColors();
-    container.innerHTML = categories.map(cat => {
+    container.innerHTML = categories.map(catObj => {
+        const cat = catObj.name;
+        const desc = catObj.description;
         const iconData = DB.getIcon('category', cat);
         const iconHtml = iconData
-            ? `<img src="${iconData}" class="settings-icon-preview" alt="" onclick="browseIcon('category', '${escapeHtml(cat)}')" title="Click to change icon">`
-            : `<span class="settings-icon-placeholder" onclick="browseIcon('category', '${escapeHtml(cat)}')" title="Set icon">+&#xFE0F;&#x1F5BC;</span>`;
+            ? `<img src="${iconData}" class="settings-icon-preview" alt="" onclick="event.stopPropagation();browseIcon('category', '${escapeHtml(cat)}')" title="Click to change icon">`
+            : `<span class="settings-icon-placeholder" onclick="event.stopPropagation();browseIcon('category', '${escapeHtml(cat)}')" title="Set icon">+&#xFE0F;&#x1F5BC;</span>`;
         const currentColor = colors[cat] || '';
         const colorHtml = currentColor
-            ? `<span class="settings-color-swatch" style="background:${currentColor}" onclick="this.nextElementSibling.click()" title="Click to change, right-click to clear" oncontextmenu="event.preventDefault();setCategoryColor('${escapeHtml(cat)}', '');renderCategoriesList()"></span><input type="color" class="settings-color-hidden" value="${currentColor}" onchange="setCategoryColor('${escapeHtml(cat)}', this.value);renderCategoriesList()">`
-            : `<span class="settings-color-swatch settings-color-empty" onclick="this.nextElementSibling.click()" title="Set color"></span><input type="color" class="settings-color-hidden" value="#888888" onchange="setCategoryColor('${escapeHtml(cat)}', this.value);renderCategoriesList()">`;
-        return `<div class="settings-list-item">
+            ? `<span class="settings-color-swatch" style="background:${currentColor}" onclick="event.stopPropagation();this.nextElementSibling.click()" title="Click to change, right-click to clear" oncontextmenu="event.preventDefault();event.stopPropagation();setCategoryColor('${escapeHtml(cat)}', '');renderCategoriesList()"></span><input type="color" class="settings-color-hidden" value="${currentColor}" onclick="event.stopPropagation()" onchange="setCategoryColor('${escapeHtml(cat)}', this.value);renderCategoriesList()">`
+            : `<span class="settings-color-swatch settings-color-empty" onclick="event.stopPropagation();this.nextElementSibling.click()" title="Set color"></span><input type="color" class="settings-color-hidden" value="#888888" onclick="event.stopPropagation()" onchange="setCategoryColor('${escapeHtml(cat)}', this.value);renderCategoriesList()">`;
+        const descHtml = desc ? `<span class="people-desc">${escapeHtml(desc)}</span>` : '';
+        return `<div class="settings-list-item" onclick="editCategoryRecord('${escapeHtml(cat)}')" style="cursor:pointer" title="Click to edit description">
             ${iconHtml}
             <span class="settings-item-name">${escapeHtml(cat)}</span>
+            ${descHtml}
             ${colorHtml}
-            <span class="remove-btn" onclick="removeCategory('${escapeHtml(cat)}')" title="Remove category">&times;</span>
+            <span class="remove-btn" onclick="event.stopPropagation();removeCategory('${escapeHtml(cat)}')" title="Remove category">&times;</span>
         </div>`;
     }).join('');
+}
+
+function editCategoryRecord(name) {
+    const categories = DB.getCategoriesWithDesc();
+    const cat = categories.find(c => c.name === name);
+    if (!cat) return;
+    _editingCategory = name;
+    document.getElementById('category-editor-title').textContent = 'Edit: ' + name;
+    document.getElementById('category-edit-description').value = cat.description || '';
+    document.getElementById('category-editor').style.display = 'block';
+}
+
+async function saveCategoryDescription() {
+    if (!_editingCategory) return;
+    const desc = document.getElementById('category-edit-description').value.trim();
+    await DB.setCategoryDescription(_editingCategory, desc);
+    cancelCategoryEditor();
+    renderCategoriesList();
+}
+
+function cancelCategoryEditor() {
+    _editingCategory = null;
+    document.getElementById('category-editor').style.display = 'none';
 }
 
 async function addCategory() {
@@ -236,6 +267,8 @@ async function removeCategory(name) {
 
 // ========== Tags Icon Management ==========
 
+let _editingTag = null;
+
 function renderTagsIconList() {
     const container = document.getElementById('tags-icon-list');
     if (!container) return;
@@ -245,21 +278,46 @@ function renderTagsIconList() {
         return;
     }
     const colors = getTagColors();
+    const tagDescs = DB.getTagDescriptions();
     container.innerHTML = tags.map(tag => {
         const iconData = DB.getIcon('tag', tag);
+        const desc = tagDescs[tag] || '';
         const iconHtml = iconData
-            ? `<img src="${iconData}" class="settings-icon-preview" alt="" onclick="browseIcon('tag', '${escapeHtml(tag)}')" title="Click to change icon">`
-            : `<span class="settings-icon-placeholder" onclick="browseIcon('tag', '${escapeHtml(tag)}')" title="Set icon">+&#xFE0F;&#x1F5BC;</span>`;
+            ? `<img src="${iconData}" class="settings-icon-preview" alt="" onclick="event.stopPropagation();browseIcon('tag', '${escapeHtml(tag)}')" title="Click to change icon">`
+            : `<span class="settings-icon-placeholder" onclick="event.stopPropagation();browseIcon('tag', '${escapeHtml(tag)}')" title="Set icon">+&#xFE0F;&#x1F5BC;</span>`;
         const currentColor = colors[tag] || '';
         const colorHtml = currentColor
-            ? `<span class="settings-color-swatch" style="background:${currentColor}" onclick="this.nextElementSibling.click()" title="Click to change, right-click to clear" oncontextmenu="event.preventDefault();setTagColor('${escapeHtml(tag)}', '');renderTagsIconList()"></span><input type="color" class="settings-color-hidden" value="${currentColor}" onchange="setTagColor('${escapeHtml(tag)}', this.value);renderTagsIconList()">`
-            : `<span class="settings-color-swatch settings-color-empty" onclick="this.nextElementSibling.click()" title="Set color"></span><input type="color" class="settings-color-hidden" value="#888888" onchange="setTagColor('${escapeHtml(tag)}', this.value);renderTagsIconList()">`;
-        return `<div class="settings-list-item">
+            ? `<span class="settings-color-swatch" style="background:${currentColor}" onclick="event.stopPropagation();this.nextElementSibling.click()" title="Click to change, right-click to clear" oncontextmenu="event.preventDefault();event.stopPropagation();setTagColor('${escapeHtml(tag)}', '');renderTagsIconList()"></span><input type="color" class="settings-color-hidden" value="${currentColor}" onclick="event.stopPropagation()" onchange="setTagColor('${escapeHtml(tag)}', this.value);renderTagsIconList()">`
+            : `<span class="settings-color-swatch settings-color-empty" onclick="event.stopPropagation();this.nextElementSibling.click()" title="Set color"></span><input type="color" class="settings-color-hidden" value="#888888" onclick="event.stopPropagation()" onchange="setTagColor('${escapeHtml(tag)}', this.value);renderTagsIconList()">`;
+        const descHtml = desc ? `<span class="people-desc">${escapeHtml(desc)}</span>` : '';
+        return `<div class="settings-list-item" onclick="editTagRecord('${escapeHtml(tag)}')" style="cursor:pointer" title="Click to edit description">
             ${iconHtml}
             <span class="settings-item-name">${escapeHtml(tag)}</span>
+            ${descHtml}
             ${colorHtml}
         </div>`;
     }).join('');
+}
+
+function editTagRecord(name) {
+    const tagDescs = DB.getTagDescriptions();
+    _editingTag = name;
+    document.getElementById('tag-editor-title').textContent = 'Edit: ' + name;
+    document.getElementById('tag-edit-description').value = tagDescs[name] || '';
+    document.getElementById('tag-editor').style.display = 'block';
+}
+
+async function saveTagDescription() {
+    if (!_editingTag) return;
+    const desc = document.getElementById('tag-edit-description').value.trim();
+    await DB.setTagDescription(_editingTag, desc);
+    cancelTagEditor();
+    renderTagsIconList();
+}
+
+function cancelTagEditor() {
+    _editingTag = null;
+    document.getElementById('tag-editor').style.display = 'none';
 }
 
 // ========== Icon Picker ==========
@@ -433,8 +491,8 @@ function cancelPersonEditor() {
 function exportMetadata() {
     const metadata = {};
 
-    // Categories
-    metadata.categories = DB.getCategories();
+    // Categories (with descriptions)
+    metadata.categories = DB.getCategoriesWithDesc();
 
     // All icons (category, tag, person)
     metadata.icons = DB.getAllIcons();
@@ -442,8 +500,14 @@ function exportMetadata() {
     // People
     metadata.people = DB.getPeople();
 
+    // Tag descriptions
+    metadata.tagDescriptions = DB.getTagDescriptions();
+
     // All settings (includes reportTemplates, customViews, entryTemplates, entryListFields, theme, etc.)
     metadata.settings = DB.getSettings();
+
+    // Widgets
+    metadata.widgets = DB.getWidgets();
 
     const json = JSON.stringify(metadata, null, 2);
     const journalId = DB.getJournalId() || 'journal';
@@ -468,9 +532,16 @@ async function importMetadata(event) {
             throw new Error('Invalid metadata file format.');
         }
 
-        // Import categories: clear and re-add
+        // Import categories: clear and re-add (supports both old string[] and new {name,description}[] format)
         if (Array.isArray(metadata.categories)) {
-            await DB.setCategories(metadata.categories);
+            const catNames = metadata.categories.map(c => typeof c === 'string' ? c : c.name);
+            await DB.setCategories(catNames);
+            // Set descriptions for new format
+            for (const c of metadata.categories) {
+                if (typeof c === 'object' && c.name && c.description) {
+                    await DB.setCategoryDescription(c.name, c.description);
+                }
+            }
         }
 
         // Import icons: clear all existing, insert new
@@ -499,9 +570,30 @@ async function importMetadata(event) {
             }
         }
 
+        // Import tag descriptions
+        if (metadata.tagDescriptions && typeof metadata.tagDescriptions === 'object') {
+            for (const [name, desc] of Object.entries(metadata.tagDescriptions)) {
+                await DB.setTagDescription(name, desc);
+            }
+        }
+
         // Import settings: overwrite all keys
         if (metadata.settings && typeof metadata.settings === 'object') {
             await DB.setSettings(metadata.settings);
+        }
+
+        // Import widgets
+        if (Array.isArray(metadata.widgets)) {
+            // Delete existing widgets first
+            const existing = DB.getWidgets();
+            for (const w of existing) {
+                await DB.deleteWidget(w.id);
+            }
+            for (const w of metadata.widgets) {
+                if (w.id && w.name) {
+                    await DB.saveWidget(w);
+                }
+            }
         }
 
         alert('Metadata imported successfully.');
@@ -1330,58 +1422,58 @@ function saveWeatherTempUnit() {
 function refreshAutoOpenToggle() {
     const toggle = document.getElementById('auto-open-toggle');
     if (toggle) {
-        toggle.checked = localStorage.getItem('auto_open_last_journal') === 'true';
+        toggle.checked = Bootstrap.get('auto_open_last_journal') === 'true';
     }
 }
 
 function toggleAutoOpenJournal() {
     const toggle = document.getElementById('auto-open-toggle');
-    localStorage.setItem('auto_open_last_journal', toggle.checked ? 'true' : 'false');
+    Bootstrap.set('auto_open_last_journal', toggle.checked ? 'true' : 'false');
 }
 
 function refreshWarnDeleteToggle() {
     const toggle = document.getElementById('warn-delete-toggle');
-    const val = localStorage.getItem('warn_before_delete');
+    const val = Bootstrap.get('warn_before_delete');
     // Default to checked (warn) if not set
     toggle.checked = val !== 'false';
 }
 
 function toggleWarnBeforeDelete() {
     const toggle = document.getElementById('warn-delete-toggle');
-    localStorage.setItem('warn_before_delete', toggle.checked ? 'true' : 'false');
+    Bootstrap.set('warn_before_delete', toggle.checked ? 'true' : 'false');
 }
 
 function shouldConfirmDelete() {
-    return localStorage.getItem('warn_before_delete') !== 'false';
+    return Bootstrap.get('warn_before_delete') !== 'false';
 }
 
 // ========== Warn Unsaved Entry ==========
 
 function refreshWarnUnsavedToggle() {
     const toggle = document.getElementById('warn-unsaved-toggle');
-    const val = localStorage.getItem('warn_unsaved_entry');
+    const val = Bootstrap.get('warn_unsaved_entry');
     toggle.checked = val !== 'false';
 }
 
 function toggleWarnUnsaved() {
     const toggle = document.getElementById('warn-unsaved-toggle');
-    localStorage.setItem('warn_unsaved_entry', toggle.checked ? 'true' : 'false');
+    Bootstrap.set('warn_unsaved_entry', toggle.checked ? 'true' : 'false');
 }
 
 function shouldWarnUnsaved() {
-    return localStorage.getItem('warn_unsaved_entry') !== 'false';
+    return Bootstrap.get('warn_unsaved_entry') !== 'false';
 }
 
 // ========== Misc Info Collapse Default ==========
 
 function refreshMiscCollapsedToggle() {
     const toggle = document.getElementById('misc-collapsed-toggle');
-    if (toggle) toggle.checked = localStorage.getItem('ev_misc_collapsed') === '1';
+    if (toggle) toggle.checked = Bootstrap.get('ev_misc_collapsed') === '1';
 }
 
 function toggleMiscCollapsedDefault() {
     const toggle = document.getElementById('misc-collapsed-toggle');
-    localStorage.setItem('ev_misc_collapsed', toggle.checked ? '1' : '0');
+    Bootstrap.set('ev_misc_collapsed', toggle.checked ? '1' : '0');
 }
 
 // ========== Default Entry List Order ==========
@@ -1389,32 +1481,32 @@ function toggleMiscCollapsedDefault() {
 function refreshDefaultEntryListOrder() {
     const fieldSel = document.getElementById('default-sort-field');
     const dirSel = document.getElementById('default-sort-dir');
-    if (fieldSel) fieldSel.value = localStorage.getItem('default_entry_sort_field') || 'dtCreated';
-    if (dirSel) dirSel.value = localStorage.getItem('default_entry_sort_dir') || 'desc';
+    if (fieldSel) fieldSel.value = Bootstrap.get('default_entry_sort_field') || 'dtCreated';
+    if (dirSel) dirSel.value = Bootstrap.get('default_entry_sort_dir') || 'desc';
 }
 
 function saveDefaultEntryListOrder() {
     const fieldSel = document.getElementById('default-sort-field');
     const dirSel = document.getElementById('default-sort-dir');
-    localStorage.setItem('default_entry_sort_field', fieldSel.value);
-    localStorage.setItem('default_entry_sort_dir', dirSel.value);
+    Bootstrap.set('default_entry_sort_field', fieldSel.value);
+    Bootstrap.set('default_entry_sort_dir', dirSel.value);
 }
 
 // ========== Geocoding Provider ==========
 
 function refreshGeocodingProvider() {
     const sel = document.getElementById('geocoding-provider');
-    const provider = localStorage.getItem('geocoding_provider') || 'photon';
+    const provider = Bootstrap.get('geocoding_provider') || 'photon';
     if (sel) sel.value = provider;
     toggleGeocodingApiKeyRow();
 
     const keyInput = document.getElementById('geocoding-api-key');
-    if (keyInput) keyInput.value = localStorage.getItem('geocoding_api_key') || '';
+    if (keyInput) keyInput.value = Bootstrap.get('geocoding_api_key') || '';
 }
 
 function saveGeocodingProvider() {
     const sel = document.getElementById('geocoding-provider');
-    localStorage.setItem('geocoding_provider', sel.value);
+    Bootstrap.set('geocoding_provider', sel.value);
     toggleGeocodingApiKeyRow();
 }
 
@@ -1426,22 +1518,22 @@ function toggleGeocodingApiKeyRow() {
 
 function saveGeocodingApiKey() {
     const input = document.getElementById('geocoding-api-key');
-    localStorage.setItem('geocoding_api_key', input.value.trim());
+    Bootstrap.set('geocoding_api_key', input.value.trim());
 }
 
 function getGeocodingProvider() {
-    return localStorage.getItem('geocoding_provider') || 'photon';
+    return Bootstrap.get('geocoding_provider') || 'photon';
 }
 
 function getGeocodingApiKey() {
-    return localStorage.getItem('geocoding_api_key') || '';
+    return Bootstrap.get('geocoding_api_key') || '';
 }
 
 // ========== Entry Viewer Font ==========
 
 function refreshViewerFont() {
-    const fontFamily = localStorage.getItem('ev_font_family') || '';
-    const fontSize = localStorage.getItem('ev_font_size') || '';
+    const fontFamily = Bootstrap.get('ev_font_family') || '';
+    const fontSize = Bootstrap.get('ev_font_size') || '';
     const famSel = document.getElementById('ev-font-family');
     const sizeSel = document.getElementById('ev-font-size');
     if (famSel) famSel.value = fontFamily;
@@ -1452,16 +1544,16 @@ function refreshViewerFont() {
 function saveViewerFont() {
     const famSel = document.getElementById('ev-font-family');
     const sizeSel = document.getElementById('ev-font-size');
-    localStorage.setItem('ev_font_family', famSel.value);
-    localStorage.setItem('ev_font_size', sizeSel.value);
+    Bootstrap.set('ev_font_family', famSel.value);
+    Bootstrap.set('ev_font_size', sizeSel.value);
     updateFontPreview();
 }
 
 function updateFontPreview() {
     const preview = document.getElementById('ev-font-preview');
     if (!preview) return;
-    const fontFamily = localStorage.getItem('ev_font_family') || '';
-    const fontSize = localStorage.getItem('ev_font_size') || '';
+    const fontFamily = Bootstrap.get('ev_font_family') || '';
+    const fontSize = Bootstrap.get('ev_font_size') || '';
     preview.style.fontFamily = fontFamily || "'Quicksand', sans-serif";
     preview.style.fontSize = fontSize || '0.95rem';
 }
@@ -1469,8 +1561,8 @@ function updateFontPreview() {
 function applyViewerFont() {
     const card = document.querySelector('.entry-view-card');
     if (!card) return;
-    const fontFamily = localStorage.getItem('ev_font_family') || '';
-    const fontSize = localStorage.getItem('ev_font_size') || '';
+    const fontFamily = Bootstrap.get('ev_font_family') || '';
+    const fontSize = Bootstrap.get('ev_font_size') || '';
     if (fontFamily || fontSize) {
         card.classList.add('ev-custom-font');
         card.style.setProperty('--ev-font-family', fontFamily || "'Quicksand', sans-serif");
@@ -1483,8 +1575,8 @@ function applyViewerFont() {
 // ========== Date & Time Display Format ==========
 
 function refreshDateTimeFormat() {
-    const dateFmt = localStorage.getItem('ev_date_format') || 'short';
-    const timeFmt = localStorage.getItem('ev_time_format') || '12h';
+    const dateFmt = Bootstrap.get('ev_date_format') || 'short';
+    const timeFmt = Bootstrap.get('ev_time_format') || '12h';
     const dateSel = document.getElementById('ev-date-format');
     const timeSel = document.getElementById('ev-time-format');
     if (dateSel) dateSel.value = dateFmt;
@@ -1495,8 +1587,8 @@ function refreshDateTimeFormat() {
 function saveDateTimeFormat() {
     const dateSel = document.getElementById('ev-date-format');
     const timeSel = document.getElementById('ev-time-format');
-    localStorage.setItem('ev_date_format', dateSel.value);
-    localStorage.setItem('ev_time_format', timeSel.value);
+    Bootstrap.set('ev_date_format', dateSel.value);
+    Bootstrap.set('ev_time_format', timeSel.value);
     updateDateTimePreview();
 }
 
@@ -1520,11 +1612,11 @@ function saveMaxPinnedEntries() {
     const input = document.getElementById('max-pinned-entries');
     const val = Math.max(1, Math.min(100, parseInt(input.value) || 10));
     input.value = val;
-    localStorage.setItem('max_pinned_entries', val);
+    Bootstrap.set('max_pinned_entries', val);
 }
 
 function getMaxPinnedEntries() {
-    return parseInt(localStorage.getItem('max_pinned_entries')) || 10;
+    return parseInt(Bootstrap.get('max_pinned_entries')) || 10;
 }
 
 // ========== Max Ranking Entries ==========
@@ -1538,11 +1630,11 @@ function saveMaxRankingEntries() {
     const input = document.getElementById('max-ranking-entries');
     const val = Math.max(1, Math.min(100, parseInt(input.value) || 5));
     input.value = val;
-    localStorage.setItem('max_ranking_entries', val);
+    Bootstrap.set('max_ranking_entries', val);
 }
 
 function getMaxRankingEntries() {
-    return parseInt(localStorage.getItem('max_ranking_entries')) || 5;
+    return parseInt(Bootstrap.get('max_ranking_entries')) || 5;
 }
 
 // ========== Entry List Fields ==========
@@ -1922,4 +2014,316 @@ function closeAboutModal(event) {
         document.getElementById('about-modal').style.display = 'none';
     }
 }
+
+// ========== Backup Folder ==========
+
+function refreshBackupFolderUI() {
+    const section = document.getElementById('backup-folder-section');
+    if (!section) return;
+    if (!window.AndroidBridge || typeof AndroidBridge.selectBackupFolder !== 'function') {
+        section.style.display = 'none';
+        return;
+    }
+    section.style.display = '';
+    const name = AndroidBridge.getBackupFolderName();
+    const nameEl = document.getElementById('backup-folder-name');
+    const selectBtn = document.getElementById('btn-select-backup-folder');
+    const clearBtn = document.getElementById('btn-clear-backup-folder');
+    if (name) {
+        nameEl.textContent = name;
+        selectBtn.textContent = 'Change';
+        clearBtn.style.display = '';
+    } else {
+        nameEl.textContent = 'No folder selected';
+        selectBtn.textContent = 'Select Folder';
+        clearBtn.style.display = 'none';
+    }
+}
+
+function selectBackupFolder() {
+    if (window.AndroidBridge && typeof AndroidBridge.selectBackupFolder === 'function') {
+        AndroidBridge.selectBackupFolder();
+    }
+}
+
+function onBackupFolderSelected(folderName) {
+    refreshBackupFolderUI();
+    const msgEl = document.getElementById('backup-status-msg');
+    if (msgEl) {
+        msgEl.textContent = 'Folder set to: ' + folderName;
+        msgEl.style.color = 'var(--success)';
+    }
+}
+
+function clearBackupFolder() {
+    if (window.AndroidBridge && typeof AndroidBridge.clearBackupFolder === 'function') {
+        AndroidBridge.clearBackupFolder();
+    }
+    refreshBackupFolderUI();
+    const msgEl = document.getElementById('backup-status-msg');
+    if (msgEl) {
+        msgEl.textContent = 'Backup folder cleared.';
+        msgEl.style.color = '';
+    }
+}
+
+async function backupAllData() {
+    const msgEl = document.getElementById('backup-status-msg');
+    if (msgEl) { msgEl.textContent = 'Building backup...'; msgEl.style.color = ''; }
+
+    try {
+        const journalId = DB.getJournalId();
+        const salt = Bootstrap.get('journal_salt_' + journalId);
+        const verifyToken = Bootstrap.get('journal_verify_' + journalId);
+
+        // Get encrypted export
+        const exportStr = await DB.exportJSON();
+        if (!exportStr) throw new Error('Failed to export journal data');
+        const exportData = JSON.parse(exportStr);
+
+        // Get metadata
+        const metadata = {};
+        metadata.categories = DB.getCategoriesWithDesc();
+        metadata.icons = DB.getAllIcons();
+        metadata.people = DB.getPeople();
+        metadata.tagDescriptions = DB.getTagDescriptions();
+        metadata.settings = DB.getSettings();
+        metadata.widgets = DB.getWidgets();
+
+        // Build comprehensive backup payload
+        const backup = {
+            version: 1,
+            timestamp: new Date().toISOString(),
+            journalId: exportData.journalId || journalId,
+            journalName: (DB.getJournalList().find(j => j.id === journalId) || {}).name || journalId,
+            salt: salt,
+            verifyToken: verifyToken,
+            encrypted: exportData.encrypted,
+            metadata: metadata
+        };
+
+        const json = JSON.stringify(backup, null, 2);
+        const now = new Date();
+        const pad = (n) => String(n).padStart(2, '0');
+        const filename = `${now.getFullYear()}-${pad(now.getMonth()+1)}-${pad(now.getDate())}_${pad(now.getHours())}-${pad(now.getMinutes())}-${pad(now.getSeconds())}_backup.json`;
+
+        // Convert to base64 for AndroidBridge
+        const base64 = btoa(unescape(encodeURIComponent(json)));
+
+        let saved = false;
+        if (window.AndroidBridge && typeof AndroidBridge.hasBackupFolder === 'function' && AndroidBridge.hasBackupFolder()) {
+            saved = AndroidBridge.saveFileToBackupFolder(filename, base64, 'application/json');
+        }
+
+        if (!saved) {
+            // Fall back to Downloads
+            downloadFile(json, filename, 'application/json');
+        }
+
+        if (msgEl) {
+            msgEl.textContent = 'Backup saved: ' + filename;
+            msgEl.style.color = 'var(--success)';
+        }
+    } catch (err) {
+        if (msgEl) {
+            msgEl.textContent = 'Backup failed: ' + err.message;
+            msgEl.style.color = 'var(--danger)';
+        }
+    }
+}
+
+// ========== Restore All Data ==========
+
+async function restoreAllData() {
+    const hasAndroidBackupFolder = window.AndroidBridge &&
+        typeof AndroidBridge.hasBackupFolder === 'function' && AndroidBridge.hasBackupFolder() &&
+        typeof AndroidBridge.listBackupFolderFiles === 'function';
+
+    if (hasAndroidBackupFolder) {
+        // List backup files from the backup folder
+        let files;
+        try {
+            files = JSON.parse(AndroidBridge.listBackupFolderFiles());
+        } catch (e) {
+            files = [];
+        }
+
+        if (files.length === 0) {
+            alert('No backup files found in the backup folder.\n\nYou can select a backup file manually.');
+            document.getElementById('restore-backup-file').click();
+            return;
+        }
+
+        // Sort by lastModified descending (newest first)
+        files.sort((a, b) => b.lastModified - a.lastModified);
+
+        // Build file picker list
+        const listItems = files.map((f, i) => {
+            const date = new Date(f.lastModified);
+            const sizeKB = (f.size / 1024).toFixed(1);
+            return `${i + 1}. ${f.name}  (${sizeKB} KB, ${date.toLocaleString()})`;
+        }).join('\n');
+
+        const choice = prompt(
+            '\u26A0\uFE0F WARNING: Restoring a backup will OVERWRITE all current data, ' +
+            'including entries, images, metadata, and settings.\n\n' +
+            'Select a backup file (enter number) or press Cancel:\n\n' + listItems
+        );
+
+        if (!choice) return;
+        const idx = parseInt(choice, 10) - 1;
+        if (isNaN(idx) || idx < 0 || idx >= files.length) {
+            alert('Invalid selection.');
+            return;
+        }
+
+        const msgEl = document.getElementById('backup-status-msg');
+        if (msgEl) { msgEl.textContent = 'Reading backup file...'; msgEl.style.color = ''; }
+
+        try {
+            const content = AndroidBridge.readBackupFolderFile(files[idx].name);
+            if (!content) throw new Error('Could not read backup file.');
+            await performRestore(content);
+        } catch (err) {
+            if (msgEl) {
+                msgEl.textContent = 'Restore failed: ' + err.message;
+                msgEl.style.color = 'var(--danger)';
+            }
+        }
+    } else {
+        // Web fallback: use file picker
+        if (!confirm(
+            '\u26A0\uFE0F WARNING: Restoring a backup will OVERWRITE all current data, ' +
+            'including entries, images, metadata, and settings.\n\n' +
+            'Do you want to continue and select a backup file?'
+        )) return;
+        document.getElementById('restore-backup-file').click();
+    }
+}
+
+async function onRestoreFileSelected(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    event.target.value = '';
+
+    const msgEl = document.getElementById('backup-status-msg');
+    if (msgEl) { msgEl.textContent = 'Reading backup file...'; msgEl.style.color = ''; }
+
+    try {
+        const content = await file.text();
+        await performRestore(content);
+    } catch (err) {
+        if (msgEl) {
+            msgEl.textContent = 'Restore failed: ' + err.message;
+            msgEl.style.color = 'var(--danger)';
+        }
+    }
+}
+
+async function performRestore(jsonStr) {
+    const msgEl = document.getElementById('backup-status-msg');
+    const backup = JSON.parse(jsonStr);
+
+    // Validate backup structure
+    if (!backup.version || !backup.encrypted || !backup.salt || !backup.verifyToken) {
+        throw new Error('Invalid backup file. Missing required fields.');
+    }
+
+    if (msgEl) { msgEl.textContent = 'Restoring data...'; msgEl.style.color = ''; }
+
+    const journalId = backup.journalId || DB.getJournalId();
+
+    // 1. Restore salt and verify token
+    Bootstrap.set('journal_salt_' + journalId, backup.salt);
+    Bootstrap.set('journal_verify_' + journalId, backup.verifyToken);
+
+    // Sync to Android if available
+    if (window.AndroidBridge && typeof AndroidBridge.syncCryptoKey === 'function') {
+        AndroidBridge.syncCryptoKey(journalId, backup.salt, backup.verifyToken);
+    }
+
+    // 2. Import encrypted data (crypto will use the restored salt from Bootstrap)
+    const encryptedJSON = JSON.stringify({ journalId: journalId, encrypted: backup.encrypted });
+    await DB.importJSON(encryptedJSON);
+
+    // 4. Restore metadata if present
+    if (backup.metadata) {
+        const metadata = backup.metadata;
+
+        if (Array.isArray(metadata.categories)) {
+            const catNames = metadata.categories.map(c => typeof c === 'string' ? c : c.name);
+            await DB.setCategories(catNames);
+            for (const c of metadata.categories) {
+                if (typeof c === 'object' && c.name && c.description) {
+                    await DB.setCategoryDescription(c.name, c.description);
+                }
+            }
+        }
+
+        // Restore icons
+        const existingIcons = DB.getAllIcons();
+        for (const icon of existingIcons) {
+            await DB.removeIcon(icon.type, icon.name);
+        }
+        if (Array.isArray(metadata.icons)) {
+            for (const icon of metadata.icons) {
+                if (icon.type && icon.name && icon.data) {
+                    await DB.setIcon(icon.type, icon.name, icon.data);
+                }
+            }
+        }
+
+        // Restore people
+        const existingPeople = DB.getPeople();
+        for (const p of existingPeople) {
+            await DB.deletePerson(p.firstName, p.lastName);
+        }
+        if (Array.isArray(metadata.people)) {
+            for (const p of metadata.people) {
+                if (p.firstName && p.lastName) {
+                    await DB.addPerson(p.firstName, p.lastName, p.description || '');
+                }
+            }
+        }
+
+        // Restore tag descriptions
+        if (metadata.tagDescriptions && typeof metadata.tagDescriptions === 'object') {
+            for (const [name, desc] of Object.entries(metadata.tagDescriptions)) {
+                await DB.setTagDescription(name, desc);
+            }
+        }
+
+        // Restore settings
+        if (metadata.settings && typeof metadata.settings === 'object') {
+            await DB.setSettings(metadata.settings);
+        }
+
+        // Restore widgets
+        if (Array.isArray(metadata.widgets)) {
+            const existing = DB.getWidgets();
+            for (const w of existing) {
+                await DB.deleteWidget(w.id);
+            }
+            for (const w of metadata.widgets) {
+                if (w.id && w.name) {
+                    await DB.saveWidget(w);
+                }
+            }
+        }
+    }
+
+    // Re-apply theme
+    const s = DB.getSettings();
+    if (s.theme) {
+        document.documentElement.setAttribute('data-theme', s.theme);
+    }
+
+    if (msgEl) {
+        msgEl.textContent = 'Restore complete! Redirecting...';
+        msgEl.style.color = 'var(--success)';
+    }
+
+    setTimeout(() => navigateTo('dashboard'), 1000);
+}
+
 

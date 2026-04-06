@@ -108,6 +108,7 @@
                     <span class="stat-label">This Year</span>
                 </div>
             </div>
+            <div id="dashboard-widgets" class="dashboard-widgets" style="display:none"></div>
             <div class="dashboard-panels" id="dashboard-panels">
                 <div class="panel" id="panel-top-tags"></div>
                 <div class="panel" id="panel-top-categories"></div>
@@ -249,6 +250,7 @@
                         <div id="category-select" class="multi-select">
                             <!-- populated dynamically -->
                         </div>
+                        <div id="category-hint" class="entity-hint" style="display:none"></div>
                     </div>
 
                     <div class="form-group">
@@ -266,6 +268,7 @@
                             <input type="text" id="entry-tags-input" placeholder="Type a tag and press Enter" autocomplete="off">
                             <div id="tag-dropdown" class="tag-dropdown"></div>
                         </div>
+                        <div id="tag-hint" class="entity-hint" style="display:none"></div>
                     </div>
 
                     <div class="form-group">
@@ -288,6 +291,7 @@
                         <div id="people-select" class="multi-select people-multi-select">
                             <!-- populated dynamically -->
                         </div>
+                        <div id="people-hint" class="entity-hint" style="display:none"></div>
                     </div>
 
                     <div class="form-group">
@@ -501,9 +505,79 @@
             <div id="explorer-results" class="explorer-results" style="display:none">
                 <div class="explorer-results-bar">
                     <button class="btn-secondary btn-small" onclick="exportExplorerCSV()">Export CSV</button>
+                    <button class="btn-secondary btn-small" onclick="exportExplorerICalendar()">Export iCalendar</button>
                 </div>
                 <div id="explorer-results-grid"></div>
             </div>
+        </div>
+
+        <!-- WIDGET EDITOR PAGE -->
+        <div id="page-widget-editor" class="page">
+            <div class="page-header page-header-row">
+                <h2 id="widget-editor-title">Create Widget</h2>
+            </div>
+
+            <div class="widget-editor-tabs">
+                <button class="widget-editor-tab active" onclick="switchWidgetTab('header')" id="wtab-header">Header Info</button>
+                <button class="widget-editor-tab" onclick="switchWidgetTab('filter')" id="wtab-filter">Filter</button>
+                <button class="widget-editor-tab" onclick="switchWidgetTab('functions')" id="wtab-functions">Functions</button>
+            </div>
+
+            <!-- Tab 1: Header Info -->
+            <div class="widget-editor-tab-content active" id="wtab-content-header">
+                <fieldset class="settings-group-box">
+                    <legend>Widget Info</legend>
+                    <div class="form-group">
+                        <label class="form-label">Name</label>
+                        <input type="text" id="widget-name" class="form-control" placeholder="e.g. Family Outing 2026">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Description</label>
+                        <input type="text" id="widget-description" class="form-control" placeholder="Optional description">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label"><input type="checkbox" id="widget-bg-color-enabled" checked> Background Color</label>
+                        <input type="color" id="widget-bg-color" value="#4a90d9" class="widget-color-picker">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Widget Icon</label>
+                        <div id="widget-icon-preview" class="widget-icon-preview"></div>
+                        <button class="btn-small" onclick="browseWidgetIcon()">Browse Icon</button>
+                        <input type="file" id="widget-icon-file-input" accept="image/*" style="display:none" onchange="onWidgetIconFileSelected(event)">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label"><input type="checkbox" id="widget-enabled-dashboard" checked> Enabled in Dashboard</label>
+                    </div>
+                </fieldset>
+            </div>
+
+            <!-- Tab 2: Filter -->
+            <div class="widget-editor-tab-content" id="wtab-content-filter">
+                <fieldset class="settings-group-box">
+                    <legend>Entry Filters</legend>
+                    <p class="settings-description">Define criteria to filter which entries this widget aggregates. All conditions must match (AND).</p>
+                    <div id="widget-filters-list"></div>
+                    <button class="btn-small" onclick="addWidgetFilter()" style="margin-top:0.5rem">&#x2795; Add Filter</button>
+                </fieldset>
+            </div>
+
+            <!-- Tab 3: Functions -->
+            <div class="widget-editor-tab-content" id="wtab-content-functions">
+                <fieldset class="settings-group-box">
+                    <legend>Aggregate Functions</legend>
+                    <p class="settings-description">Each function computes a value from the filtered entries and displays it on the widget card.</p>
+                    <div id="widget-functions-list"></div>
+                    <button class="btn-small" onclick="addWidgetFunc()" style="margin-top:0.5rem">&#x2795; Add Function</button>
+                </fieldset>
+            </div>
+
+            <!-- Preview & Actions -->
+            <div class="widget-editor-actions">
+                <button class="btn-secondary" onclick="previewWidget()">Preview</button>
+                <button class="btn-primary" onclick="saveWidgetEditor()">Save Widget</button>
+                <button class="btn-secondary" onclick="cancelWidgetEditor()">Cancel</button>
+            </div>
+            <div id="widget-preview-output" style="display:none; margin-top:1rem;"></div>
         </div>
 
         <!-- SETTINGS PAGE -->
@@ -519,6 +593,7 @@
                 <button class="settings-tab" onclick="switchSettingsTab('templates')" id="stab-templates">&#x1F4DD; Templates</button>
                 <button class="settings-tab" onclick="switchSettingsTab('cattags')" id="stab-cattags">&#x1F3F7;&#xFE0F; Edit Metadata</button>
                 <button class="settings-tab" onclick="switchSettingsTab('data')" id="stab-data">&#x1F4BE; Data</button>
+                <button class="settings-tab" onclick="switchSettingsTab('widgets')" id="stab-widgets">&#x1F4CA; Widgets</button>
             </div>
 
             <!-- TAB 1: Preferences -->
@@ -925,6 +1000,17 @@
                     <input type="text" id="new-category-input" placeholder="New category">
                     <button class="btn-small" onclick="addCategory()">Add</button>
                 </div>
+                <div id="category-editor" class="person-editor" style="display:none">
+                    <h4 id="category-editor-title">Edit Category</h4>
+                    <div class="form-group">
+                        <label for="category-edit-description">Description</label>
+                        <textarea id="category-edit-description" rows="2" placeholder="Optional description shown as hint during entry..."></textarea>
+                    </div>
+                    <div class="form-actions">
+                        <button type="button" class="btn-primary" onclick="saveCategoryDescription()" style="width:auto">Save</button>
+                        <button type="button" class="btn-secondary" onclick="cancelCategoryEditor()">Cancel</button>
+                    </div>
+                </div>
                 </div>
             </div>
 
@@ -936,7 +1022,18 @@
                     <span>Use tag colors in viewer</span>
                 </label>
                 <div id="tags-icon-list" class="settings-list"></div>
-                <p class="settings-hint">Tags are created in entries. Assign custom icons here.</p>
+                <p class="settings-hint">Tags are created in entries. Assign icons and descriptions here.</p>
+                <div id="tag-editor" class="person-editor" style="display:none">
+                    <h4 id="tag-editor-title">Edit Tag</h4>
+                    <div class="form-group">
+                        <label for="tag-edit-description">Description</label>
+                        <textarea id="tag-edit-description" rows="2" placeholder="Optional description shown as hint during entry..."></textarea>
+                    </div>
+                    <div class="form-actions">
+                        <button type="button" class="btn-primary" onclick="saveTagDescription()" style="width:auto">Save</button>
+                        <button type="button" class="btn-secondary" onclick="cancelTagEditor()">Cancel</button>
+                    </div>
+                </div>
                 </div>
             </div>
 
@@ -983,6 +1080,19 @@
             <div class="settings-section">
                 <h3 class="settings-collapsible" onclick="toggleSettingsSection(this)"><span class="settings-icon">&#x1F4BE;</span>Data &amp; Security<span class="collapse-arrow">&#9660;</span></h3>
                 <div class="settings-section-body">
+
+                <fieldset id="backup-folder-section" class="settings-group-box" style="display:none">
+                    <legend>&#x1F4C2; Backup Folder</legend>
+                    <div id="backup-folder-display" class="backup-folder-display">
+                        <span id="backup-folder-name" class="backup-folder-name">No folder selected</span>
+                        <button class="btn-small" id="btn-select-backup-folder" onclick="selectBackupFolder()">Select Folder</button>
+                        <button class="btn-small" id="btn-clear-backup-folder" onclick="clearBackupFolder()" style="display:none">Clear</button>
+                    </div>
+                    <button class="btn-primary" onclick="backupAllData()" style="margin-top:0.75rem">&#x1F4BE; Backup All Data</button>
+                    <button class="btn-danger" onclick="restoreAllData()" style="margin-top:0.5rem">&#x1F504; Restore All Data</button>
+                    <input type="file" id="restore-backup-file" accept=".json" style="display:none" onchange="onRestoreFileSelected(event)">
+                    <p id="backup-status-msg" class="msg-text"></p>
+                </fieldset>
 
                 <fieldset class="settings-group-box">
                     <legend>&#x1F4BE; Data Management</legend>
@@ -1067,6 +1177,18 @@
 
             </div>
 
+            <!-- TAB 5: Widgets -->
+            <div class="settings-tab-content" id="stab-content-widgets">
+                <div class="settings-section">
+                    <div class="settings-section-header"><h3>Widgets</h3></div>
+                    <div class="settings-section-body">
+                        <p class="settings-description">Create dashboard widgets that display aggregate information from your entries.</p>
+                        <button class="btn-primary" onclick="openWidgetEditor()" style="margin-bottom:1rem">&#x2795; Create Widget</button>
+                        <div id="widget-list"></div>
+                    </div>
+                </div>
+            </div>
+
             <input type="file" id="icon-file-input" accept="image/*" style="display:none" onchange="onIconFileSelected(event)">
 
         </div>
@@ -1149,6 +1271,7 @@
     <script src="lib/sql-wasm.js"></script>
     <script src="lib/sql-wasm-base64.js"></script>
     <script src="js/app_info.js"></script>
+    <script src="js/bootstrap.js"></script>
     <script src="js/crypto.js"></script>
     <script src="js/db.js"></script>
     <script src="js/components.js"></script>
@@ -1159,6 +1282,7 @@
     <script src="js/reports.js"></script>
     <script src="js/weather.js"></script>
     <script src="js/explorer.js"></script>
+    <script src="js/widgets.js"></script>
     <script src="js/settings.js"></script>
 </body>
 </html>

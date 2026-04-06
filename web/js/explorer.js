@@ -718,6 +718,104 @@ function exportExplorerCSV() {
     downloadFile(csv, 'explorer_results_' + (new Date().toISOString().slice(0, 10)) + '.csv', 'text/csv');
 }
 
+function exportExplorerICalendar() {
+    if (!explorerLastResults || explorerLastResults.length === 0) {
+        alert('No results to export. Run a query first.');
+        return;
+    }
+
+    const isRawResult = explorerLastResults.length > 0 && !explorerLastResults[0].id;
+    if (isRawResult) {
+        alert('iCalendar export is only available for entry-based query results.');
+        return;
+    }
+
+    const fold = (str) => {
+        // iCalendar lines must be <= 75 octets; fold with CRLF + space
+        let result = '';
+        while (str.length > 75) {
+            result += str.substring(0, 75) + '\r\n ';
+            str = str.substring(75);
+        }
+        return result + str;
+    };
+
+    const icalEscape = (str) => {
+        return String(str || '').replace(/\\/g, '\\\\').replace(/;/g, '\\;')
+            .replace(/,/g, '\\,').replace(/\n/g, '\\n');
+    };
+
+    const toICalDate = (date, time) => {
+        // date: "YYYY-MM-DD", time: "HH:MM" or "HH:MM:SS" or empty
+        const d = (date || '').replace(/-/g, '');
+        if (!d) return null;
+        if (time) {
+            const t = time.replace(/:/g, '').substring(0, 4) + '00';
+            return d + 'T' + t;
+        }
+        return d;
+    };
+
+    const uid = () => crypto.randomUUID ? crypto.randomUUID() : Date.now() + '-' + Math.random().toString(36).substring(2);
+    const now = new Date().toISOString().replace(/[-:]/g, '').replace(/\.\d+/, '');
+
+    const events = [];
+    for (const entry of explorerLastResults) {
+        const dtstart = toICalDate(entry.date, entry.time);
+        if (!dtstart) continue;
+
+        const isDateOnly = !entry.time;
+        const lines = [];
+        lines.push('BEGIN:VEVENT');
+        lines.push('UID:' + uid());
+        lines.push('DTSTAMP:' + now);
+
+        if (isDateOnly) {
+            lines.push('DTSTART;VALUE=DATE:' + dtstart);
+            lines.push('DTEND;VALUE=DATE:' + dtstart);
+        } else {
+            lines.push('DTSTART:' + dtstart);
+            // Default 1-hour duration for timed entries
+            const h = parseInt(entry.time.substring(0, 2), 10);
+            const m = parseInt(entry.time.substring(3, 5), 10);
+            const endH = String(Math.min(h + 1, 23)).padStart(2, '0');
+            const endM = String(m).padStart(2, '0');
+            const dtend = (entry.date || '').replace(/-/g, '') + 'T' + endH + endM + '00';
+            lines.push('DTEND:' + dtend);
+        }
+
+        lines.push(fold('SUMMARY:' + icalEscape(entry.title || 'Untitled')));
+
+        const content = (entry.content || '').replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
+        if (content) {
+            lines.push(fold('DESCRIPTION:' + icalEscape(content)));
+        }
+
+        if (entry.placeName) {
+            lines.push(fold('LOCATION:' + icalEscape(entry.placeName)));
+        }
+
+        lines.push('END:VEVENT');
+        events.push(lines.join('\r\n'));
+    }
+
+    if (events.length === 0) {
+        alert('No entries with valid dates found to export.');
+        return;
+    }
+
+    const ical = [
+        'BEGIN:VCALENDAR',
+        'VERSION:2.0',
+        'PRODID:-//MyJournal//Explorer Export//EN',
+        'CALSCALE:GREGORIAN',
+        events.join('\r\n'),
+        'END:VCALENDAR'
+    ].join('\r\n');
+
+    downloadFile(ical, 'explorer_results_' + (new Date().toISOString().slice(0, 10)) + '.ics', 'text/calendar');
+}
+
 function clearExplorerQuery() {
     explorerConditions = [];
     addExplorerCondition();

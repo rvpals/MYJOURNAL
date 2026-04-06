@@ -23,13 +23,13 @@ const DB = (() => {
     // ========== Journal List (metadata, not encrypted) ==========
 
     function getJournalList() {
-        const raw = localStorage.getItem(JOURNALS_META_KEY);
+        const raw = Bootstrap.get(JOURNALS_META_KEY);
         return raw ? JSON.parse(raw) : [];
     }
 
     function saveJournalList(list) {
         const json = JSON.stringify(list);
-        localStorage.setItem(JOURNALS_META_KEY, json);
+        Bootstrap.set(JOURNALS_META_KEY, json);
         // Sync to native SharedPreferences if available
         if (window.AndroidBridge && typeof AndroidBridge.syncJournalList === 'function') {
             AndroidBridge.syncJournalList(json);
@@ -112,7 +112,9 @@ const DB = (() => {
         `);
         db.run(`CREATE INDEX IF NOT EXISTS idx_images_entry ON images(entryId)`);
 
-        db.run(`CREATE TABLE IF NOT EXISTS categories (name TEXT PRIMARY KEY)`);
+        db.run(`CREATE TABLE IF NOT EXISTS categories (name TEXT PRIMARY KEY, description TEXT DEFAULT '')`);
+
+        db.run(`CREATE TABLE IF NOT EXISTS tags (name TEXT PRIMARY KEY, description TEXT DEFAULT '')`);
 
         db.run(`CREATE TABLE IF NOT EXISTS icons (
             type TEXT NOT NULL,
@@ -129,6 +131,20 @@ const DB = (() => {
         )`);
 
         db.run(`CREATE TABLE IF NOT EXISTS settings (key TEXT PRIMARY KEY, value TEXT)`);
+
+        db.run(`CREATE TABLE IF NOT EXISTS widgets (
+            id TEXT PRIMARY KEY,
+            name TEXT NOT NULL,
+            description TEXT DEFAULT '',
+            bgColor TEXT DEFAULT '',
+            icon TEXT DEFAULT '',
+            filters TEXT DEFAULT '[]',
+            functions TEXT DEFAULT '[]',
+            enabledInDashboard INTEGER DEFAULT 1,
+            sortOrder INTEGER DEFAULT 0,
+            dtCreated TEXT,
+            dtUpdated TEXT
+        )`);
 
         db.run(`CREATE TABLE IF NOT EXISTS schema_version (version INTEGER PRIMARY KEY)`);
         db.run(`INSERT OR REPLACE INTO schema_version VALUES (?)`, [SCHEMA_VERSION]);
@@ -149,6 +165,21 @@ const DB = (() => {
             PRIMARY KEY (firstName, lastName)
         )`);
         try { db.run("ALTER TABLE entries ADD COLUMN people TEXT"); } catch(e) { /* column already exists */ }
+        try { db.run("ALTER TABLE categories ADD COLUMN description TEXT DEFAULT ''"); } catch(e) { /* column already exists */ }
+        db.run(`CREATE TABLE IF NOT EXISTS tags (name TEXT PRIMARY KEY, description TEXT DEFAULT '')`);
+        db.run(`CREATE TABLE IF NOT EXISTS widgets (
+            id TEXT PRIMARY KEY,
+            name TEXT NOT NULL,
+            description TEXT DEFAULT '',
+            bgColor TEXT DEFAULT '',
+            icon TEXT DEFAULT '',
+            filters TEXT DEFAULT '[]',
+            functions TEXT DEFAULT '[]',
+            enabledInDashboard INTEGER DEFAULT 1,
+            sortOrder INTEGER DEFAULT 0,
+            dtCreated TEXT,
+            dtUpdated TEXT
+        )`);
     }
 
     // ========== Row Conversion ==========
@@ -205,11 +236,14 @@ const DB = (() => {
 
     function openIDB() {
         return new Promise((resolve, reject) => {
-            const request = indexedDB.open(IDB_NAME, 1);
+            const request = indexedDB.open(IDB_NAME, 2);
             request.onupgradeneeded = (e) => {
                 const db = e.target.result;
                 if (!db.objectStoreNames.contains(STORE_NAME)) {
                     db.createObjectStore(STORE_NAME);
+                }
+                if (!db.objectStoreNames.contains('bootstrap')) {
+                    db.createObjectStore('bootstrap');
                 }
             };
             request.onsuccess = (e) => resolve(e.target.result);
@@ -590,12 +624,30 @@ const DB = (() => {
         return results[0].values.map(row => row[0]);
     }
 
+    function getCategoriesWithDesc() {
+        if (!sqlDB) return [];
+        const results = sqlDB.exec('SELECT name, description FROM categories ORDER BY name');
+        if (!results.length) return [];
+        return results[0].values.map(row => ({ name: row[0], description: row[1] || '' }));
+    }
+
     function setCategories(cats) {
         if (!sqlDB) return;
+        // Preserve existing descriptions when replacing category list
+        const existing = {};
+        const prev = sqlDB.exec('SELECT name, description FROM categories');
+        if (prev.length) prev[0].values.forEach(row => { existing[row[0]] = row[1] || ''; });
         sqlDB.run('DELETE FROM categories');
         for (const cat of cats) {
-            sqlDB.run('INSERT OR IGNORE INTO categories VALUES (?)', [cat]);
+            const desc = existing[cat] || '';
+            sqlDB.run('INSERT OR IGNORE INTO categories (name, description) VALUES (?, ?)', [cat, desc]);
         }
+        return save();
+    }
+
+    function setCategoryDescription(name, description) {
+        if (!sqlDB) return;
+        sqlDB.run('UPDATE categories SET description = ? WHERE name = ?', [description || '', name]);
         return save();
     }
 
@@ -718,6 +770,30 @@ const DB = (() => {
         return results[0].values.map(row => row[0]).sort();
     }
 
+    // ========== Tag Descriptions ==========
+
+    function getTagDescriptions() {
+        if (!sqlDB) return {};
+        const results = sqlDB.exec('SELECT name, description FROM tags');
+        const map = {};
+        if (results.length) {
+            for (const row of results[0].values) {
+                if (row[1]) map[row[0]] = row[1];
+            }
+        }
+        return map;
+    }
+
+    function setTagDescription(name, description) {
+        if (!sqlDB) return;
+        if (description) {
+            sqlDB.run('INSERT OR REPLACE INTO tags (name, description) VALUES (?, ?)', [name, description]);
+        } else {
+            sqlDB.run('DELETE FROM tags WHERE name = ?', [name]);
+        }
+        return save();
+    }
+
     // ========== Export/Import (Encrypted SQLite) ==========
 
     async function exportJSON() {
@@ -810,16 +886,74 @@ const DB = (() => {
         return getCachedCompat();
     }
 
+    // ========== Widgets ==========
+
+    function getWidgets() {
+        if (!sqlDB) return [];
+        const results = sqlDB.exec('SELECT * FROM widgets ORDER BY sortOrder, name');
+        if (!results.length) return [];
+        return results[0].values.map(r => {
+            const cols = results[0].columns;
+            const obj = {};
+            cols.forEach((c, i) => obj[c] = r[i]);
+            obj.filters = safeJsonParse(obj.filters, []);
+            obj.functions = safeJsonParse(obj.functions, []);
+            obj.enabledInDashboard = !!obj.enabledInDashboard;
+            return obj;
+        });
+    }
+
+    function getWidgetById(id) {
+        if (!sqlDB) return null;
+        const results = sqlDB.exec('SELECT * FROM widgets WHERE id = ?', [id]);
+        if (!results.length || !results[0].values.length) return null;
+        const cols = results[0].columns;
+        const r = results[0].values[0];
+        const obj = {};
+        cols.forEach((c, i) => obj[c] = r[i]);
+        obj.filters = safeJsonParse(obj.filters, []);
+        obj.functions = safeJsonParse(obj.functions, []);
+        obj.enabledInDashboard = !!obj.enabledInDashboard;
+        return obj;
+    }
+
+    function saveWidget(widget) {
+        if (!sqlDB) return;
+        const now = new Date().toISOString();
+        sqlDB.run(`INSERT OR REPLACE INTO widgets (id, name, description, bgColor, icon, filters, functions, enabledInDashboard, sortOrder, dtCreated, dtUpdated)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`, [
+            widget.id,
+            widget.name || '',
+            widget.description || '',
+            widget.bgColor || '',
+            widget.icon || '',
+            JSON.stringify(widget.filters || []),
+            JSON.stringify(widget.functions || []),
+            widget.enabledInDashboard ? 1 : 0,
+            widget.sortOrder || 0,
+            widget.dtCreated || now,
+            now
+        ]);
+        return save();
+    }
+
+    function deleteWidget(id) {
+        if (!sqlDB) return;
+        sqlDB.run('DELETE FROM widgets WHERE id = ?', [id]);
+        return save();
+    }
+
     return {
         setPassword, getPassword, setJournalId, getJournalId,
         getJournalList, saveJournalList, addJournalToList, removeJournalFromList, generateJournalId,
         loadAll, saveAll, deleteJournalData, save, getCached, getDefaultData,
-        getEntries, getEntryById, getCategories, getSettings,
+        getEntries, getEntryById, getCategories, getCategoriesWithDesc, getSettings,
         addEntry, updateEntry, deleteEntryById, deleteEntriesByIds,
-        setCategories, setSettings,
+        setCategories, setCategoryDescription, setSettings,
         getAllIcons, getIcon, setIcon, removeIcon,
         getPeople, addPerson, updatePerson, deletePerson,
-        getAllTags, getAllPlaceNames,
+        getWidgets, getWidgetById, saveWidget, deleteWidget,
+        getAllTags, getAllPlaceNames, getTagDescriptions, setTagDescription,
         loadEntryImages,
         exportJSON, importJSON,
         exportSQLiteBytes, importSQLiteBytes,

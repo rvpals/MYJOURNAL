@@ -116,6 +116,9 @@ function refreshDashboard() {
         filterType: 'person', onItemClick: (name) => navigateToFilteredList('person', name)
     }).setData(dashboardFullData.people).render();
 
+    // Widgets
+    renderDashboardWidgets(entries);
+
     // Pinned entries
     renderPinnedEntries(entries);
 

@@ -5,8 +5,8 @@
 let _viewEntryFromSearch = false;
 
 function getDefaultEntryListOrder() {
-    const field = localStorage.getItem('default_entry_sort_field') || 'date';
-    const direction = localStorage.getItem('default_entry_sort_dir') || 'desc';
+    const field = Bootstrap.get('default_entry_sort_field') || 'date';
+    const direction = Bootstrap.get('default_entry_sort_dir') || 'desc';
     return { field, direction };
 }
 
@@ -14,9 +14,9 @@ let selectMode = false;
 let selectedEntryIds = new Set();
 let searchDebounceTimer = null;
 let currentPageNum = 1;
-let currentPageSize = parseInt(localStorage.getItem('entries_page_size')) || 20;
+let currentPageSize = parseInt(Bootstrap.get('entries_page_size')) || 20;
 let filteredEntriesCache = [];
-let entryViewMode = localStorage.getItem('entry_view_mode') || 'card';
+let entryViewMode = Bootstrap.get('entry_view_mode') || 'card';
 
 function onSearchInput() {
     const bar = document.getElementById('search-progress');
@@ -158,7 +158,7 @@ function renderSearchFilterPanel() {
 
 function toggleViewMode() {
     entryViewMode = entryViewMode === 'card' ? 'list' : 'card';
-    localStorage.setItem('entry_view_mode', entryViewMode);
+    Bootstrap.set('entry_view_mode', entryViewMode);
     updateViewModeButton();
     updateColToggleForViewMode();
     renderPaginatedEntries();
@@ -522,7 +522,7 @@ function onPageSizeChange() {
     const val = parseInt(document.getElementById('page-size-select').value);
     currentPageSize = val;
     currentPageNum = 1;
-    localStorage.setItem('entries_page_size', val);
+    Bootstrap.set('entries_page_size', val);
     renderPaginatedEntries();
 }
 
@@ -740,7 +740,7 @@ function showEntryView(entry, skipNav) {
     }
 
     // Apply collapse-by-default preference
-    const collapseDefault = localStorage.getItem('ev_misc_collapsed') === '1';
+    const collapseDefault = Bootstrap.get('ev_misc_collapsed') === '1';
     setMiscCollapsed(collapseDefault);
 
     // Apply custom font settings
@@ -926,7 +926,7 @@ async function deleteViewerImage(index) {
     const entry = DB.getEntryById(currentViewEntryId);
     if (!entry || !entry.images || index < 0 || index >= entry.images.length) return;
 
-    const warnDelete = localStorage.getItem('journal_warn_delete') !== 'false';
+    const warnDelete = Bootstrap.get('journal_warn_delete') !== 'false';
     if (warnDelete) {
         const name = entry.images[index].name || ('Image ' + (index + 1));
         if (!confirm('Delete "' + name + '" from this entry?')) return;
