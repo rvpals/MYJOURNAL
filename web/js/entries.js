@@ -743,8 +743,9 @@ function showEntryView(entry, skipNav) {
     const collapseDefault = Bootstrap.get('ev_misc_collapsed') === '1';
     setMiscCollapsed(collapseDefault);
 
-    // Apply custom font settings
+    // Apply custom font settings and wallpaper
     if (typeof applyViewerFont === 'function') applyViewerFont();
+    if (typeof applyWallpaper === 'function') applyWallpaper();
     updateViewNavButtons();
 
     // Highlight search term from dashboard search

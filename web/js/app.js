@@ -278,7 +278,7 @@ function navigateTo(pageId) {
         return false;
     }
 
-    if (pageId === 'dashboard') refreshDashboard();
+    if (pageId === 'dashboard') { refreshDashboard(); if (typeof applyWallpaper === 'function') applyWallpaper(); }
     if (pageId === 'entry-list') refreshEntryList();
     if (pageId === 'entry-form') prepareEntryForm();
     if (pageId === 'reports') prepareReports();

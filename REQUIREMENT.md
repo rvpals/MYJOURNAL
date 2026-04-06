@@ -245,6 +245,15 @@ summary: "Complete functional requirements for all 12 feature areas — authenti
 - Max pinned entries count
 - Default sort field and direction
 
+### Wallpaper
+- Browse and select a background image in Settings > Preferences > Wallpaper
+- Wallpaper applied as `background-size: cover` on dashboard page and entry viewer page
+- Semi-transparent theme-colored overlay (55% opacity) ensures text readability over any image
+- Image resized to max 1920px width and JPEG-compressed at 85% quality before storage
+- Stored as base64 in encrypted DB `settings` table (key: `wallpaper`)
+- Preview thumbnail shown in settings UI after selection
+- Clear button removes wallpaper and restores theme defaults
+
 ### Themes
 - 12 themes: Light, Dark, Ocean, Midnight, Forest, Amethyst, Aurora, Lavender, Frost, Navy, Sunflower, Meadow
 - All implemented via CSS `[data-theme]` custom properties

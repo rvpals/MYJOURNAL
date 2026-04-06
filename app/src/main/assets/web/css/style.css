@@ -5720,6 +5720,40 @@ mark.search-highlight {
     }
 }
 
+/* ========== Wallpaper ========== */
+.has-wallpaper {
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-attachment: scroll;
+    position: relative;
+}
+.has-wallpaper::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: var(--bg-primary);
+    opacity: 0.55;
+    pointer-events: none;
+    z-index: 0;
+}
+.has-wallpaper > * {
+    position: relative;
+    z-index: 1;
+}
+.wallpaper-preview {
+    margin-top: 0.5rem;
+    border: var(--border-width) solid var(--border-color);
+    border-radius: var(--radius);
+    overflow: hidden;
+    max-width: 300px;
+}
+.wallpaper-preview img {
+    display: block;
+    width: 100%;
+    height: auto;
+}
+
 /* ========== Calendar View ========== */
 .calendar-header {
     margin-bottom: 0.75rem;

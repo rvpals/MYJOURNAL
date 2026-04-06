@@ -145,6 +145,17 @@ summary: "Feature-by-feature test checklist with pass/fail status covering criti
 - [ ] **Entry-based only** — Shows alert for non-entry raw SQL results
 - [ ] **Valid .ics** — Exported file is valid iCalendar with VEVENT per entry (date, time, title, location, description)
 
+## Wallpaper
+
+- [ ] **Browse image** — Click "Browse Image..." in Settings > Preferences > Wallpaper, select an image file
+- [ ] **Dashboard background** — Selected wallpaper appears as background on dashboard page with semi-transparent overlay
+- [ ] **Entry viewer background** — Same wallpaper appears as background when viewing a single entry
+- [ ] **Preview** — Thumbnail preview shown in settings after selecting image
+- [ ] **Clear wallpaper** — Clear button removes wallpaper and restores theme defaults on both pages
+- [ ] **Theme compatibility** — Wallpaper overlay renders readably across all 12 themes
+- [ ] **Persistence** — Wallpaper survives app restart (stored encrypted in DB settings)
+- [ ] **Large images** — Large images resized to max 1920px width, no crash or excessive lag
+
 ## Calendar View
 
 - [ ] **Monthly view** — Calendar grid shows current month (Mon-Sun), day numbers, entry count badges with correct counts

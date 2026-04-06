@@ -54,6 +54,9 @@ summary: "Known bugs, platform limitations, fixed issues with dates, and archite
 - SQL Explorer now supports iCalendar (.ics) export alongside CSV.
 - Android backup folder uses SAF (Storage Access Framework) with persistent URI permissions; folder URI stored in SharedPreferences (`backup_prefs`).
 
+- Wallpaper image stored as base64 JPEG in the encrypted DB `settings` table. Large images are resized to max 1920px width and JPEG-compressed at 85% quality. Very large wallpapers may increase DB size noticeably.
+- Wallpaper uses a `::before` pseudo-element overlay at 55% opacity for text readability — works with all 12 themes.
+
 ## Limitations
 
 - Web Crypto API requires HTTPS or localhost (no plain HTTP)

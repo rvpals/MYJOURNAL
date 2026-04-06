@@ -120,6 +120,7 @@ function refreshSettings() {
     if (typeof refreshCustomViewsPage === 'function') refreshCustomViewsPage();
     refreshBackupFolderUI();
     refreshWidgetList();
+    refreshWallpaperUI();
     restoreSettingsTab();
 }
 
@@ -2324,6 +2325,93 @@ async function performRestore(jsonStr) {
     }
 
     setTimeout(() => navigateTo('dashboard'), 1000);
+}
+
+// ========== Wallpaper ==========
+
+function browseWallpaper() {
+    document.getElementById('wallpaper-file-input').click();
+}
+
+function onWallpaperFileSelected(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        const img = new Image();
+        img.onload = function() {
+            // Resize to max 1920px wide to keep storage reasonable
+            const maxW = 1920;
+            let w = img.width, h = img.height;
+            if (w > maxW) {
+                h = Math.round(h * (maxW / w));
+                w = maxW;
+            }
+            const canvas = document.createElement('canvas');
+            canvas.width = w;
+            canvas.height = h;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0, w, h);
+            const dataUrl = canvas.toDataURL('image/jpeg', 0.85);
+            DB.setSettings({ wallpaper: dataUrl });
+            refreshWallpaperUI();
+            applyWallpaper();
+        };
+        img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+    event.target.value = '';
+}
+
+function clearWallpaper() {
+    DB.setSettings({ wallpaper: '' });
+    refreshWallpaperUI();
+    applyWallpaper();
+}
+
+function refreshWallpaperUI() {
+    const settings = DB.getSettings();
+    const wp = settings.wallpaper || '';
+    const preview = document.getElementById('wallpaper-preview');
+    const clearBtn = document.getElementById('wallpaper-clear-btn');
+    if (wp) {
+        if (preview) {
+            preview.style.display = 'block';
+            preview.innerHTML = '<img src="' + wp + '" alt="Wallpaper preview">';
+        }
+        if (clearBtn) clearBtn.style.display = '';
+    } else {
+        if (preview) { preview.style.display = 'none'; preview.innerHTML = ''; }
+        if (clearBtn) clearBtn.style.display = 'none';
+    }
+}
+
+function applyWallpaper() {
+    const settings = DB.getSettings();
+    const wp = settings.wallpaper || '';
+    const dashboard = document.getElementById('page-dashboard');
+    const viewer = document.getElementById('page-entry-view');
+
+    if (wp) {
+        const style = 'url(' + wp + ')';
+        if (dashboard) {
+            dashboard.classList.add('has-wallpaper');
+            dashboard.style.backgroundImage = style;
+        }
+        if (viewer) {
+            viewer.classList.add('has-wallpaper');
+            viewer.style.backgroundImage = style;
+        }
+    } else {
+        if (dashboard) {
+            dashboard.classList.remove('has-wallpaper');
+            dashboard.style.backgroundImage = '';
+        }
+        if (viewer) {
+            viewer.classList.remove('has-wallpaper');
+            viewer.style.backgroundImage = '';
+        }
+    }
 }
 
 

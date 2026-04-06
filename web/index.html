@@ -787,6 +787,18 @@
                     <div id="theme-preview" class="theme-preview-grid"></div>
                 </fieldset>
 
+                <fieldset class="settings-group-box">
+                    <legend>&#x1F5BC; Wallpaper</legend>
+                    <div class="form-group">
+                        <label>Dashboard &amp; Entry Viewer Background</label>
+                        <div class="pref-row" style="gap:0.5rem">
+                            <button class="btn-small" onclick="browseWallpaper()">Browse Image...</button>
+                            <button class="btn-small btn-danger-small" id="wallpaper-clear-btn" onclick="clearWallpaper()" style="display:none">Clear</button>
+                        </div>
+                        <div id="wallpaper-preview" class="wallpaper-preview" style="display:none"></div>
+                    </div>
+                </fieldset>
+
                 </div>
             </div>
 
@@ -1204,6 +1216,7 @@
             </div>
 
             <input type="file" id="icon-file-input" accept="image/*" style="display:none" onchange="onIconFileSelected(event)">
+            <input type="file" id="wallpaper-file-input" accept="image/*" style="display:none" onchange="onWallpaperFileSelected(event)">
 
         </div>
     </div>

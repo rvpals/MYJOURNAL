@@ -137,7 +137,7 @@ summary: "Version-by-version feature completion history (v0.9–v1.4) and remain
 - [x] Native auto-login updated to use Bootstrap store instead of localStorage
 - [x] Metadata export/import updated: includes category descriptions, tag descriptions, and widgets
 
-### v1.4.0+ (2026-04-05, Calendar View)
+### v1.4.0+ (2026-04-05, Calendar View + Wallpaper)
 - [x] Calendar View: monthly calendar grid (Mon-Sun) with entry count badges per day
 - [x] Calendar View: weekly view with 7-column grid showing entry titles per day
 - [x] Calendar View: month/week navigation (prev/next buttons), "Today" button
@@ -148,6 +148,11 @@ summary: "Version-by-version feature completion history (v0.9–v1.4) and remain
 - [x] Calendar View: "CALENDAR" button added to dashboard navigation grid
 - [x] Calendar View: responsive layout with mobile breakpoints
 - [x] Calendar View: full theme support via CSS variables
+- [x] Wallpaper: browse and select background image in Settings > Preferences
+- [x] Wallpaper: applied as background on dashboard and entry viewer pages
+- [x] Wallpaper: semi-transparent overlay (55% opacity) for text readability
+- [x] Wallpaper: image resized to max 1920px, JPEG compressed (85%), stored encrypted in DB settings
+- [x] Wallpaper: preview thumbnail and clear button in settings UI
 
 ## Remaining / TODO
 
