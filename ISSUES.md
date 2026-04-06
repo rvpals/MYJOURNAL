@@ -14,6 +14,11 @@ summary: "Known bugs, platform limitations, fixed issues with dates, and archite
 - **Image storage is inefficient** — full base64 images stored in SQLite; no server-side or file-system storage option
 - **Bootstrap IDB version bump** — IndexedDB version bumped from 1 to 2 (adds `bootstrap` object store); existing users will trigger onupgradeneeded on first load after update
 
+## Fixed (2026-04-06)
+
+- ~~New journal creation fails due to categories INSERT missing column name~~ **FIXED** — `INSERT INTO categories VALUES (?)` fails when table has `name` + `description` columns; changed to `INSERT INTO categories (name) VALUES (?)`
+- ~~Null reference when `.nav-links` element doesn't exist~~ **FIXED** — added null check before calling `classList.remove('open')` in `navigateTo()`
+
 ## Fixed (2026-04-04)
 
 - ~~Metadata import shows blank screen after "app will refresh" message~~ **FIXED** — `window.location.reload()` fails in WebView file:// protocol; replaced with in-place `refreshSettings()` + theme reapply + `navigateTo('settings')`
@@ -41,8 +46,11 @@ summary: "Known bugs, platform limitations, fixed issues with dates, and archite
 - Dashboard ranked panels, Explorer results, and Entry list table view now use shared components (ResultGrid, RankedPanel, RecordViewer, CollapsiblePanel) from components.js — any rendering bugs in these areas should be checked against the component code, not the old inline implementations (which have been removed).
 - Old filter-toggle-header / filter-fields-body CSS removed from both style.css and style-android.css — entry list filters now use CollapsiblePanel.
 - Navbar no longer has Entry List, Report, or SQL Explorer links — navigation moved to dashboard button grid.
-- Dashboard nav grid now has 5 buttons (2x3 grid): New Entry, Entry List, Report, SQL Explorer, Calendar.
+- Dashboard nav grid removed — navigation moved to hamburger dropdown menu. New Entry button (📝) is in the navbar.
 - Theme cycle button removed from navbar — theme selection is in Settings > Display & Appearance > Theme.
+- App renamed from "JOURNAL" to "My Journal" in v1.5.0 — affects Android app label, login screen, dashboard header, navbar brand, and page title.
+- About button removed from Settings page header — now accessible via hamburger menu.
+- Navbar journal button uses `flex: 1` to fill available width; long journal names truncate with ellipsis.
 - HD icons use `type_hd` suffix in the same `icons` table (e.g., `tag_hd`). No schema change. Upload generates both 64x64 and 128x128 if source image >=96px. RankedPanel card view checks HD first, then standard icon, then text fallback.
 - Data Management now uses dropdown selects instead of individual buttons. Export/Import Metadata moved from Edit Metadata tab to Data Management dropdowns.
 - `cleanupDatelessEntries()` function removed — Cleanup Dateless button no longer exists.

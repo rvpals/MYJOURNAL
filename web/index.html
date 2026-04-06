@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>JOURNAL</title>
+    <title>My Journal</title>
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="css/style-android.css">
     <link rel="stylesheet" href="https://cdn.quilljs.com/1.3.7/quill.snow.css">
@@ -13,7 +13,7 @@
     <!-- LOGIN PAGE -->
     <div id="page-login" class="page active">
         <div class="login-container">
-            <h1>JOURNAL</h1>
+            <h1>My Journal</h1>
             <p class="login-subtitle">Personal Journal &amp; Activity Log</p>
             <div class="login-box">
                 <div class="form-group">
@@ -51,17 +51,24 @@
         <!-- NAV BAR -->
         <nav id="navbar">
             <div class="nav-row1">
-                <button class="nav-brand nav-brand-btn" onclick="navigateTo('dashboard')" title="Click to show dashboard">JOURNAL <span id="nav-journal-name" class="nav-journal-name"></span></button>
-                <a href="#" class="nav-link nav-link-settings nav-row1-btn" data-page="settings" onclick="navigateTo('settings')" title="Settings"><span class="nav-icon">&#x2699;&#xFE0F;</span> <span class="nav-label-text">Settings</span></a>
-                <button class="btn-icon nav-row1-btn" onclick="lockApp()" title="Lock">&#x1F512;</button>
+                <button class="nav-brand nav-brand-btn" onclick="navigateTo('dashboard')" title="Click to show dashboard">My Journal <span id="nav-journal-name" class="nav-journal-name"></span></button>
             </div>
-            <div class="nav-row2">
-                <div class="nav-row2-right">
-                    <div class="nav-links">
+            <div class="nav-row1-right">
+                <button class="btn-icon nav-newentry-btn" onclick="navigateTo('entry-form')" title="New Entry">&#x1F4DD;</button>
+                <div class="nav-menu-wrapper">
+                    <button class="btn-icon nav-menu-btn" onclick="toggleNavMenu()" title="Menu">&#9776;</button>
+                    <div id="nav-menu-dropdown" class="nav-menu-dropdown">
+                        <a href="#" class="nav-menu-item" data-page="entry-list" onclick="navMenuGo('entry-list')">&#x1F4D6; Entry List</a>
+                        <a href="#" class="nav-menu-item" data-page="reports" onclick="navMenuGo('reports')">&#x1F4C4; Report</a>
+                        <a href="#" class="nav-menu-item" data-page="explorer" onclick="navMenuGo('explorer')">&#x1F50D; SQL Explorer</a>
+                        <a href="#" class="nav-menu-item" data-page="calendar" onclick="navMenuGo('calendar')">&#x1F4C5; Calendar</a>
+                        <a href="#" class="nav-menu-item" data-page="settings" onclick="navMenuGo('settings')">&#x2699;&#xFE0F; Settings</a>
+                        <div class="nav-menu-divider"></div>
+                        <a href="#" class="nav-menu-item" onclick="event.preventDefault(); closeNavMenu(); openAbout()">&#x2139;&#xFE0F; About</a>
+                        <a href="#" class="nav-menu-item nav-menu-lock" onclick="event.preventDefault(); closeNavMenu(); lockApp()">&#x1F512; Lock</a>
                     </div>
                 </div>
             </div>
-            <button id="nav-hamburger" class="btn-icon nav-hamburger" onclick="toggleMobileNav()">&#9776;</button>
         </nav>
 
         <!-- DASHBOARD PAGE -->
@@ -70,13 +77,6 @@
                 <h2>Dashboard</h2>
                 <div id="dashboard-weather" class="dashboard-weather-compact" style="display:none"></div>
                 <div class="col-toggle" data-target="dashboard-panels" id="col-toggle-dashboard"></div>
-            </div>
-            <div class="dashboard-nav-grid">
-                <button class="btn btn-primary" onclick="navigateTo('entry-form')">&#x1F4DD; New Entry</button>
-                <button class="btn btn-secondary" onclick="navigateTo('entry-list')">&#x1F4D6; Entry List</button>
-                <button class="btn btn-secondary" onclick="navigateTo('reports')">&#x1F4C4; Report</button>
-                <button class="btn btn-secondary" onclick="navigateTo('explorer')">&#x1F50D; SQL Explorer</button>
-                <button class="btn btn-secondary" onclick="navigateTo('calendar')">&#x1F4C5; Calendar</button>
             </div>
             <div id="dashboard-quick-actions" class="dashboard-quick-actions"></div>
             <fieldset class="dashboard-search-group" id="dashboard-search-group">
@@ -518,6 +518,14 @@
                 <h2>Calendar</h2>
             </div>
             <div id="calendar-header" class="calendar-header"></div>
+            <div class="calendar-goto-panel" id="calendar-goto-panel" style="display:none">
+                <div class="calendar-goto-panel-content">
+                    <input type="text" id="calendar-goto-text" class="calendar-goto-input" placeholder="mm/dd/yyyy" maxlength="10" onkeydown="if(event.key==='Enter')calendarGotoFromText()" oninput="calendarAutoFormatDate(this)">
+                    <input type="date" id="calendar-goto-input" class="calendar-goto-input" onchange="calendarGoto()" oninput="calendarGotoDateChanged()">
+                    <button class="cal-goto-btn" onclick="calendarJumpEvent(-1)" title="Jump to previous date with entries">&#9664; Prev Event</button>
+                    <button class="cal-goto-btn" onclick="calendarJumpEvent(1)" title="Jump to next date with entries">Next Event &#9654;</button>
+                </div>
+            </div>
             <div id="calendar-grid" class="calendar-grid"></div>
             <div id="calendar-results" class="calendar-results" style="display:none">
                 <h3 id="calendar-results-label" class="calendar-results-label"></h3>
@@ -599,7 +607,6 @@
             <div class="page-header page-header-row">
                 <h2>Settings</h2>
                 <div class="col-toggle" data-target="page-settings" id="col-toggle-settings"></div>
-                <button class="btn-small btn-about-corner" onclick="openAbout()" title="About this app">&#x2139;&#xFE0F; About</button>
             </div>
 
             <div class="settings-tabs">
@@ -1115,7 +1122,7 @@
                         <button class="btn-small" id="btn-clear-backup-folder" onclick="clearBackupFolder()" style="display:none">Clear</button>
                     </div>
                     <button class="btn-primary" onclick="backupAllData()" style="margin-top:0.75rem">&#x1F4BE; Backup All Data</button>
-                    <button class="btn-danger" onclick="restoreAllData()" style="margin-top:0.5rem">&#x1F504; Restore All Data</button>
+                    <button class="btn-primary" onclick="restoreAllData()" style="margin-top:0.5rem">&#x1F504; Restore All Data</button>
                     <input type="file" id="restore-backup-file" accept=".json" style="display:none" onchange="onRestoreFileSelected(event)">
                     <p id="backup-status-msg" class="msg-text"></p>
                 </fieldset>

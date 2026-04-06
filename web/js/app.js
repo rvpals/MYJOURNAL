@@ -256,11 +256,17 @@ function navigateTo(pageId) {
     const activeLink = document.querySelector(`.nav-link[data-page="${pageId}"]`);
     if (activeLink) activeLink.classList.add('active');
 
+    // Highlight menu items
+    document.querySelectorAll('.nav-menu-item').forEach(l => l.classList.remove('active'));
+    const activeMenu = document.querySelector(`.nav-menu-item[data-page="${pageId}"]`);
+    if (activeMenu) activeMenu.classList.add('active');
+
     // Highlight brand button when on dashboard
     const brandBtn = document.querySelector('.nav-brand-btn');
     if (brandBtn) brandBtn.classList.toggle('nav-brand-active', pageId === 'dashboard');
 
-    document.querySelector('.nav-links').classList.remove('open');
+    const navLinks = document.querySelector('.nav-links');
+    if (navLinks) navLinks.classList.remove('open');
 
     // Redirect custom-views to settings > templates tab
     if (pageId === 'custom-views') {
@@ -328,6 +334,31 @@ function handleAndroidBack() {
 function toggleMobileNav() {
     document.querySelector('.nav-links').classList.toggle('open');
 }
+
+function toggleNavMenu() {
+    const dd = document.getElementById('nav-menu-dropdown');
+    if (!dd) return;
+    dd.classList.toggle('open');
+}
+
+function closeNavMenu() {
+    const dd = document.getElementById('nav-menu-dropdown');
+    if (dd) dd.classList.remove('open');
+}
+
+function navMenuGo(page) {
+    event.preventDefault();
+    closeNavMenu();
+    navigateTo(page);
+}
+
+// Close menu when clicking outside
+document.addEventListener('click', function(e) {
+    const wrapper = document.querySelector('.nav-menu-wrapper');
+    if (wrapper && !wrapper.contains(e.target)) {
+        closeNavMenu();
+    }
+});
 
 // ========== Theme ==========
 

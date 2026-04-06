@@ -1,13 +1,25 @@
 <?xml version="1.0" encoding="utf-8"?>
 <app-info>
     <name>My Journal</name>
-    <version>1.4.0</version>
+    <version>1.5.0</version>
     <email>rvpals@gmail.com</email>
     <url>https://github.com/rvpals</url>
     <company-url>https://play.google.com/store/apps/details?id=com.journal.app</company-url>
     <description>A personal journal and activity log with encrypted local storage. Create entries with rich text, tags, categories, places, and weather data. Supports multiple password-protected journals, custom report templates, and data export/import.</description>
 
     <changelog>
+        <release version="v1.5.0" date="2026-04-06">
+            <change>Hamburger menu: navigation moved to dropdown menu (Entry List, Report, SQL Explorer, Calendar, Settings, Lock)</change>
+            <change>New Entry button added to navbar for quick access</change>
+            <change>Dashboard cleaned up: navigation buttons removed (now in hamburger menu)</change>
+            <change>Calendar View redesigned: Google Calendar-inspired modern look with table gridlines</change>
+            <change>Calendar month view: entry title chips in day cells, today circle indicator</change>
+            <change>Calendar week view: horizontal day rows with time and entry title chips</change>
+            <change>Calendar toolbar: single-line layout with nav arrows, Today, Goto, and Month/Week toggle</change>
+            <change>Calendar Goto: collapsible panel with date picker, text input (mm/dd/yyyy), and Prev/Next Event jump buttons</change>
+            <change>Backup/Restore buttons styled consistently on Data Management tab</change>
+            <change>Fixed: new journal creation failing due to categories INSERT missing column name</change>
+        </release>
         <release version="v1.4.0" date="2026-04-03">
             <change>Native LoginActivity: journal selector, password entry, biometric login</change>
             <change>Native DashboardActivity: stats grid, pinned/recent entries, ranked panels</change>

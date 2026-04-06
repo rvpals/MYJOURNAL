@@ -53,7 +53,6 @@ summary: "Feature-by-feature test checklist with pass/fail status covering criti
 - [ ] **Ranked panels** — Top tags, categories, places, people (ranked by count, top 10)
 - [ ] **Pinned entries** — Display, click to view
 - [ ] **Recent entries** — Display, click to view
-- [ ] **Dashboard nav grid** — 2-column buttons (New Entry, Entry List, Report, SQL Explorer, Calendar) navigate correctly, 3D styling
 - [ ] **Dashboard weather** — Inset 3D styling, click to navigate to Settings > Weather Location
 - [ ] **Dashboard search** — Live search results, whole-word toggle, ResultGrid rendering
 - [ ] **Quick actions** — Pinned custom views on dashboard
@@ -167,9 +166,20 @@ summary: "Feature-by-feature test checklist with pass/fail status covering criti
 - [ ] **Today highlight** — Current day has accent border in both month and week views
 - [ ] **ResultGrid results** — Clicking entry row in results navigates to entry viewer, columns show time/title/categories/tags
 - [ ] **Mode toggle** — Month/Week buttons switch views, active button highlighted
-- [ ] **Dashboard button** — "CALENDAR" button appears in dashboard nav grid, navigates to calendar page
+- [ ] **Hamburger menu** — Calendar accessible from hamburger menu dropdown, navigates to calendar page
 - [ ] **Theme support** — Calendar renders correctly across all 12 themes
 - [ ] **Responsive** — Calendar is usable on small screens (mobile breakpoint adjustments)
+
+## Hamburger Menu & Navbar
+
+- [ ] **Hamburger menu items** — Entry List, Report, SQL Explorer, Calendar, Settings all navigate correctly
+- [ ] **About in menu** — About menu item opens About modal
+- [ ] **Lock in menu** — Lock menu item locks the app
+- [ ] **Active page highlight** — Current page highlighted in hamburger menu dropdown
+- [ ] **Close on outside click** — Clicking outside hamburger menu closes it
+- [ ] **New Entry button** — 📝 button in navbar opens new entry form
+- [ ] **Journal button fill** — Journal button stretches to fill available width, long names truncate with ellipsis
+- [ ] **App name** — "My Journal" displayed on login screen, navbar, dashboard header, page title
 
 ## Cross-Platform
 

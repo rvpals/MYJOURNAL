@@ -154,6 +154,24 @@ summary: "Version-by-version feature completion history (v0.9–v1.4) and remain
 - [x] Wallpaper: image resized to max 1920px, JPEG compressed (85%), stored encrypted in DB settings
 - [x] Wallpaper: preview thumbnail and clear button in settings UI
 
+### v1.5.0 (2026-04-06, hamburger menu + calendar redesign + rename)
+- [x] Hamburger menu: navigation links moved from navbar to dropdown menu (Entry List, Report, SQL Explorer, Calendar, Settings)
+- [x] New Entry button (📝) added to navbar for quick access
+- [x] Dashboard cleaned up: navigation buttons removed (now accessible via hamburger menu)
+- [x] About menu item added to hamburger menu (between Settings and Lock)
+- [x] About button removed from Settings page header
+- [x] Journal button (navbar brand) fills available screen width up to new entry/hamburger buttons with text ellipsis for long names
+- [x] App renamed from "JOURNAL" to "My Journal" across all surfaces (Android app name, login screen, dashboard header, navbar, page title)
+- [x] Calendar View redesigned: Google Calendar-inspired modern look with table gridlines
+- [x] Calendar month view: entry title chips in day cells, today circle indicator
+- [x] Calendar week view: horizontal day rows with time and entry title chips
+- [x] Calendar toolbar: single-line layout with nav arrows, Today, Goto, and Month/Week toggle
+- [x] Calendar Goto: collapsible panel with date picker, text input (mm/dd/yyyy), and Prev/Next Event jump buttons
+- [x] Backup/Restore buttons styled consistently on Data Management tab
+- [x] Fixed: new journal creation failing due to categories INSERT missing column name
+- [x] Fixed: nav-menu active state highlighting for current page
+- [x] Fixed: null reference when `.nav-links` element doesn't exist
+
 ## Remaining / TODO
 
 - [ ] Re-test all features after widget/Bootstrap changes (web + Android)

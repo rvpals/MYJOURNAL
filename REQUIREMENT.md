@@ -104,10 +104,13 @@ summary: "Complete functional requirements for all 12 feature areas — authenti
 
 ## 4. Dashboard
 
-### Navigation Grid
-- 2-column button grid at top of dashboard: New Entry, Entry List, Report, SQL Explorer, Calendar
-- 3D styled buttons with gradient, shadow, border-bottom, hover lift, press inset
-- Entry List, Report, SQL Explorer, Calendar links removed from navbar — accessible only via dashboard
+### Navigation
+- Navigation links (Entry List, Report, SQL Explorer, Calendar, Settings) in hamburger dropdown menu
+- About modal accessible from hamburger menu (between Settings and Lock)
+- New Entry button (📝) in navbar for quick access
+- Lock button in hamburger menu
+- Active page highlighted in dropdown menu
+- Menu closes on outside click
 
 ### Stats
 - Total entries count
@@ -159,7 +162,7 @@ summary: "Complete functional requirements for all 12 feature areas — authenti
 
 ## 4b. Calendar View
 
-- Accessible from "Calendar" button in dashboard navigation grid
+- Accessible from "Calendar" item in hamburger menu
 - Two view modes: Monthly (default) and Weekly, toggled via buttons
 - **Monthly view**: 7-column grid (Monday to Sunday) showing all days of the current month
   - Each day cell shows the day number and a color-coded entry count badge (green=1, blue=2-3, red=4+)
@@ -194,7 +197,7 @@ summary: "Complete functional requirements for all 12 feature areas — authenti
 
 ## 6. SQL Explorer
 
-- Accessible from "SQL Explorer" nav link
+- Accessible from "SQL Explorer" item in hamburger menu
 - Two input modes: raw SQL textarea or visual condition builder
 - Visual builder: field chips, operator dropdown, value input, add/remove rows
 - Raw SQL: queries targeting non-entries tables (e.g., `SELECT * FROM icons`) run directly via sql.js

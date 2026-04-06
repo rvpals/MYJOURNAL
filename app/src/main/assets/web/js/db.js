@@ -285,7 +285,7 @@ const DB = (() => {
         createSchema(db);
         const defaults = getDefaultData();
         for (const cat of defaults.categories) {
-            db.run('INSERT OR IGNORE INTO categories VALUES (?)', [cat]);
+            db.run('INSERT OR IGNORE INTO categories (name) VALUES (?)', [cat]);
         }
         for (const [key, val] of Object.entries(defaults.settings)) {
             db.run('INSERT OR REPLACE INTO settings VALUES (?, ?)', [key, JSON.stringify(val)]);
@@ -322,7 +322,7 @@ const DB = (() => {
 
         // Insert categories
         for (const cat of (data.categories || [])) {
-            db.run('INSERT OR IGNORE INTO categories VALUES (?)', [cat]);
+            db.run('INSERT OR IGNORE INTO categories (name) VALUES (?)', [cat]);
         }
 
         // Insert settings
@@ -418,7 +418,7 @@ const DB = (() => {
             }
         }
         for (const cat of (data.categories || [])) {
-            sqlDB.run('INSERT OR IGNORE INTO categories VALUES (?)', [cat]);
+            sqlDB.run('INSERT OR IGNORE INTO categories (name) VALUES (?)', [cat]);
         }
         for (const [key, val] of Object.entries(data.settings || {})) {
             sqlDB.run('INSERT OR REPLACE INTO settings VALUES (?, ?)', [key, JSON.stringify(val)]);

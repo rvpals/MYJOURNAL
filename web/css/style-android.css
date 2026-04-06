@@ -8,52 +8,33 @@
 .android #navbar {
     height: auto;
     padding: 0.3rem 0.5rem;
-    flex-direction: column;
-    align-items: stretch;
+    flex-direction: row;
+    align-items: center;
 }
 
 .android .nav-row1 {
     display: flex;
     align-items: center;
-    gap: 0.35rem;
-    margin-bottom: 0.3rem;
+    flex: 1;
+    min-width: 0;
 }
 
 .android .nav-brand {
     font-size: 0.85rem;
-    flex: 1;
     margin-right: 0;
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
-.android .nav-row1-btn {
-    flex-shrink: 0;
+.android .nav-row1-right {
+    gap: 0.3rem;
 }
 
-.android .nav-row2 {
-    display: flex;
-    align-items: center;
-    gap: 0.25rem;
-}
-
-.android .nav-row2-right {
-    display: flex;
-    align-items: center;
-    gap: 0.25rem;
-    margin-left: auto;
-}
-
-.android .nav-label-text {
-    display: none !important;
-}
-
-.android .nav-links {
-    gap: 0.25rem;
-}
-
-.android .nav-link,
-.android .nav-row2 .btn-icon,
-.android .nav-row2 .btn-new-entry,
-.android .nav-row1-btn {
+.android .nav-newentry-btn,
+.android .nav-menu-btn {
     display: flex;
     align-items: center;
     justify-content: center;
@@ -68,35 +49,16 @@
     box-shadow: 0 2px 4px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.15);
     text-shadow: 0 1px 2px rgba(0,0,0,0.4);
     transition: all 0.15s ease;
+    color: var(--nav-text);
+    opacity: 1;
 }
 
-.android .nav-link:hover,
-.android .nav-link.active,
-.android .nav-row2 .btn-icon:hover,
-.android .nav-row1-btn:hover {
-    background: linear-gradient(180deg, rgba(255,255,255,0.18) 0%, rgba(255,255,255,0.06) 50%, rgba(0,0,0,0.05) 100%);
-    border-bottom-color: var(--accent);
-    box-shadow: 0 2px 6px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.2);
-}
-
-.android .nav-link:active,
-.android .nav-row2 .btn-icon:active,
-.android .nav-row1-btn:active {
+.android .nav-newentry-btn:active,
+.android .nav-menu-btn:active {
     background: linear-gradient(180deg, rgba(0,0,0,0.1) 0%, rgba(0,0,0,0.05) 50%, rgba(255,255,255,0.05) 100%);
     box-shadow: inset 0 2px 4px rgba(0,0,0,0.3);
     border-bottom-width: 1px;
     transform: translateY(1px);
-}
-
-.android .nav-icon {
-    font-size: 1.2rem;
-    margin-right: 0;
-    display: block;
-    filter: drop-shadow(0 1px 2px rgba(0,0,0,0.4));
-}
-
-.android .nav-hamburger {
-    display: none;
 }
 
 .android .col-toggle {
@@ -159,12 +121,5 @@
 
 /* ========== Android Small Screen Overrides ========== */
 @media (max-width: 768px) {
-    .android .nav-links {
-        display: flex;
-        position: static;
-        flex-direction: row;
-        padding: 0;
-    }
     .android .nav-hamburger { display: none; }
-    .android .nav-link-settings .nav-label-text { display: none; }
 }
