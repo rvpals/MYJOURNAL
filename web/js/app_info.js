@@ -1,86 +1,20 @@
 /**
- * App info - parsed from embedded XML string.
- * To update app info, edit the XML below AND web/app_info.xml to keep them in sync.
- * web/app_info.xml remains the canonical reference file.
+ * App info - loaded from app_info.xml at runtime.
+ * To update app info, edit web/app_info.xml (single source of truth).
  */
 
-var _APP_INFO_XML = [
-'<?xml version="1.0" encoding="utf-8"?>',
-'<app-info>',
-'<name>Journal</name>',
-'<version>1.3.1</version>',
-'<email>rvpals@gmail.com</email>',
-'<url>https://github.com/rvpals</url>',
-'<company-url>https://play.google.com/store/apps/details?id=com.journal.app</company-url>',
-'<description>A personal journal and activity log with encrypted local storage. Create entries with rich text, tags, categories, places, and weather data. Supports multiple password-protected journals, custom report templates, and data export/import.</description>',
-'<changelog>',
-'<release version="v1.3.1" date="2026-03-27">',
-'<change>Added pin/unpin entries with Pinned Entries panel on dashboard</change>',
-'<change>Added max pinned entries setting in Preferences (1-100, default 10)</change>',
-'<change>Added Default Entry View option in custom views editor (only one allowed)</change>',
-'<change>Added entry viewer font family and size settings in Preferences with live preview</change>',
-'<change>Added Android swipe left/right on entry view for prev/next navigation</change>',
-'<change>Added Android collapsible filter fields on entry list (starts collapsed)</change>',
-'<change>Dashboard pinned custom view buttons now show matching entry count badges</change>',
-'</release>',
-'<release version="v1.2.0" date="2026-03-25">',
-'<change>Added Custom Views page with advanced filtering (AND/OR/NOT), grouping, multi-field sorting, display mode</change>',
-'<change>Added 3 new themes (Navy, Sunflower, Meadow) with 3D styled UI</change>',
-'<change>Added entry list pagination with configurable page size</change>',
-'<change>Added entry list Card/List view toggle with date-first card layout</change>',
-'<change>Added Show All button to Dashboard Top Tags, Categories, and Places panels</change>',
-'<change>Added Pre-fill Templates with description field for one-click new entry creation</change>',
-'<change>Added Dashboard quick action buttons for pinned custom filter views (max 10)</change>',
-'<change>Added batch deletion of entries with multi-select mode</change>',
-'<change>Added CSV import duplicate detection (Date+Title matching) with skipped entries log</change>',
-'<change>Added custom date/time format inputs for CSV import (saved as defaults)</change>',
-'</release>',
-'<release version="v1.1.0" date="2026-03-20">',
-'<change>Added SQL Explorer with visual query builder and raw SQL text input</change>',
-'<change>Added Print PDF button on entry view with template selection</change>',
-'<change>Added entry view tabbed layout (Main / Misc tabs)</change>',
-'<change>Added 4 new themes (Amethyst, Aurora, Lavender, Frost)</change>',
-'<change>Added navbar icons on all buttons, Settings moved to right side</change>',
-'<change>Added inline template editor on Reports page</change>',
-'<change>Added search progress bar with debounced filtering</change>',
-'<change>Added geocoding provider setting (Photon, Nominatim, Google)</change>',
-'<change>Added Android hardware back button mapped to app navigation</change>',
-'<change>Added read-only entry view page with quick edit button</change>',
-'<change>Added clickable dashboard stat cards to filter entry list</change>',
-'<change>Added entry numbering and filter criteria summary box</change>',
-'<change>Added column layout toggle (1/2/3 columns) on card screens</change>',
-'<change>Added CSV export from Settings with all fields double-quoted</change>',
-'<change>Added Warn before delete preference toggle</change>',
-'</release>',
-'<release version="v1.0.0" date="2026-03-15">',
-'<change>Added custom views with saved filter combinations (AND/OR logic)</change>',
-'<change>Added entry list field visibility settings</change>',
-'<change>Added multi-theme support: Light, Dark, Ocean, Midnight, Forest</change>',
-'<change>Added custom HTML report templates with field substitution tags</change>',
-'<change>Added report generation from templates (inline view and download)</change>',
-'<change>Added auto-open last journal toggle</change>',
-'<change>Added weather import via Open-Meteo API</change>',
-'<change>Added About modal with app info</change>',
-'</release>',
-'<release version="v0.9.0" date="">',
-'<change>Initial release</change>',
-'<change>Multi-journal support with per-journal password encryption (AES-256-GCM)</change>',
-'<change>Rich text editing with Quill.js</change>',
-'<change>Dashboard with stats and ranked lists</change>',
-'<change>Search and filter entries by text, category, tag, date range</change>',
-'<change>Reports: HTML view, print, CSV export, PDF export</change>',
-'<change>Data export/import as encrypted JSON</change>',
-'<change>Android WebView app with shared web assets</change>',
-'</release>',
-'</changelog>',
-'</app-info>'
-].join('');
-
-var APP_INFO = { app_name: 'Journal', app_version: '', app_email: '', app_url: '', app_company_url: '', app_description: '' };
+var APP_INFO = { app_name: 'My Journal', app_version: '', app_email: '', app_url: '', app_company_url: '', app_description: '' };
 var APP_CHANGELOG = [];
+var _appInfoReady = false;
+var _appInfoCallbacks = [];
 
-(function() {
-    var doc = new DOMParser().parseFromString(_APP_INFO_XML, 'text/xml');
+function onAppInfoReady(cb) {
+    if (_appInfoReady) { cb(); return; }
+    _appInfoCallbacks.push(cb);
+}
+
+function _parseAppInfoXML(xmlText) {
+    var doc = new DOMParser().parseFromString(xmlText, 'text/xml');
     var root = doc.documentElement;
     if (!root) return;
 
@@ -93,7 +27,7 @@ var APP_CHANGELOG = [];
     }
 
     APP_INFO = {
-        app_name: map['name'] || 'Journal',
+        app_name: map['name'] || 'My Journal',
         app_version: map['version'] || '',
         app_email: map['email'] || '',
         app_url: map['url'] || '',
@@ -115,4 +49,26 @@ var APP_CHANGELOG = [];
             changes: changes
         });
     }
+
+    _appInfoReady = true;
+    for (var j = 0; j < _appInfoCallbacks.length; j++) _appInfoCallbacks[j]();
+    _appInfoCallbacks = [];
+}
+
+// Load app_info.xml from the same directory as index.html
+(function() {
+    var xhr = new XMLHttpRequest();
+    xhr.open('GET', 'app_info.xml', true);
+    xhr.onload = function() {
+        if (xhr.status === 200 || xhr.status === 0) {
+            _parseAppInfoXML(xhr.responseText);
+        }
+    };
+    xhr.onerror = function() {
+        // Fallback: already have defaults in APP_INFO
+        _appInfoReady = true;
+        for (var j = 0; j < _appInfoCallbacks.length; j++) _appInfoCallbacks[j]();
+        _appInfoCallbacks = [];
+    };
+    xhr.send();
 })();

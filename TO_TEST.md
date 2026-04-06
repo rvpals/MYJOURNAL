@@ -49,14 +49,14 @@ summary: "Feature-by-feature test checklist with pass/fail status covering criti
 
 ## Dashboard
 
-- [ ] **Stats cards** — Total entries, this week, this month, this year (verify counts)
-- [ ] **Ranked panels** — Top tags, categories, places, people (ranked by count, top 10)
-- [ ] **Pinned entries** — Display, click to view
-- [ ] **Recent entries** — Display, click to view
-- [ ] **Dashboard weather** — Inset 3D styling, click to navigate to Settings > Weather Location
-- [ ] **Dashboard search** — Live search results, whole-word toggle, ResultGrid rendering
-- [ ] **Quick actions** — Pinned custom views on dashboard
-- [ ] **Ranked panels** — RankedPanel component: list/card view toggle, show all/top 10, click to filter, HD image button rendering
+- [x] **Stats cards** — Total entries, this week, this month, this year (verify counts) (verified 2026-04-06)
+- [x] **Ranked panels** — Top tags, categories, places, people (ranked by count, top 10) (verified 2026-04-06)
+- [x] **Pinned entries** — Display, click to view (verified 2026-04-06)
+- [x] **Recent entries** — Display, click to view (verified 2026-04-06)
+- [x] **Dashboard weather** — Inset 3D styling, click to navigate to Settings > Weather Location (verified 2026-04-06)
+- [x] **Dashboard search** — Live search results, whole-word toggle, ResultGrid rendering (verified 2026-04-06)
+- [x] **Quick actions** — Pinned custom views on dashboard (verified 2026-04-06)
+- [x] **Ranked panels** — RankedPanel component: list/card view toggle, show all/top 10, click to filter, HD image button rendering (verified 2026-04-06)
 
 ## Custom Views
 
@@ -157,29 +157,29 @@ summary: "Feature-by-feature test checklist with pass/fail status covering criti
 
 ## Calendar View
 
-- [ ] **Monthly view** — Calendar grid shows current month (Mon-Sun), day numbers, entry count badges with correct counts
-- [ ] **Weekly view** — 7-column grid shows entry titles listed per day, click title to view entry
-- [ ] **Navigation** — Prev/next month/week buttons work, "Today" button returns to current date
-- [ ] **Go to date** — Text input accepts YYYY-MM-DD, navigates to correct month/week, invalid dates show red border
-- [ ] **Day selection** — Click day cell to highlight it and show ResultGrid with that day's entries below calendar
-- [ ] **Entry count badges** — Green (1 entry), blue (2-3), red (4+) badges display correctly
-- [ ] **Today highlight** — Current day has accent border in both month and week views
-- [ ] **ResultGrid results** — Clicking entry row in results navigates to entry viewer, columns show time/title/categories/tags
-- [ ] **Mode toggle** — Month/Week buttons switch views, active button highlighted
-- [ ] **Hamburger menu** — Calendar accessible from hamburger menu dropdown, navigates to calendar page
-- [ ] **Theme support** — Calendar renders correctly across all 12 themes
-- [ ] **Responsive** — Calendar is usable on small screens (mobile breakpoint adjustments)
+- [x] **Monthly view** — Calendar grid shows current month (Mon-Sun), day numbers, entry count badges with correct counts (verified 2026-04-06)
+- [x] **Weekly view** — 7-column grid shows entry titles listed per day, click title to view entry (verified 2026-04-06)
+- [x] **Navigation** — Prev/next month/week buttons work, "Today" button returns to current date (verified 2026-04-06)
+- [x] **Go to date** — Text input accepts YYYY-MM-DD, navigates to correct month/week, invalid dates show red border (verified 2026-04-06)
+- [x] **Day selection** — Click day cell to highlight it and show ResultGrid with that day's entries below calendar (verified 2026-04-06)
+- [x] **Entry count badges** — Green (1 entry), blue (2-3), red (4+) badges display correctly (verified 2026-04-06)
+- [x] **Today highlight** — Current day has accent border in both month and week views (verified 2026-04-06)
+- [x] **ResultGrid results** — Clicking entry row in results navigates to entry viewer, columns show time/title/categories/tags (verified 2026-04-06)
+- [x] **Mode toggle** — Month/Week buttons switch views, active button highlighted (verified 2026-04-06)
+- [x] **Hamburger menu** — Calendar accessible from hamburger menu dropdown, navigates to calendar page (verified 2026-04-06)
+- [x] **Theme support** — Calendar renders correctly across all 12 themes (verified 2026-04-06)
+- [x] **Responsive** — Calendar is usable on small screens (mobile breakpoint adjustments) (verified 2026-04-06)
 
 ## Hamburger Menu & Navbar
 
-- [ ] **Hamburger menu items** — Entry List, Report, SQL Explorer, Calendar, Settings all navigate correctly
-- [ ] **About in menu** — About menu item opens About modal
-- [ ] **Lock in menu** — Lock menu item locks the app
-- [ ] **Active page highlight** — Current page highlighted in hamburger menu dropdown
-- [ ] **Close on outside click** — Clicking outside hamburger menu closes it
-- [ ] **New Entry button** — 📝 button in navbar opens new entry form
-- [ ] **Journal button fill** — Journal button stretches to fill available width, long names truncate with ellipsis
-- [ ] **App name** — "My Journal" displayed on login screen, navbar, dashboard header, page title
+- [x] **Hamburger menu items** — Entry List, Report, SQL Explorer, Calendar, Settings all navigate correctly (verified 2026-04-06)
+- [x] **About in menu** — About menu item opens About modal (verified 2026-04-06)
+- [x] **Lock in menu** — Lock menu item locks the app (verified 2026-04-06)
+- [x] **Active page highlight** — Current page highlighted in hamburger menu dropdown (verified 2026-04-06)
+- [x] **Close on outside click** — Clicking outside hamburger menu closes it (verified 2026-04-06)
+- [x] **New Entry button** — 📝 button in navbar opens new entry form (verified 2026-04-06)
+- [x] **Journal button fill** — Journal button stretches to fill available width, long names truncate with ellipsis (verified 2026-04-06)
+- [x] **App name** — "My Journal" displayed on login screen, navbar, dashboard header, page title (verified 2026-04-06)
 
 ## Cross-Platform
 
