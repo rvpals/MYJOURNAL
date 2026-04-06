@@ -36,8 +36,8 @@ summary: "Central navigation map for all project documentation. Read this FIRST 
 
 ### COMPONENTS.md
 - **Semantic Summary:** API documentation for reusable UI components (ResultGrid, RankedPanel, RecordViewer, CollapsiblePanel) — constructor options, methods, CSS classes, and usage locations. Also lists planned components.
-- **Key Keywords:** components, ResultGrid, RankedPanel, RecordViewer, CollapsiblePanel, API, options, CSS classes, reusable UI, HD icon buttons, image buttons
-- **When to read:** Using or modifying shared components, adding new UI, checking component API, HD icon rendering, planned component designs.
+- **Key Keywords:** components, ResultGrid, RankedPanel, RecordViewer, CollapsiblePanel, Bootstrap, API, options, CSS classes, reusable UI, HD icon buttons, image buttons
+- **When to read:** Using or modifying shared components, Bootstrap store API, adding new UI, checking component API, HD icon rendering, planned component designs.
 
 ### README.md
 - **Semantic Summary:** Minimal public-facing project overview for GitHub display. Content is a subset of CLAUDE.md.

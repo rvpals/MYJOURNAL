@@ -104,11 +104,52 @@ summary: "Feature-by-feature test checklist with pass/fail status covering criti
 - [ ] **Data import** — Import dropdown (Data, CSV, MetaData) + Import button with 📥 icon
 - [ ] **Metadata import** — Verify no blank screen after import (fixed: in-place refresh instead of page reload)
 
+## Dashboard Widgets
+
+- [ ] **Create widget** — Open widget editor from Settings > Widgets tab, set name, description, icon, background color
+- [ ] **Widget filters** — Add filter rows (date/text/array fields with appropriate operators), verify entries are filtered correctly
+- [ ] **Widget functions** — Add aggregate functions (Count, Sum, Max, Min, Average) on entries/tags/categories/people/places
+- [ ] **Widget preview** — Preview button shows live widget card with computed results
+- [ ] **Widget on dashboard** — Enabled widgets render as cards on dashboard with correct aggregate values
+- [ ] **Widget edit/delete** — Edit existing widget, delete with confirmation
+- [ ] **Widget persistence** — Widgets survive app restart (stored in DB widgets table)
+
+## Bootstrap Module
+
+- [ ] **localStorage migration** — On first load, existing localStorage keys migrate to IndexedDB bootstrap store
+- [ ] **Crypto keys** — Salt and verify tokens stored/read from Bootstrap, not localStorage
+- [ ] **Journal list** — Journal list synced via Bootstrap store
+- [ ] **UI preferences** — Settings tab, view modes, sort, page size all persisted via Bootstrap
+- [ ] **Android auto-login** — Native login syncs crypto keys to Bootstrap store (not localStorage)
+- [ ] **Bootstrap sync** — syncJournalMetadata reads from Bootstrap store correctly
+
+## Category/Tag Descriptions
+
+- [ ] **Category description** — Add/edit description in Settings > Edit Metadata, verify saved to DB
+- [ ] **Tag description** — Add/edit description in Settings > Edit Metadata, verify saved to tags table
+- [ ] **Entry form hints** — Selected categories/tags/people show description hints below selectors
+- [ ] **Tag dropdown** — Tag autocomplete suggestions show descriptions inline
+- [ ] **Metadata export/import** — Descriptions included in metadata export and correctly imported
+
+## Backup Folder (Android)
+
+- [ ] **Select folder** — SAF folder picker opens, selected folder name displays in UI
+- [ ] **Backup all data** — Creates JSON backup file in selected folder
+- [ ] **Restore all data** — Lists backup files, restores selected backup
+- [ ] **Clear folder** — Clears folder selection, releases URI permissions
+- [ ] **Persist across restarts** — Folder URI persisted in SharedPreferences, available after app restart
+
+## iCalendar Export
+
+- [ ] **Export from Explorer** — iCalendar export button appears in Explorer results bar
+- [ ] **Entry-based only** — Shows alert for non-entry raw SQL results
+- [ ] **Valid .ics** — Exported file is valid iCalendar with VEVENT per entry (date, time, title, location, description)
+
 ## Cross-Platform
 
 - [ ] **Web browser** — Full functionality in Chrome/Firefox (localhost or HTTPS)
 - [ ] **Android WebView** — All features work within WebView container
-- [ ] **File downloads** — PDF, CSV, SQLite, JSON exports work on both platforms
+- [ ] **File downloads** — PDF, CSV, SQLite, JSON, iCalendar exports work on both platforms
 - [ ] **Theme consistency** — All 12 themes render correctly on both web and Android
 - [ ] **Android CSS** — style-android.css overrides applied only on Android
 

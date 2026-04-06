@@ -108,6 +108,25 @@ Reusable collapsible container with header toggle and pin-to-expand. Collapsed b
 
 ---
 
+## Bootstrap (bootstrap.js)
+
+IndexedDB-backed key-value store with synchronous in-memory cache. Replaces all `localStorage` usage.
+
+**Usage:**
+```js
+await Bootstrap.init();        // call once at startup (migrates from localStorage)
+Bootstrap.get('key');           // synchronous read from cache
+Bootstrap.set('key', 'value'); // sync cache update + async IDB write
+Bootstrap.remove('key');       // sync remove + async IDB delete
+Bootstrap.has('key');           // check existence
+Bootstrap.getInt('key', 0);    // parsed int with default
+Bootstrap.isReady();            // true after init()
+```
+
+**IDB details:** DB name `JournalDB`, store `bootstrap`, version 2. Auto-migrates known localStorage keys on first init (crypto salts/verify, journal list, UI prefs, column toggles, panel pins, view modes).
+
+---
+
 ## Planned
 
 ### SearchInput

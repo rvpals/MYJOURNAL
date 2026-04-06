@@ -20,10 +20,11 @@ A WebView-based Android app for keeping a personal journal with rich text editin
 - **Biometric login** — Fingerprint/face unlock via AndroidX BiometricPrompt
 - **Image attachments** — Camera capture, gallery picker, lightbox viewer
 - **Weather tracking** — Open-Meteo API integration, GPS-based
-- **Dashboard** — Stats, pinned entries, search, top tags/categories/places/people
+- **Dashboard** — Stats, pinned entries, search, top tags/categories/places/people, configurable aggregate widgets
 - **Custom views** — Saved filter/sort/group combinations
-- **SQL Explorer** — Query builder and raw SQL for advanced searches
+- **SQL Explorer** — Query builder, raw SQL, CSV and iCalendar export
 - **Reports** — HTML, PDF, CSV, and custom template reports
+- **Backup/Restore** — SAF folder-based backup on Android
 - **12 themes** — Light, Dark, Ocean, Midnight, Forest, Amethyst, Aurora, Lavender, Frost, Navy, Sunflower, Meadow
 - **Export/Import** — Encrypted or plain SQLite, CSV, metadata JSON
 

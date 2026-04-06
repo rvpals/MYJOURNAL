@@ -116,10 +116,30 @@ summary: "Version-by-version feature completion history (v0.9–v1.4) and remain
 - [x] Dashboard: clicking weather info navigates to Settings > Preferences > Weather Location
 - [x] Entry viewer: removed text labels from Edit/Print/Delete/Back buttons, icon-only with title tooltips
 
+### v1.4.0+ (2026-04-05, widgets + Bootstrap + descriptions)
+- [x] Dashboard Widgets: configurable aggregate cards with filters (entry criteria) and functions (Count, Sum, Max, Min, Average)
+- [x] Widget editor: tabbed UI (Header Info, Filter, Functions) with live preview, custom icon upload, background color picker
+- [x] Widget storage: new `widgets` DB table with filters/functions as JSON, enabledInDashboard toggle, sort order
+- [x] Settings > Widgets tab: widget list, create/edit/delete widgets
+- [x] Bootstrap module (`bootstrap.js`): IndexedDB-backed key-value store replacing all localStorage usage
+- [x] Bootstrap: synchronous in-memory cache with async IDB persistence, auto-migration from localStorage
+- [x] Category descriptions: added `description` column to categories table, editable in Settings > Edit Metadata
+- [x] Tag descriptions: new `tags` table (name PK, description), editable in Settings > Edit Metadata
+- [x] Entity hints: category, tag, and people descriptions shown as hints below selectors in entry form
+- [x] Tag dropdown: descriptions shown inline in autocomplete suggestions
+- [x] iCalendar export: SQL Explorer results exportable as .ics files (VEVENT per entry with date/time/title/location)
+- [x] Backup folder (Android): SAF folder picker for selecting persistent backup/restore directory
+- [x] Backup/Restore: full data backup to JSON file in selected folder, restore from backup files
+- [x] AndroidBridge: new backup folder methods (selectBackupFolder, hasBackupFolder, clearBackupFolder, saveFileToBackupFolder, listBackupFolderFiles, readBackupFolderFile)
+- [x] MainActivity: WebConsole logging for WebView JavaScript debug output
+- [x] Removed gdrive.js from assets (Google Drive placeholder removed)
+- [x] All localStorage usage migrated to Bootstrap store (crypto.js, app.js, db.js, settings.js, components.js)
+- [x] Native auto-login updated to use Bootstrap store instead of localStorage
+- [x] Metadata export/import updated: includes category descriptions, tag descriptions, and widgets
+
 ## Remaining / TODO
 
-- [ ] Re-test all features after UI overhaul (web + Android)
-- [ ] Google Drive backup/sync (gdrive.js is placeholder)
+- [ ] Re-test all features after widget/Bootstrap changes (web + Android)
 - [ ] Web app: HTTPS requirement for Web Crypto API (currently file:// only works with base64 WASM fallback)
 - [ ] Entry image thumbnails could be optimized (currently full base64 stored)
 - [ ] Consider lazy loading for large journal databases (1000+ entries)

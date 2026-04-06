@@ -38,19 +38,20 @@ MYJOURNAL/
 │   │   ├── style.css               # 12 themes via CSS variables, all component styles
 │   │   └── style-android.css       # Android-only overrides (.android prefix rules)
 │   ├── js/
-│   │   ├── app.js          # Main controller: login, navigation, theme, Quill editor (~1,315 lines)
+│   │   ├── app.js          # Main controller: login, navigation, theme, Quill editor
 │   │   ├── app_info.js     # Parses app_info.xml → APP_INFO + APP_CHANGELOG objects
-│   │   ├── components.js   # Reusable UI: ResultGrid, RankedPanel, RecordViewer, CollapsiblePanel (~467 lines)
-│   │   ├── crypto.js       # PBKDF2 + AES-256-GCM via Web Crypto API (~175 lines)
-│   │   ├── db.js           # sql.js SQLite abstraction, IndexedDB persistence, CRUD (~834 lines)
-│   │   ├── entries.js      # Entry form, list view, search, filter, pagination (~1,097 lines)
-│   │   ├── dashboard.js    # Stats aggregation, ranked lists, quick actions (~552 lines)
-│   │   ├── views.js        # Custom saved views: AND/OR/NOT filter, group, sort (~859 lines)
-│   │   ├── explorer.js     # SQL Explorer: query builder, raw SQL, CSV export (~660 lines)
-│   │   ├── reports.js      # HTML/PDF/CSV report generation with templates (~577 lines)
-│   │   ├── settings.js     # All settings: preferences, themes, metadata, import/export (~1,925 lines)
-│   │   ├── weather.js      # Open-Meteo API, city search, GPS location (~149 lines)
-│   │   └── gdrive.js       # Google Drive integration (placeholder/partial)
+│   │   ├── bootstrap.js    # IndexedDB-backed key-value store replacing localStorage
+│   │   ├── components.js   # Reusable UI: ResultGrid, RankedPanel, RecordViewer, CollapsiblePanel
+│   │   ├── crypto.js       # PBKDF2 + AES-256-GCM via Web Crypto API
+│   │   ├── db.js           # sql.js SQLite abstraction, IndexedDB persistence, CRUD
+│   │   ├── entries.js      # Entry form, list view, search, filter, pagination
+│   │   ├── dashboard.js    # Stats aggregation, ranked lists, widgets, quick actions
+│   │   ├── views.js        # Custom saved views: AND/OR/NOT filter, group, sort
+│   │   ├── explorer.js     # SQL Explorer: query builder, raw SQL, CSV/iCalendar export
+│   │   ├── reports.js      # HTML/PDF/CSV report generation with templates
+│   │   ├── settings.js     # All settings: preferences, themes, metadata, widgets, import/export
+│   │   ├── weather.js      # Open-Meteo API, city search, GPS location
+│   │   └── widgets.js      # Dashboard widgets: filters, aggregate functions, editor
 │   ├── lib/
 │   │   ├── sql-wasm.js         # sql.js library
 │   │   └── sql-wasm-base64.js  # Base64-encoded WASM fallback for file:// protocol
@@ -91,9 +92,11 @@ The `copyWebAssets` Gradle task copies `/web` → `app/src/main/assets/web/` bef
 
 **entries** — id, date, time, title, content, richContent, categories (JSON), tags (JSON), people (JSON), placeName, locations (JSON), weather (JSON), pinned, dtCreated, dtUpdated
 **images** — id, entryId, name, data (base64), thumb, sortOrder
-**categories** — name (PK)
+**categories** — name (PK), description
+**tags** — name (PK), description
 **icons** — type + name (composite PK), data (PNG data URL). Types: category, tag, person (64x64), category_hd, tag_hd, person_hd (128x128 for image buttons)
 **people** — firstName + lastName (composite PK), description
+**widgets** — id (PK), name, description, bgColor, icon, filters (JSON), functions (JSON), enabledInDashboard, sortOrder, dtCreated, dtUpdated
 **settings** — key (PK), value
 **schema_version** — version (INT)
 
@@ -106,8 +109,10 @@ JavaScript calls from WebView to native Android:
 - `onDashboardReady(json)` / `requestDashboardRefresh()` — Native dashboard data
 - `onAutoLoginComplete(json)` / `onAutoLoginFailed(error)` — Auto-login result callbacks
 - `returnToLogin()` — Back to LoginActivity
-- `syncCryptoKey()` / `syncJournalList()` — Sync localStorage ↔ SharedPreferences
+- `syncCryptoKey()` / `syncJournalList()` — Sync Bootstrap store ↔ SharedPreferences
 - `isAndroid()` / `hasNativeLogin()` — Platform detection
+- `selectBackupFolder()` / `hasBackupFolder()` / `getBackupFolderName()` / `clearBackupFolder()` — SAF backup folder management
+- `saveFileToBackupFolder()` / `listBackupFolderFiles()` / `readBackupFolderFile()` — Backup file I/O
 
 ## Themes (12)
 
@@ -118,6 +123,7 @@ Light, Dark, Ocean, Midnight, Forest, Amethyst, Aurora, Lavender, Frost, Navy, S
 - **No frameworks** — vanilla JS, no React/Vue/Angular
 - **Single-page app** — pages are div sections toggled via `navigateTo(page)`
 - **Encryption everywhere** — all DB writes go through Crypto.encrypt → IndexedDB
+- **Bootstrap store** — all client-side key-value storage uses `Bootstrap.get/set/remove()` (IndexedDB-backed), NOT localStorage
 - **Dual auth** — web crypto.js and native LoginActivity both implement PBKDF2+AES-GCM (must stay in sync)
 - **AndroidBridge** — file downloads MUST use `downloadFile()` (not blob URLs) to avoid WebView crashes
 - **CSS themes** — all colors via CSS variables; never hardcode colors

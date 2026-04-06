@@ -45,17 +45,26 @@ summary: "Complete functional requirements for all 12 feature areas — authenti
 ### Schema
 - **entries**: id, date (YYYY-MM-DD), time (HH:MM), title, content (plain text), richContent (HTML), categories (JSON array), tags (JSON array), people (JSON array), placeName, locations (JSON array of {lat, lng, address}), weather (JSON {temp, unit, description, code}), pinned (0/1), dtCreated, dtUpdated
 - **images**: id, entryId (FK), name, data (base64), thumb (base64), sortOrder
-- **categories**: name (PK)
+- **categories**: name (PK), description
+- **tags**: name (PK), description
 - **icons**: type + name (composite PK), data (SVG/emoji)
 - **people**: firstName + lastName (composite PK), description
+- **widgets**: id (PK), name, description, bgColor, icon, filters (JSON), functions (JSON), enabledInDashboard, sortOrder, dtCreated, dtUpdated
 - **settings**: key (PK), value
 - **schema_version**: version (INT)
 - Indices: idx_entries_date, idx_entries_pinned, idx_images_entry
 
+### Bootstrap Store (replaces localStorage)
+- All client-side key-value storage uses the Bootstrap module (IndexedDB-backed with in-memory cache)
+- `Bootstrap.init()` called once at startup; auto-migrates existing localStorage keys
+- `Bootstrap.get(key)`, `Bootstrap.set(key, value)`, `Bootstrap.remove(key)` — synchronous cache reads, async IDB writes
+- Keys migrated: crypto salts/verify tokens, journal list, UI preferences, column toggles, panel pins, view modes
+
 ### Sync (Android ↔ Web)
-- Journal list synced between web localStorage and native SharedPreferences
+- Journal list synced between web Bootstrap store and native SharedPreferences
 - Crypto salt and verify token synced via AndroidBridge.syncCryptoKey()
 - Journal list synced via AndroidBridge.syncJournalList()
+- Native auto-login injects Bootstrap.set() calls (not localStorage) for crypto key sync
 
 ## 3. Journal Entries
 
@@ -64,9 +73,9 @@ summary: "Complete functional requirements for all 12 feature areas — authenti
 - Time: text input, HH:MM format
 - Title: text input
 - Content: dual-mode — Quill.js rich text editor OR plain textarea toggle
-- Categories: single-select dropdown from managed list, "+ New" quick-create panel to add inline
-- Tags: multi-select with auto-complete from managed list, "+ New" quick-create panel to add inline
-- People: multi-select with auto-complete from managed list, "+ New" quick-create panel (first/last name + description) to add inline
+- Categories: single-select dropdown from managed list, "+ New" quick-create panel to add inline; description hints shown below selector when category has a description
+- Tags: multi-select with auto-complete from managed list, "+ New" quick-create panel to add inline; descriptions shown in autocomplete dropdown and as hints below tag list
+- People: multi-select with auto-complete from managed list, "+ New" quick-create panel (first/last name + description) to add inline; descriptions shown as hints below selector
 - Place name: text input with geocoding search
 - Locations: array of {lat, lng, address} from geocoding results
 - Weather: fetch current weather button (Open-Meteo API), displays temp + condition
@@ -125,6 +134,20 @@ summary: "Complete functional requirements for all 12 feature areas — authenti
 - Live search across all entries
 - Results displayed inline with date, title, content preview
 
+### Dashboard Widgets
+- Configurable aggregate cards displayed on the dashboard
+- Each widget has: name, description, optional icon (64x64), optional background color, enabled/disabled toggle
+- Widget filters: entry criteria using field/operator/value triplets (AND logic)
+  - Supported fields: date, time, title, content, categories, tags, people, placeName
+  - Operators vary by type: date (after, before, equals, between), text (contains, equals, starts/ends with, is empty/not empty), array (includes, not includes, is empty/not empty)
+- Widget functions: aggregate computations on filtered entries
+  - Functions: Count, Sum, Max, Min, Average
+  - Target fields: entries (row count), tags, categories, people, placeName, title
+  - Each function has optional prefix label and postfix text
+- Widget editor: separate page with 3 tabs (Header Info, Filter, Functions), live preview
+- Widget storage: `widgets` DB table, included in metadata export/import
+- Widget rendering: cards with auto-contrast text color, icon, results rows
+
 ### Quick Actions
 - Custom views pinned to dashboard appear as action buttons
 
@@ -163,6 +186,7 @@ summary: "Complete functional requirements for all 12 feature areas — authenti
 - Record detail overlay: full-screen modal showing all field values (untruncated), prev/next navigation between records, click outside or x to close
 - Load Custom View dropdown: load conditions from saved custom views into the builder and auto-run
 - CSV export button: exports current results grid to CSV file with all values double-quoted, date-stamped filename (e.g., `explorer_results_2026-04-01.csv`)
+- iCalendar export button: exports entry-based results as .ics file with VEVENT per entry (date, time, title, location, description); only available for entry queries (not raw SQL on non-entry tables)
 - Table browser: clickable table name chips (dynamically loaded from SQLite schema) show column schema (name, type, PK, not null, default) and up to 5 sample rows
 - Clear button resets both SQL and builder
 
@@ -207,8 +231,8 @@ summary: "Complete functional requirements for all 12 feature areas — authenti
 - Theme selection persisted in settings DB
 
 ### Metadata Editing
-- Categories: add, rename, delete, assign color (color picker with swatches)
-- Tags: add, rename, delete, assign color (color picker with swatches)
+- Categories: add, rename, delete, assign color (color picker with swatches), editable description (shown as hint in entry form)
+- Tags: add, rename, delete, assign color (color picker with swatches), editable description (stored in tags table, shown as hint in entry form and autocomplete dropdown)
 - "Use category/tag colors" toggles — colors applied in entry list and dashboard
 - People: add, edit, delete (first name, last name, description)
 - Icons: custom image icons for categories, tags, and people
@@ -224,7 +248,9 @@ summary: "Complete functional requirements for all 12 feature areas — authenti
 - **Import dropdown**: Import Data, Import CSV File, Import MetaData — with 📥 icon button
 - **CSV Import**: Column mapping UI, date/time format configuration, duplicate detection
 - **Metadata Export**: JSON containing categories, tags, people, icons, settings, report templates, pre-fill templates, custom views (excludes entries/images)
-- **Metadata Import**: Overwrite warning, full replace, in-place UI refresh (no page reload)
+- **Metadata Import**: Overwrite warning, full replace, in-place UI refresh (no page reload); supports both old (string[]) and new ({name,description}[]) category format
+- **Metadata Export/Import fields**: categories (with descriptions), icons, people, tag descriptions, settings, widgets
+- **Backup Folder** (Android only): SAF folder picker for persistent backup directory, backup all data to JSON, restore from backup files, list available backups
 - **Password Change**: Verify old password, re-encrypt entire database
 
 ### Pre-fill Templates
@@ -263,7 +289,8 @@ summary: "Complete functional requirements for all 12 feature areas — authenti
 - Credential storage in SharedPreferences
 - Dashboard data exchange
 - Platform detection
-- Crypto key and journal list sync
+- Crypto key and journal list sync (via Bootstrap store, not localStorage)
+- Backup folder: selectBackupFolder, hasBackupFolder, getBackupFolderName, clearBackupFolder, saveFileToBackupFolder, listBackupFolderFiles, readBackupFolderFile
 
 ### CSS
 - style-android.css loaded only on Android (`.android` body class)

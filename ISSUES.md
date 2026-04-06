@@ -12,7 +12,7 @@ summary: "Known bugs, platform limitations, fixed issues with dates, and archite
 - **Blob URL downloads crash Android WebView** — all file downloads must use `downloadFile()` which routes through `AndroidBridge.saveFile()` on Android
 - **Large journals may be slow** — entire SQLite DB is loaded into memory via sql.js; no lazy loading for 1000+ entries
 - **Image storage is inefficient** — full base64 images stored in SQLite; no server-side or file-system storage option
-- **gdrive.js is a placeholder** — Google Drive sync is not implemented
+- **Bootstrap IDB version bump** — IndexedDB version bumped from 1 to 2 (adds `bootstrap` object store); existing users will trigger onupgradeneeded on first load after update
 
 ## Fixed (2026-04-04)
 
@@ -46,6 +46,12 @@ summary: "Known bugs, platform limitations, fixed issues with dates, and archite
 - Data Management now uses dropdown selects instead of individual buttons. Export/Import Metadata moved from Edit Metadata tab to Data Management dropdowns.
 - `cleanupDatelessEntries()` function removed — Cleanup Dateless button no longer exists.
 - Entry viewer buttons (Edit, Print, Delete, Back) are icon-only; text labels removed.
+- All localStorage usage has been replaced by Bootstrap module (IndexedDB-backed with in-memory cache). Bootstrap auto-migrates existing localStorage keys on first init.
+- `gdrive.js` removed from assets — Google Drive placeholder no longer included.
+- Dashboard widgets are stored in the `widgets` DB table with filters/functions as JSON. Widget editor is a separate page (`page-widget-editor`).
+- Categories table now has a `description` column. A new `tags` table stores tag descriptions (separate from entry tag arrays).
+- SQL Explorer now supports iCalendar (.ics) export alongside CSV.
+- Android backup folder uses SAF (Storage Access Framework) with persistent URI permissions; folder URI stored in SharedPreferences (`backup_prefs`).
 
 ## Limitations
 
