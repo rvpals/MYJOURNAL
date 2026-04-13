@@ -164,7 +164,10 @@
                 </div>
                 <div class="ev-bottom-sep"></div>
                 <div class="entry-view-actions ev-btn-bar">
-                    <button class="ev-action-btn ev-btn-edit" onclick="editViewedEntry()" title="Edit">
+                    <button id="ev-lock-btn" class="ev-action-btn ev-btn-lock" onclick="toggleLockEntry()" title="Lock/Unlock">
+                        <span class="ev-btn-icon" id="ev-lock-icon">&#x1F513;</span>
+                    </button>
+                    <button id="ev-edit-btn" class="ev-action-btn ev-btn-edit" onclick="editViewedEntry()" title="Edit">
                         <span class="ev-btn-icon">&#x270F;&#xFE0F;</span>
                     </button>
                     <button class="ev-action-btn ev-btn-print" onclick="openPrintModal()" title="Print">

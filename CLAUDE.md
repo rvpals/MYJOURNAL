@@ -91,7 +91,7 @@ The `copyWebAssets` Gradle task copies `/web` → `app/src/main/assets/web/` bef
 
 ## Database Schema
 
-**entries** — id, date, time, title, content, richContent, categories (JSON), tags (JSON), people (JSON), placeName, locations (JSON), weather (JSON), pinned, dtCreated, dtUpdated
+**entries** — id, date, time, title, content, richContent, categories (JSON), tags (JSON), people (JSON), placeName, locations (JSON), weather (JSON), pinned, locked, dtCreated, dtUpdated
 **images** — id, entryId, name, data (base64), thumb, sortOrder
 **categories** — name (PK), description
 **tags** — name (PK), description

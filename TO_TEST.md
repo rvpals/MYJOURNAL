@@ -181,6 +181,16 @@ summary: "Feature-by-feature test checklist with pass/fail status covering criti
 - [x] **Journal button fill** — Journal button stretches to fill available width, long names truncate with ellipsis (verified 2026-04-06)
 - [x] **App name** — "My Journal" displayed on login screen, navbar, dashboard header, page title (verified 2026-04-06)
 
+## Entry Locking
+
+- [x] **Lock entry** — Open entry viewer, click Lock button, confirm prompt, verify lock icon changes to closed lock (verified 2026-04-13)
+- [x] **Edit disabled when locked** — Verify Edit button is grayed out and non-clickable on a locked entry (verified 2026-04-13)
+- [x] **Unlock entry** — Click Lock button on locked entry, confirm prompt, verify lock icon changes to open lock and Edit button re-enables (verified 2026-04-13)
+- [x] **Edit guard** — Verify `editViewedEntry()` does nothing when entry is locked (no navigation to edit form) (verified 2026-04-13)
+- [x] **Lock persists** — Lock an entry, navigate away, return — verify it's still locked (verified 2026-04-13)
+- [x] **Schema migration** — Open an existing journal (pre-lock feature), verify entries load correctly with `locked` defaulting to false (verified 2026-04-13)
+- [x] **Prev/Next nav** — Navigate between locked and unlocked entries, verify lock state updates correctly per entry (verified 2026-04-13)
+
 ## Cross-Platform
 
 - [ ] **Web browser** — Full functionality in Chrome/Firefox (localhost or HTTPS)

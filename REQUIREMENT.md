@@ -43,7 +43,7 @@ summary: "Complete functional requirements for all 12 feature areas — authenti
 - Full database loaded into memory on login, saved back on every write operation
 
 ### Schema
-- **entries**: id, date (YYYY-MM-DD), time (HH:MM), title, content (plain text), richContent (HTML), categories (JSON array), tags (JSON array), people (JSON array), placeName, locations (JSON array of {lat, lng, address}), weather (JSON {temp, unit, description, code}), pinned (0/1), dtCreated, dtUpdated
+- **entries**: id, date (YYYY-MM-DD), time (HH:MM), title, content (plain text), richContent (HTML), categories (JSON array), tags (JSON array), people (JSON array), placeName, locations (JSON array of {lat, lng, address}), weather (JSON {temp, unit, description, code}), pinned (0/1), locked (0/1), dtCreated, dtUpdated
 - **images**: id, entryId (FK), name, data (base64), thumb (base64), sortOrder
 - **categories**: name (PK), description
 - **tags**: name (PK), description
@@ -96,7 +96,8 @@ summary: "Complete functional requirements for all 12 feature areas — authenti
 - Read-only display of all entry fields
 - Rich content rendered as HTML
 - Image gallery with lightbox (full-screen, prev/next navigation)
-- Action buttons: Pin/Unpin, Edit, Print (PDF), Delete, Back — icon-only with title tooltips
+- Action buttons: Lock/Unlock, Pin/Unpin, Edit, Print (PDF), Delete, Back — icon-only with title tooltips
+- Lock/Unlock toggle: confirmation prompt ("Are you sure you want to lock/unlock this entry?"), locked entries disable the Edit button (grayed out, non-clickable)
 - Prev/Next navigation between entries (swipe on Android)
 - 3D styled buttons with gradient backgrounds, shadows, hover/press effects
 - Date/Time displayed using user's configured format

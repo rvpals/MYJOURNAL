@@ -8,7 +8,7 @@ const DB = (() => {
     const IDB_NAME = 'JournalDB';
     const STORE_NAME = 'encrypted_data';
     const JOURNALS_META_KEY = 'journal_list';
-    const SCHEMA_VERSION = 1;
+    const SCHEMA_VERSION = 2;
 
     let currentPassword = null;
     let currentJournalId = null;
@@ -91,6 +91,7 @@ const DB = (() => {
                 locations TEXT,
                 weather TEXT,
                 pinned INTEGER DEFAULT 0,
+                locked INTEGER DEFAULT 0,
                 dtCreated TEXT,
                 dtUpdated TEXT,
                 people TEXT
@@ -165,6 +166,7 @@ const DB = (() => {
             PRIMARY KEY (firstName, lastName)
         )`);
         try { db.run("ALTER TABLE entries ADD COLUMN people TEXT"); } catch(e) { /* column already exists */ }
+        try { db.run("ALTER TABLE entries ADD COLUMN locked INTEGER DEFAULT 0"); } catch(e) { /* column already exists */ }
         try { db.run("ALTER TABLE categories ADD COLUMN description TEXT DEFAULT ''"); } catch(e) { /* column already exists */ }
         db.run(`CREATE TABLE IF NOT EXISTS tags (name TEXT PRIMARY KEY, description TEXT DEFAULT '')`);
         db.run(`CREATE TABLE IF NOT EXISTS widgets (
@@ -198,6 +200,7 @@ const DB = (() => {
             JSON.stringify(entry.locations || []),
             entry.weather ? JSON.stringify(entry.weather) : null,
             entry.pinned ? 1 : 0,
+            entry.locked ? 1 : 0,
             entry.dtCreated || null,
             entry.dtUpdated || null,
             JSON.stringify(entry.people || [])
@@ -220,6 +223,7 @@ const DB = (() => {
             locations: safeJsonParse(obj.locations, []),
             weather: safeJsonParse(obj.weather, null),
             pinned: obj.pinned === 1,
+            locked: obj.locked === 1,
             dtCreated: obj.dtCreated || '',
             dtUpdated: obj.dtUpdated || '',
             people: safeJsonParse(obj.people, []),
@@ -302,7 +306,7 @@ const DB = (() => {
         createSchema(db);
 
         // Insert entries
-        const entrySQL = `INSERT INTO entries VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`;
+        const entrySQL = `INSERT INTO entries VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`;
         const imgSQL = `INSERT INTO images VALUES (?,?,?,?,?,?)`;
         for (const entry of (data.entries || [])) {
             db.run(entrySQL, entryToParams(entry));
@@ -400,7 +404,7 @@ const DB = (() => {
         sqlDB.run('PRAGMA foreign_keys = ON');
         createSchema(sqlDB);
 
-        const entrySQL = `INSERT INTO entries VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`;
+        const entrySQL = `INSERT INTO entries VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`;
         const imgSQL = `INSERT INTO images VALUES (?,?,?,?,?,?)`;
         for (const entry of (data.entries || [])) {
             sqlDB.run(entrySQL, entryToParams(entry));
@@ -518,7 +522,7 @@ const DB = (() => {
 
     function addEntry(entry) {
         if (!sqlDB) return;
-        const sql = `INSERT INTO entries VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`;
+        const sql = `INSERT INTO entries VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`;
         sqlDB.run(sql, entryToParams(entry));
 
         // Insert images
@@ -546,7 +550,7 @@ const DB = (() => {
         const fieldMap = {
             date: 'date', time: 'time', title: 'title', content: 'content',
             richContent: 'richContent', placeName: 'placeName',
-            pinned: 'pinned', dtCreated: 'dtCreated', dtUpdated: 'dtUpdated'
+            pinned: 'pinned', locked: 'locked', dtCreated: 'dtCreated', dtUpdated: 'dtUpdated'
         };
         const jsonFields = { categories: true, tags: true, locations: true, people: true };
         const objectFields = { weather: true };
@@ -559,7 +563,7 @@ const DB = (() => {
             if (key === 'id') continue;
             if (fieldMap[key]) {
                 setClauses.push(`${fieldMap[key]} = ?`);
-                params.push(key === 'pinned' ? (val ? 1 : 0) : (val ?? null));
+                params.push((key === 'pinned' || key === 'locked') ? (val ? 1 : 0) : (val ?? null));
             } else if (jsonFields[key]) {
                 setClauses.push(`${key} = ?`);
                 params.push(JSON.stringify(val || []));

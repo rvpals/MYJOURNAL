@@ -172,6 +172,13 @@ summary: "Version-by-version feature completion history (v0.9–v1.4) and remain
 - [x] Fixed: nav-menu active state highlighting for current page
 - [x] Fixed: null reference when `.nav-links` element doesn't exist
 
+### v1.5.0+ (2026-04-13, entry locking)
+- [x] Entry locking: `locked` column (INTEGER DEFAULT 0) added to entries table, schema version bumped to 2
+- [x] Lock/Unlock toggle button in entry viewer bottom bar with confirmation prompt ("Are you sure you want to lock/unlock this entry?")
+- [x] Locked entries: Edit button disabled (grayed out, non-clickable) to prevent accidental edits
+- [x] Lock icon reflects state: locked (closed lock) / unlocked (open lock) with appropriate tooltip
+- [x] Database migration: `upgradeSchema()` adds `locked` column to existing databases
+
 ## Remaining / TODO
 
 - [ ] Re-test all features after widget/Bootstrap changes (web + Android)

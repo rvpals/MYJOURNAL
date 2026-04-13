@@ -653,6 +653,18 @@ function showEntryView(entry, skipNav) {
     const pinToggle = document.getElementById('ev-pin-toggle');
     if (pinToggle) pinToggle.checked = !!entry.pinned;
 
+    // Set lock state
+    const lockBtn = document.getElementById('ev-lock-btn');
+    const lockIcon = document.getElementById('ev-lock-icon');
+    const editBtn = document.getElementById('ev-edit-btn');
+    if (lockIcon) lockIcon.innerHTML = entry.locked ? '&#x1F512;' : '&#x1F513;';
+    if (lockBtn) lockBtn.title = entry.locked ? 'Unlock entry' : 'Lock entry';
+    if (editBtn) {
+        editBtn.disabled = !!entry.locked;
+        editBtn.style.opacity = entry.locked ? '0.4' : '';
+        editBtn.style.pointerEvents = entry.locked ? 'none' : '';
+    }
+
     // === Main tab: Content, Rich Content ===
     let mainHtml = '';
 
@@ -828,6 +840,22 @@ async function togglePinEntry() {
         }
     }
     await DB.updateEntry(currentViewEntryId, { pinned: pinned });
+}
+
+async function toggleLockEntry() {
+    if (!currentViewEntryId) return;
+    const entry = DB.getEntries().find(e => e.id === currentViewEntryId);
+    if (!entry) return;
+    const newLocked = !entry.locked;
+    const action = newLocked ? 'lock' : 'unlock';
+    if (!confirm(`Are you sure you want to ${action} this entry?`)) return;
+    await DB.updateEntry(currentViewEntryId, { locked: newLocked });
+    // Refresh the viewer
+    const updated = DB.getEntries().find(e => e.id === currentViewEntryId);
+    if (updated) {
+        DB.loadEntryImages(updated);
+        showEntryView(updated, true);
+    }
 }
 
 async function deleteViewedEntry() {
@@ -1046,6 +1074,7 @@ function editViewedEntry() {
     if (!currentViewEntryId) return;
     const entry = DB.getEntries().find(e => e.id === currentViewEntryId);
     if (!entry) return;
+    if (entry.locked) return;
     editEntry(entry.id);
 }
 

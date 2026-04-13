@@ -65,6 +65,12 @@ summary: "Known bugs, platform limitations, fixed issues with dates, and archite
 - Wallpaper image stored as base64 JPEG in the encrypted DB `settings` table. Large images are resized to max 1920px width and JPEG-compressed at 85% quality. Very large wallpapers may increase DB size noticeably.
 - Wallpaper uses a `::before` pseudo-element overlay at 55% opacity for text readability — works with all 12 themes.
 
+## Notes (2026-04-13)
+
+- Entry locking feature adds `locked` column to entries table. Schema version bumped from 1 to 2. `upgradeSchema()` handles migration for existing databases via `ALTER TABLE entries ADD COLUMN locked INTEGER DEFAULT 0`.
+- Locked entries can still be viewed, pinned, and deleted — only editing is prevented (Edit button disabled + guard in `editViewedEntry()`).
+- Lock/Unlock button appears in the entry viewer bottom bar before the Edit button, with a confirmation prompt.
+
 ## Limitations
 
 - Web Crypto API requires HTTPS or localhost (no plain HTTP)

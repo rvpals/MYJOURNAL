@@ -5020,6 +5020,7 @@ mark.search-highlight {
 
 /* Color variants */
 .ev-btn-edit { color: var(--accent); }
+.ev-btn-lock { color: var(--text-secondary); }
 .ev-btn-print { color: var(--accent); }
 .ev-btn-delete { color: var(--danger, #e74c3c); }
 .ev-btn-back { color: var(--text-secondary); }
