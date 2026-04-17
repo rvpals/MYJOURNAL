@@ -179,6 +179,14 @@ summary: "Version-by-version feature completion history (v0.9–v1.4) and remain
 - [x] Lock icon reflects state: locked (closed lock) / unlocked (open lock) with appropriate tooltip
 - [x] Database migration: `upgradeSchema()` adds `locked` column to existing databases
 
+### v1.5.0+ (2026-04-16, CSV mapping UI redesign)
+- [x] CSV import mapping moved to full-screen modal overlay (`position: fixed`, `z-index: 200`) outside settings container hierarchy
+- [x] Modal follows existing print/about modal pattern: centered, scrollable (`max-height: 90vh`), themed background
+- [x] Each CSV column rendered as `form-group` (label + full-width select dropdown), all fully visible and selectable
+- [x] Removed all custom CSV mapping CSS (`.csv-mapping-row`, `.csv-arrow`, `.csv-import-section` inline styles)
+- [x] HTML moved from inline settings fieldset to `<body>`-level `#csv-import-modal` div
+- [x] Fixed `build.gradle` versionName "1.0a" → "1.5.0", versionCode 1 → 6
+
 ## Remaining / TODO
 
 - [ ] Re-test all features after widget/Bootstrap changes (web + Android)

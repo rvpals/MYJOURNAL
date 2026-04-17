@@ -279,7 +279,7 @@ summary: "Complete functional requirements for all 12 feature areas — authenti
 - **Consolidated UI**: Export and Import each have a dropdown selector + action button (replaces individual buttons)
 - **Export dropdown**: Export Encrypted, Export Unencrypted, Export CSV File, Export MetaData — with 📤 icon button
 - **Import dropdown**: Import Data, Import CSV File, Import MetaData — with 📥 icon button
-- **CSV Import**: Column mapping UI, date/time format configuration, duplicate detection
+- **CSV Import**: Full-screen modal with column mapping (label + full-width dropdown per CSV column), date/time format configuration, duplicate detection
 - **Metadata Export**: JSON containing categories, tags, people, icons, settings, report templates, pre-fill templates, custom views (excludes entries/images)
 - **Metadata Import**: Overwrite warning, full replace, in-place UI refresh (no page reload); supports both old (string[]) and new ({name,description}[]) category format
 - **Metadata Export/Import fields**: categories (with descriptions), icons, people, tag descriptions, settings, widgets

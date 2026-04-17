@@ -4312,9 +4312,6 @@ mark.search-highlight {
 
     .location-search-row input { min-width: auto; width: 100%; }
 
-    .csv-mapping-row { flex-direction: column; align-items: flex-start; }
-    .csv-col-name { min-width: auto; }
-    .csv-field-select { width: 100%; }
     .csv-import-actions { flex-direction: column; }
 
     .view-condition-row { flex-direction: column; }
@@ -4325,19 +4322,36 @@ mark.search-highlight {
 }
 
 /* ========== CSV Import ========== */
-.csv-import-section {
-    margin-top: 1rem;
-    padding-top: 1rem;
-    border-top: 1px solid var(--border-color);
-    overflow-x: auto;
-    max-width: 100%;
+.csv-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(44, 49, 69, 0.6);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 200;
+    padding: 1rem;
 }
 
-.csv-import-section h4 {
-    font-size: 1rem;
+.csv-modal-content {
+    background: var(--bg-primary);
+    border-radius: var(--radius);
+    padding: 1.25rem 1.5rem;
+    max-width: 500px;
+    width: 100%;
+    max-height: 90vh;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+.csv-modal-title {
+    font-size: 1.1rem;
     font-weight: 700;
     color: var(--accent);
-    margin-bottom: 0.5rem;
+    margin: 0 0 0.5rem;
 }
 
 .csv-preview-info {
@@ -4348,54 +4362,7 @@ mark.search-highlight {
 }
 
 .csv-mapping-list {
-    display: flex;
-    flex-direction: column;
-    gap: 0.4rem;
     margin-bottom: 1rem;
-}
-
-.csv-mapping-row {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    flex-wrap: wrap;
-    max-width: 100%;
-}
-
-.csv-col-name {
-    font-weight: 700;
-    font-size: 0.9rem;
-    min-width: 80px;
-    max-width: 40%;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    color: var(--text-primary);
-    flex-shrink: 1;
-}
-
-.csv-arrow {
-    color: var(--accent);
-    font-weight: 700;
-    font-size: 1.1rem;
-}
-
-.csv-field-select {
-    padding: 0.4rem 0.6rem;
-    border: var(--border-width) solid var(--border-color);
-    border-radius: calc(var(--radius) - 4px);
-    background: var(--bg-input);
-    color: var(--text-primary);
-    font-size: 0.85rem;
-    font-family: 'Quicksand', sans-serif;
-    min-width: 120px;
-    flex: 1;
-    max-width: 100%;
-    transition: border-color var(--transition);
-}
-
-.csv-field-select:focus {
-    border-color: var(--accent);
 }
 
 .csv-preview-table-container {

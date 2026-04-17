@@ -860,21 +860,19 @@ function showCsvMappingUI() {
     if (!csvParsedData) return;
     const { headers, rows } = csvParsedData;
 
-    document.getElementById('csv-import-section').style.display = 'block';
+    document.getElementById('csv-import-modal').style.display = 'flex';
     document.getElementById('csv-import-msg').textContent = '';
 
     // Info
     document.getElementById('csv-preview-info').textContent =
         `Found ${headers.length} columns, ${rows.length} data rows.`;
 
-    // Mapping dropdowns
+    // Mapping fields — reuse standard form-group pattern
     const list = document.getElementById('csv-mapping-list');
     list.innerHTML = headers.map((h, i) => {
         const autoMatch = autoDetectField(h);
-        return `
-        <div class="csv-mapping-row">
-            <span class="csv-col-name" title="${escapeHtml(h)}">${escapeHtml(h)}</span>
-            <span class="csv-arrow">&#8594;</span>
+        return `<div class="form-group">
+            <label>${escapeHtml(h)}</label>
             <select class="csv-field-select" data-col="${i}" onchange="onCsvFieldChange()">
                 ${CSV_JOURNAL_FIELDS.map(f =>
                     `<option value="${f.key}"${f.key === autoMatch ? ' selected' : ''}>${f.label}</option>`
@@ -1275,7 +1273,7 @@ function showCsvDuplicateLog(duplicates) {
 
 function cancelCsvImport() {
     csvParsedData = null;
-    document.getElementById('csv-import-section').style.display = 'none';
+    document.getElementById('csv-import-modal').style.display = 'none';
     document.getElementById('csv-import-msg').textContent = '';
     document.getElementById('csv-progress-container').style.display = 'none';
     const dupLog = document.getElementById('csv-duplicate-log');

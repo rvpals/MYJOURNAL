@@ -101,6 +101,7 @@ summary: "Feature-by-feature test checklist with pass/fail status covering criti
 - [ ] **Password change** — Old password verification, re-encrypt database
 - [ ] **Data export** — Export dropdown (Encrypted, Unencrypted, CSV, MetaData) + Export button with 📤 icon
 - [ ] **Data import** — Import dropdown (Data, CSV, MetaData) + Import button with 📥 icon
+- [ ] **CSV import mapping modal** — Verify modal opens on CSV file select; each CSV column shows as label + full-width dropdown; modal scrolls vertically; Cancel closes modal; auto-detect matches correct fields
 - [ ] **Metadata import** — Verify no blank screen after import (fixed: in-place refresh instead of page reload)
 
 ## Dashboard Widgets

@@ -1155,43 +1155,7 @@
                             <input type="file" id="metadata-import-file" accept=".json" style="display:none" onchange="importMetadata(event)">
                         </div>
                     </div>
-                    <div id="csv-import-section" class="csv-import-section" style="display:none">
-                        <h4>Map CSV Columns to Journal Fields</h4>
-                        <p class="settings-description">Assign each CSV column to a journal field. Leave as "-- Skip --" to ignore a column.</p>
-                        <div id="csv-preview-info" class="csv-preview-info"></div>
-                        <div id="csv-mapping-list" class="csv-mapping-list"></div>
-                        <div class="form-group">
-                            <label>Multi-value separator for Categories, Tags</label>
-                            <input type="text" id="csv-separator" value="," placeholder="e.g. , or ; or |" style="max-width:120px">
-                        </div>
-                        <div class="form-group">
-                            <label><input type="checkbox" id="csv-tags-space-sep"> Each tag separated by a space</label>
-                            <span class="settings-hint">If checked, spaces are used as the tag separator (e.g. "Skylar Swimming" → "Skylar", "Swimming")</span>
-                        </div>
-                        <div class="form-group" id="csv-date-format-group" style="display:none">
-                            <label>Date Format</label>
-                            <input type="text" id="csv-date-format" placeholder="e.g. MM/DD/YYYY or DD-MM-YYYY" style="max-width:240px">
-                            <span class="settings-hint">Tokens: YYYY, YY, MM, DD, M, D. Leave blank for auto-detect.</span>
-                        </div>
-                        <div class="form-group" id="csv-time-format-group" style="display:none">
-                            <label>Time Format</label>
-                            <input type="text" id="csv-time-format" placeholder="e.g. HH:mm or H:mm A" style="max-width:240px">
-                            <span class="settings-hint">Tokens: HH, H, mm, A (AM/PM). Leave blank for auto-detect.</span>
-                        </div>
-                        <div id="csv-preview-table-container" class="csv-preview-table-container"></div>
-                        <div class="csv-import-actions">
-                            <button class="btn-primary csv-import-btn" onclick="executeCsvImport()">Import Entries</button>
-                            <button class="btn-secondary" onclick="cancelCsvImport()">Cancel</button>
-                        </div>
-                        <div id="csv-progress-container" class="csv-progress-container" style="display:none">
-                            <div class="csv-progress-track">
-                                <div id="csv-progress-bar" class="csv-progress-bar"></div>
-                            </div>
-                            <span id="csv-progress-text" class="csv-progress-text">0 / 0</span>
-                        </div>
-                        <p id="csv-import-msg" class="msg-text"></p>
-                        <div id="csv-duplicate-log" class="csv-duplicate-log" style="display:none"></div>
-                    </div>
+                    <div id="csv-import-section" style="display:none"></div>
                 </fieldset>
 
                 <fieldset class="settings-group-box">
@@ -1332,5 +1296,46 @@
     <script src="js/calendar.js"></script>
     <script src="js/widgets.js"></script>
     <script src="js/settings.js"></script>
+
+    <!-- CSV Import Modal (outside settings containers to avoid overflow clipping) -->
+    <div id="csv-import-modal" class="csv-modal" style="display:none">
+        <div class="csv-modal-content">
+            <h4 class="csv-modal-title">Map CSV Columns to Journal Fields</h4>
+            <p class="settings-description">Assign each CSV column to a journal field. Leave as "-- Skip --" to ignore a column.</p>
+            <div id="csv-preview-info" class="csv-preview-info"></div>
+            <div id="csv-mapping-list" class="csv-mapping-list"></div>
+            <div class="form-group">
+                <label>Multi-value separator for Categories, Tags</label>
+                <input type="text" id="csv-separator" value="," placeholder="e.g. , or ; or |" style="max-width:120px">
+            </div>
+            <div class="form-group">
+                <label><input type="checkbox" id="csv-tags-space-sep"> Each tag separated by a space</label>
+                <span class="settings-hint">If checked, spaces are used as the tag separator (e.g. "Skylar Swimming" &rarr; "Skylar", "Swimming")</span>
+            </div>
+            <div class="form-group" id="csv-date-format-group" style="display:none">
+                <label>Date Format</label>
+                <input type="text" id="csv-date-format" placeholder="e.g. MM/DD/YYYY or DD-MM-YYYY" style="max-width:240px">
+                <span class="settings-hint">Tokens: YYYY, YY, MM, DD, M, D. Leave blank for auto-detect.</span>
+            </div>
+            <div class="form-group" id="csv-time-format-group" style="display:none">
+                <label>Time Format</label>
+                <input type="text" id="csv-time-format" placeholder="e.g. HH:mm or H:mm A" style="max-width:240px">
+                <span class="settings-hint">Tokens: HH, H, mm, A (AM/PM). Leave blank for auto-detect.</span>
+            </div>
+            <div id="csv-preview-table-container" class="csv-preview-table-container"></div>
+            <div class="csv-import-actions">
+                <button class="btn-primary csv-import-btn" onclick="executeCsvImport()">Import Entries</button>
+                <button class="btn-secondary" onclick="cancelCsvImport()">Cancel</button>
+            </div>
+            <div id="csv-progress-container" class="csv-progress-container" style="display:none">
+                <div class="csv-progress-track">
+                    <div id="csv-progress-bar" class="csv-progress-bar"></div>
+                </div>
+                <span id="csv-progress-text" class="csv-progress-text">0 / 0</span>
+            </div>
+            <p id="csv-import-msg" class="msg-text"></p>
+            <div id="csv-duplicate-log" class="csv-duplicate-log" style="display:none"></div>
+        </div>
+    </div>
 </body>
 </html>

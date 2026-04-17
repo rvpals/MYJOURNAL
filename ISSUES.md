@@ -23,6 +23,11 @@ summary: "Known bugs, platform limitations, fixed issues with dates, and archite
 
 - ~~Metadata import shows blank screen after "app will refresh" message~~ **FIXED** — `window.location.reload()` fails in WebView file:// protocol; replaced with in-place `refreshSettings()` + theme reapply + `navigateTo('settings')`
 
+## Fixed (2026-04-16)
+
+- ~~CSV import mapping UI unusable — columns cut off with no scrollbar, impossible to see or set mappings~~ **FIXED** — moved CSV mapping to a full-screen modal overlay (outside settings container hierarchy), bypassing `overflow: hidden` from collapse animation; uses standard `form-group` pattern with full-width dropdowns
+- ~~build.gradle versionName stuck at "1.0a"~~ **FIXED** — updated to "1.5.0", versionCode to 6
+
 ## Fixed (2026-04-01)
 
 - ~~Web login screen showing after native Android login~~ **FIXED** — crypto keys (salt/verify) passed via Intent extras and synced to localStorage in performAutoLogin()
