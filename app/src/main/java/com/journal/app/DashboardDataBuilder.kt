@@ -69,6 +69,7 @@ object DashboardDataBuilder {
         result.put("widgets", widgets)
         result.put("journalName", journalName)
         result.put("theme", theme)
+        result.put("todayInHistory", buildTodayInHistory(entryList))
 
         return result.toString()
     }
@@ -180,6 +181,31 @@ object DashboardDataBuilder {
         val content = e.optString("content", "")
         s.put("contentPreview", if (content.length > 100) content.substring(0, 100) else content)
         return s
+    }
+
+    private fun buildTodayInHistory(entries: List<JSONObject>): JSONArray {
+        val today = SimpleDateFormat("MM-dd", Locale.US).format(Date())
+        val currentYear = Calendar.getInstance().get(Calendar.YEAR)
+        val result = JSONArray()
+
+        val matches = entries.filter { e ->
+            val date = e.optString("date", "")
+            date.length >= 10 && date.substring(5) == today && date.substring(0, 4).toIntOrNull() != currentYear
+        }.sortedByDescending { it.optString("date", "") }
+
+        for (e in matches) {
+            val year = e.optString("date", "").substring(0, 4).toIntOrNull() ?: continue
+            val yearsAgo = currentYear - year
+            val content = e.optString("content", "")
+            result.put(JSONObject().apply {
+                put("id", e.optString("id", ""))
+                put("title", e.optString("title", ""))
+                put("date", e.optString("date", ""))
+                put("contentPreview", if (content.length > 20) content.substring(0, 20) + "..." else content)
+                put("yearsAgo", yearsAgo)
+            })
+        }
+        return result
     }
 
     private fun computeWidgets(db: DatabaseService, entryList: List<JSONObject>): JSONArray {

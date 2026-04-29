@@ -17,6 +17,7 @@ import android.widget.*
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
+import com.journal.app.ThemeManager.C
 import org.json.JSONArray
 import org.json.JSONObject
 import java.text.SimpleDateFormat
@@ -24,6 +25,8 @@ import java.util.Date
 import java.util.Locale
 
 class WidgetEditorActivity : AppCompatActivity() {
+
+    private var lastThemeVersion = 0
 
     companion object {
         @JvmStatic var databaseService: DatabaseService? = null
@@ -99,6 +102,8 @@ class WidgetEditorActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_widget_editor)
+        ThemeManager.applyToActivity(this)
+        lastThemeVersion = ThemeManager.themeVersion
 
         db = databaseService ?: run { finish(); return }
         bs = bootstrapService ?: run { finish(); return }
@@ -179,10 +184,10 @@ class WidgetEditorActivity : AppCompatActivity() {
             val btn = findViewById<Button>(id)
             if (key == tab) {
                 btn.background = ContextCompat.getDrawable(this, R.drawable.btn_accent)
-                btn.setTextColor(ContextCompat.getColor(this, R.color.login_card_bg))
+                btn.setTextColor(ThemeManager.color(C.CARD_BG))
             } else {
                 btn.background = ContextCompat.getDrawable(this, R.drawable.btn_secondary)
-                btn.setTextColor(ContextCompat.getColor(this, R.color.login_text))
+                btn.setTextColor(ThemeManager.color(C.TEXT))
             }
         }
 
@@ -229,7 +234,7 @@ class WidgetEditorActivity : AppCompatActivity() {
 
         colorEnabledCb = CheckBox(this).apply {
             isChecked = widget.optString("bgColor").isNotEmpty()
-            buttonTintList = ContextCompat.getColorStateList(this@WidgetEditorActivity, R.color.login_accent)
+            buttonTintList = ThemeManager.colorStateList(C.ACCENT)
         }
         colorRow.addView(colorEnabledCb)
 
@@ -237,8 +242,8 @@ class WidgetEditorActivity : AppCompatActivity() {
             setText(widget.optString("bgColor").ifEmpty { "#4a90d9" })
             hint = "#4a90d9"
             textSize = 14f
-            setTextColor(ContextCompat.getColor(this@WidgetEditorActivity, R.color.login_text))
-            setHintTextColor(ContextCompat.getColor(this@WidgetEditorActivity, R.color.login_text_secondary))
+            setTextColor(ThemeManager.color(C.TEXT))
+            setHintTextColor(ThemeManager.color(C.TEXT_SECONDARY))
             background = ContextCompat.getDrawable(this@WidgetEditorActivity, R.drawable.input_bg)
             setPadding(dp(12), dp(8), dp(12), dp(8))
             layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f).apply {
@@ -307,7 +312,7 @@ class WidgetEditorActivity : AppCompatActivity() {
                 text = "Remove"
                 textSize = 12f
                 isAllCaps = false
-                setTextColor(ContextCompat.getColor(this@WidgetEditorActivity, R.color.login_error))
+                setTextColor(ThemeManager.color(C.ERROR))
                 background = ContextCompat.getDrawable(this@WidgetEditorActivity, R.drawable.btn_secondary)
                 layoutParams = LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, dp(34)).apply { marginEnd = dp(8) }
                 setPadding(dp(10), dp(4), dp(10), dp(4))
@@ -319,7 +324,7 @@ class WidgetEditorActivity : AppCompatActivity() {
         } else {
             iconContainer.addView(TextView(this).apply {
                 text = "No icon"
-                setTextColor(ContextCompat.getColor(this@WidgetEditorActivity, R.color.login_text_secondary))
+                setTextColor(ThemeManager.color(C.TEXT_SECONDARY))
                 textSize = 13f
                 layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
             })
@@ -329,7 +334,7 @@ class WidgetEditorActivity : AppCompatActivity() {
             text = "Browse"
             textSize = 12f
             isAllCaps = false
-            setTextColor(ContextCompat.getColor(this@WidgetEditorActivity, R.color.login_card_bg))
+            setTextColor(ThemeManager.color(C.CARD_BG))
             background = ContextCompat.getDrawable(this@WidgetEditorActivity, R.drawable.btn_accent)
             layoutParams = LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, dp(34))
             setPadding(dp(10), dp(4), dp(10), dp(4))
@@ -343,9 +348,9 @@ class WidgetEditorActivity : AppCompatActivity() {
         enabledDashboardCb = CheckBox(this).apply {
             text = "Show in Dashboard"
             isChecked = widget.optBoolean("enabledInDashboard", true)
-            setTextColor(ContextCompat.getColor(this@WidgetEditorActivity, R.color.login_text))
+            setTextColor(ThemeManager.color(C.TEXT))
             textSize = 14f
-            buttonTintList = ContextCompat.getColorStateList(this@WidgetEditorActivity, R.color.login_accent)
+            buttonTintList = ThemeManager.colorStateList(C.ACCENT)
             layoutParams = linParams().apply { bottomMargin = dp(8) }
         }
         contentContainer.addView(enabledDashboardCb)
@@ -357,7 +362,7 @@ class WidgetEditorActivity : AppCompatActivity() {
         addSectionHeader("Entry Filters")
         contentContainer.addView(TextView(this).apply {
             text = "All filters are combined with AND logic."
-            setTextColor(ContextCompat.getColor(this@WidgetEditorActivity, R.color.login_text_secondary))
+            setTextColor(ThemeManager.color(C.TEXT_SECONDARY))
             textSize = 12f
             layoutParams = linParams().apply { bottomMargin = dp(8) }
         })
@@ -365,7 +370,7 @@ class WidgetEditorActivity : AppCompatActivity() {
         if (filters.length() == 0) {
             contentContainer.addView(TextView(this).apply {
                 text = "No filters — widget will use all entries."
-                setTextColor(ContextCompat.getColor(this@WidgetEditorActivity, R.color.login_text_secondary))
+                setTextColor(ThemeManager.color(C.TEXT_SECONDARY))
                 textSize = 13f
                 setPadding(dp(4), dp(8), dp(4), dp(8))
             })
@@ -380,7 +385,7 @@ class WidgetEditorActivity : AppCompatActivity() {
         addFilterBtn.text = "+ Add Filter"
         addFilterBtn.textSize = 13f
         addFilterBtn.isAllCaps = false
-        addFilterBtn.setTextColor(ContextCompat.getColor(this, R.color.login_accent))
+        addFilterBtn.setTextColor(ThemeManager.color(C.ACCENT))
         addFilterBtn.setBackgroundColor(Color.TRANSPARENT)
         addFilterBtn.layoutParams = linParams().apply { topMargin = dp(8) }
         addFilterBtn.setOnClickListener {
@@ -422,7 +427,7 @@ class WidgetEditorActivity : AppCompatActivity() {
         val removeFilterBtn = Button(this)
         removeFilterBtn.text = "✕"
         removeFilterBtn.textSize = 12f
-        removeFilterBtn.setTextColor(ContextCompat.getColor(this, R.color.login_error))
+        removeFilterBtn.setTextColor(ThemeManager.color(C.ERROR))
         removeFilterBtn.setBackgroundColor(Color.TRANSPARENT)
         removeFilterBtn.layoutParams = LinearLayout.LayoutParams(dp(32), dp(32))
         removeFilterBtn.setOnClickListener {
@@ -447,8 +452,8 @@ class WidgetEditorActivity : AppCompatActivity() {
                 setText(value)
                 hint = if (fieldType == "date") "YYYY-MM-DD" else "Value"
                 textSize = 13f
-                setTextColor(ContextCompat.getColor(this@WidgetEditorActivity, R.color.login_text))
-                setHintTextColor(ContextCompat.getColor(this@WidgetEditorActivity, R.color.login_text_secondary))
+                setTextColor(ThemeManager.color(C.TEXT))
+                setHintTextColor(ThemeManager.color(C.TEXT_SECONDARY))
                 background = ContextCompat.getDrawable(this@WidgetEditorActivity, R.drawable.input_bg)
                 setPadding(dp(10), dp(6), dp(10), dp(6))
                 layoutParams = linParams().apply { topMargin = dp(4) }
@@ -465,8 +470,8 @@ class WidgetEditorActivity : AppCompatActivity() {
                     setText(value2)
                     hint = "End value"
                     textSize = 13f
-                    setTextColor(ContextCompat.getColor(this@WidgetEditorActivity, R.color.login_text))
-                    setHintTextColor(ContextCompat.getColor(this@WidgetEditorActivity, R.color.login_text_secondary))
+                    setTextColor(ThemeManager.color(C.TEXT))
+                    setHintTextColor(ThemeManager.color(C.TEXT_SECONDARY))
                     background = ContextCompat.getDrawable(this@WidgetEditorActivity, R.drawable.input_bg)
                     setPadding(dp(10), dp(6), dp(10), dp(6))
                     layoutParams = linParams().apply { topMargin = dp(4) }
@@ -506,7 +511,7 @@ class WidgetEditorActivity : AppCompatActivity() {
         addSectionHeader("Aggregate Functions")
         contentContainer.addView(TextView(this).apply {
             text = "Define computations on filtered entries."
-            setTextColor(ContextCompat.getColor(this@WidgetEditorActivity, R.color.login_text_secondary))
+            setTextColor(ThemeManager.color(C.TEXT_SECONDARY))
             textSize = 12f
             layoutParams = linParams().apply { bottomMargin = dp(8) }
         })
@@ -514,7 +519,7 @@ class WidgetEditorActivity : AppCompatActivity() {
         if (functions.length() == 0) {
             contentContainer.addView(TextView(this).apply {
                 text = "No functions added yet."
-                setTextColor(ContextCompat.getColor(this@WidgetEditorActivity, R.color.login_text_secondary))
+                setTextColor(ThemeManager.color(C.TEXT_SECONDARY))
                 textSize = 13f
                 setPadding(dp(4), dp(8), dp(4), dp(8))
             })
@@ -529,7 +534,7 @@ class WidgetEditorActivity : AppCompatActivity() {
         addFuncBtn.text = "+ Add Function"
         addFuncBtn.textSize = 13f
         addFuncBtn.isAllCaps = false
-        addFuncBtn.setTextColor(ContextCompat.getColor(this, R.color.login_accent))
+        addFuncBtn.setTextColor(ThemeManager.color(C.ACCENT))
         addFuncBtn.setBackgroundColor(Color.TRANSPARENT)
         addFuncBtn.layoutParams = linParams().apply { topMargin = dp(8) }
         addFuncBtn.setOnClickListener {
@@ -577,7 +582,7 @@ class WidgetEditorActivity : AppCompatActivity() {
         val removeFuncBtn = Button(this)
         removeFuncBtn.text = "✕"
         removeFuncBtn.textSize = 12f
-        removeFuncBtn.setTextColor(ContextCompat.getColor(this, R.color.login_error))
+        removeFuncBtn.setTextColor(ThemeManager.color(C.ERROR))
         removeFuncBtn.setBackgroundColor(Color.TRANSPARENT)
         removeFuncBtn.layoutParams = LinearLayout.LayoutParams(dp(32), dp(32))
         removeFuncBtn.setOnClickListener {
@@ -599,8 +604,8 @@ class WidgetEditorActivity : AppCompatActivity() {
                 setText(value)
                 hint = "Match value (optional)"
                 textSize = 13f
-                setTextColor(ContextCompat.getColor(this@WidgetEditorActivity, R.color.login_text))
-                setHintTextColor(ContextCompat.getColor(this@WidgetEditorActivity, R.color.login_text_secondary))
+                setTextColor(ThemeManager.color(C.TEXT))
+                setHintTextColor(ThemeManager.color(C.TEXT_SECONDARY))
                 background = ContextCompat.getDrawable(this@WidgetEditorActivity, R.drawable.input_bg)
                 setPadding(dp(10), dp(6), dp(10), dp(6))
                 layoutParams = linParams().apply { topMargin = dp(4) }
@@ -622,8 +627,8 @@ class WidgetEditorActivity : AppCompatActivity() {
             setText(prefix)
             hint = "Prefix"
             textSize = 12f
-            setTextColor(ContextCompat.getColor(this@WidgetEditorActivity, R.color.login_text))
-            setHintTextColor(ContextCompat.getColor(this@WidgetEditorActivity, R.color.login_text_secondary))
+            setTextColor(ThemeManager.color(C.TEXT))
+            setHintTextColor(ThemeManager.color(C.TEXT_SECONDARY))
             background = ContextCompat.getDrawable(this@WidgetEditorActivity, R.drawable.input_bg)
             setPadding(dp(8), dp(4), dp(8), dp(4))
             layoutParams = LinearLayout.LayoutParams(0, dp(34), 1f).apply { marginEnd = dp(4) }
@@ -638,8 +643,8 @@ class WidgetEditorActivity : AppCompatActivity() {
             setText(postfix)
             hint = "Postfix"
             textSize = 12f
-            setTextColor(ContextCompat.getColor(this@WidgetEditorActivity, R.color.login_text))
-            setHintTextColor(ContextCompat.getColor(this@WidgetEditorActivity, R.color.login_text_secondary))
+            setTextColor(ThemeManager.color(C.TEXT))
+            setHintTextColor(ThemeManager.color(C.TEXT_SECONDARY))
             background = ContextCompat.getDrawable(this@WidgetEditorActivity, R.drawable.input_bg)
             setPadding(dp(8), dp(4), dp(8), dp(4))
             layoutParams = LinearLayout.LayoutParams(0, dp(34), 1f)
@@ -725,7 +730,7 @@ class WidgetEditorActivity : AppCompatActivity() {
         val parsedBg = parseColorSafe(bgColor, 0)
         val hasBg = bgColor.isNotEmpty() && parsedBg != 0
         val textColor = if (hasBg) getContrastColor(parsedBg) else
-            ContextCompat.getColor(this, R.color.login_text)
+            ThemeManager.color(C.TEXT)
 
         val card = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
@@ -733,8 +738,8 @@ class WidgetEditorActivity : AppCompatActivity() {
             val bg = GradientDrawable().apply {
                 cornerRadius = dp(8).toFloat()
                 if (hasBg) setColor(parsedBg) else {
-                    setColor(ContextCompat.getColor(this@WidgetEditorActivity, R.color.login_card_bg))
-                    setStroke(dp(1), ContextCompat.getColor(this@WidgetEditorActivity, R.color.login_text_secondary))
+                    setColor(ThemeManager.color(C.CARD_BG))
+                    setStroke(dp(1), ThemeManager.color(C.TEXT_SECONDARY))
                 }
             }
             background = bg
@@ -819,7 +824,7 @@ class WidgetEditorActivity : AppCompatActivity() {
         // Match count info
         container.addView(TextView(this).apply {
             text = "${filtered.size} of ${allEntries.size} entries match filters"
-            setTextColor(ContextCompat.getColor(this@WidgetEditorActivity, R.color.login_text_secondary))
+            setTextColor(ThemeManager.color(C.TEXT_SECONDARY))
             textSize = 12f
             setPadding(0, dp(10), 0, 0)
         })
@@ -1059,8 +1064,8 @@ class WidgetEditorActivity : AppCompatActivity() {
             setText(currentHex)
             hint = "#4a90d9"
             textSize = 14f
-            setTextColor(ContextCompat.getColor(this@WidgetEditorActivity, R.color.login_text))
-            setHintTextColor(ContextCompat.getColor(this@WidgetEditorActivity, R.color.login_text_secondary))
+            setTextColor(ThemeManager.color(C.TEXT))
+            setHintTextColor(ThemeManager.color(C.TEXT_SECONDARY))
             background = ContextCompat.getDrawable(this@WidgetEditorActivity, R.drawable.input_bg)
             setPadding(dp(12), dp(8), dp(12), dp(8))
             layoutParams = LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT).apply {
@@ -1128,7 +1133,7 @@ class WidgetEditorActivity : AppCompatActivity() {
     private fun addSectionHeader(text: String) {
         contentContainer.addView(TextView(this).apply {
             this.text = text
-            setTextColor(ContextCompat.getColor(this@WidgetEditorActivity, R.color.login_accent))
+            setTextColor(ThemeManager.color(C.ACCENT))
             textSize = 15f
             setTypeface(null, Typeface.BOLD)
             setPadding(dp(4), dp(4), dp(4), dp(8))
@@ -1138,7 +1143,7 @@ class WidgetEditorActivity : AppCompatActivity() {
     private fun addLabel(text: String) {
         contentContainer.addView(TextView(this).apply {
             this.text = text
-            setTextColor(ContextCompat.getColor(this@WidgetEditorActivity, R.color.login_text_secondary))
+            setTextColor(ThemeManager.color(C.TEXT_SECONDARY))
             textSize = 12f
             setPadding(dp(4), dp(4), dp(4), dp(2))
         })
@@ -1155,8 +1160,8 @@ class WidgetEditorActivity : AppCompatActivity() {
             this.hint = hint
             setText(text)
             textSize = 14f
-            setTextColor(ContextCompat.getColor(this@WidgetEditorActivity, R.color.login_text))
-            setHintTextColor(ContextCompat.getColor(this@WidgetEditorActivity, R.color.login_text_secondary))
+            setTextColor(ThemeManager.color(C.TEXT))
+            setHintTextColor(ThemeManager.color(C.TEXT_SECONDARY))
             background = ContextCompat.getDrawable(this@WidgetEditorActivity, R.drawable.input_bg)
             setPadding(dp(12), dp(10), dp(12), dp(10))
             layoutParams = linParams().apply { bottomMargin = dp(8) }
@@ -1173,15 +1178,15 @@ class WidgetEditorActivity : AppCompatActivity() {
         val adapter = object : ArrayAdapter<String>(this, android.R.layout.simple_spinner_item, items) {
             override fun getView(position: Int, convertView: View?, parent: ViewGroup): View {
                 return (super.getView(position, convertView, parent) as TextView).apply {
-                    setTextColor(ContextCompat.getColor(this@WidgetEditorActivity, R.color.login_text))
+                    setTextColor(ThemeManager.color(C.TEXT))
                     textSize = 13f
                     setPadding(dp(4), dp(4), dp(4), dp(4))
                 }
             }
             override fun getDropDownView(position: Int, convertView: View?, parent: ViewGroup): View {
                 return (super.getDropDownView(position, convertView, parent) as TextView).apply {
-                    setTextColor(ContextCompat.getColor(this@WidgetEditorActivity, R.color.login_text))
-                    setBackgroundColor(ContextCompat.getColor(this@WidgetEditorActivity, R.color.login_input_bg))
+                    setTextColor(ThemeManager.color(C.TEXT))
+                    setBackgroundColor(ThemeManager.color(C.INPUT_BG))
                     textSize = 13f
                     setPadding(dp(12), dp(8), dp(12), dp(8))
                 }
@@ -1247,4 +1252,13 @@ class WidgetEditorActivity : AppCompatActivity() {
             resources.displayMetrics
         ).toInt()
     }
+
+    override fun onResume() {
+        super.onResume()
+        if (lastThemeVersion != ThemeManager.themeVersion) {
+            finish()
+            return
+        }
+    }
+
 }

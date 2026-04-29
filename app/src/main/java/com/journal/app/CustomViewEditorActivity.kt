@@ -12,6 +12,7 @@ import android.view.ViewGroup
 import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
+import com.journal.app.ThemeManager.C
 import org.json.JSONArray
 import org.json.JSONObject
 import java.text.SimpleDateFormat
@@ -19,6 +20,8 @@ import java.util.Calendar
 import java.util.Locale
 
 class CustomViewEditorActivity : AppCompatActivity() {
+
+    private var lastThemeVersion = 0
 
     companion object {
         @JvmStatic var databaseService: DatabaseService? = null
@@ -93,6 +96,8 @@ class CustomViewEditorActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_custom_view_editor)
+        ThemeManager.applyToActivity(this)
+        lastThemeVersion = ThemeManager.themeVersion
 
         db = databaseService ?: run { finish(); return }
         bs = bootstrapService ?: run { finish(); return }
@@ -178,10 +183,10 @@ class CustomViewEditorActivity : AppCompatActivity() {
             val btn = findViewById<Button>(id)
             if (key == tab) {
                 btn.background = ContextCompat.getDrawable(this, R.drawable.btn_accent)
-                btn.setTextColor(ContextCompat.getColor(this, R.color.login_card_bg))
+                btn.setTextColor(ThemeManager.color(C.CARD_BG))
             } else {
                 btn.background = ContextCompat.getDrawable(this, R.drawable.btn_secondary)
-                btn.setTextColor(ContextCompat.getColor(this, R.color.login_text))
+                btn.setTextColor(ThemeManager.color(C.TEXT))
             }
         }
 
@@ -227,9 +232,9 @@ class CustomViewEditorActivity : AppCompatActivity() {
         val pinCb = CheckBox(this).apply {
             text = "Pin to Dashboard"
             isChecked = pinChecked
-            setTextColor(ContextCompat.getColor(this@CustomViewEditorActivity, R.color.login_text))
+            setTextColor(ThemeManager.color(C.TEXT))
             textSize = 14f
-            buttonTintList = ContextCompat.getColorStateList(this@CustomViewEditorActivity, R.color.login_accent)
+            buttonTintList = ThemeManager.colorStateList(C.ACCENT)
             layoutParams = linParams().apply { bottomMargin = dp(4) }
             setOnCheckedChangeListener { _, checked -> pinChecked = checked }
         }
@@ -238,9 +243,9 @@ class CustomViewEditorActivity : AppCompatActivity() {
         val defaultCb = CheckBox(this).apply {
             text = "Set as Default Entry View"
             isChecked = defaultChecked
-            setTextColor(ContextCompat.getColor(this@CustomViewEditorActivity, R.color.login_text))
+            setTextColor(ThemeManager.color(C.TEXT))
             textSize = 14f
-            buttonTintList = ContextCompat.getColorStateList(this@CustomViewEditorActivity, R.color.login_accent)
+            buttonTintList = ThemeManager.colorStateList(C.ACCENT)
             layoutParams = linParams().apply { bottomMargin = dp(4) }
             setOnCheckedChangeListener { _, checked -> defaultChecked = checked }
         }
@@ -250,7 +255,7 @@ class CustomViewEditorActivity : AppCompatActivity() {
         addSpacer()
         contentContainer.addView(TextView(this).apply {
             text = "${conditions.length()} condition${if (conditions.length() != 1) "s" else ""}, ${orderBy.length()} sort field${if (orderBy.length() != 1) "s" else ""}"
-            setTextColor(ContextCompat.getColor(this@CustomViewEditorActivity, R.color.login_text_secondary))
+            setTextColor(ThemeManager.color(C.TEXT_SECONDARY))
             textSize = 12f
         })
     }
@@ -261,7 +266,7 @@ class CustomViewEditorActivity : AppCompatActivity() {
         addSectionHeader("Filter Conditions")
         contentContainer.addView(TextView(this).apply {
             text = "Logic: ${if (logicPos == 1) "OR" else "AND"} — tap Info tab to change."
-            setTextColor(ContextCompat.getColor(this@CustomViewEditorActivity, R.color.login_text_secondary))
+            setTextColor(ThemeManager.color(C.TEXT_SECONDARY))
             textSize = 12f
             layoutParams = linParams().apply { bottomMargin = dp(8) }
         })
@@ -269,7 +274,7 @@ class CustomViewEditorActivity : AppCompatActivity() {
         if (conditions.length() == 0) {
             contentContainer.addView(TextView(this).apply {
                 text = "No conditions — add at least one."
-                setTextColor(ContextCompat.getColor(this@CustomViewEditorActivity, R.color.login_text_secondary))
+                setTextColor(ThemeManager.color(C.TEXT_SECONDARY))
                 textSize = 13f
                 setPadding(dp(4), dp(8), dp(4), dp(8))
             })
@@ -284,7 +289,7 @@ class CustomViewEditorActivity : AppCompatActivity() {
         addBtn.text = "+ Add Condition"
         addBtn.textSize = 13f
         addBtn.isAllCaps = false
-        addBtn.setTextColor(ContextCompat.getColor(this, R.color.login_accent))
+        addBtn.setTextColor(ThemeManager.color(C.ACCENT))
         addBtn.setBackgroundColor(Color.TRANSPARENT)
         addBtn.layoutParams = linParams().apply { topMargin = dp(8) }
         addBtn.setOnClickListener {
@@ -326,9 +331,9 @@ class CustomViewEditorActivity : AppCompatActivity() {
         val notCb = CheckBox(this).apply {
             text = "NOT"
             isChecked = negate
-            setTextColor(ContextCompat.getColor(this@CustomViewEditorActivity, R.color.login_error))
+            setTextColor(ThemeManager.color(C.ERROR))
             textSize = 11f
-            buttonTintList = ContextCompat.getColorStateList(this@CustomViewEditorActivity, R.color.login_error)
+            buttonTintList = ThemeManager.colorStateList(C.ERROR)
             layoutParams = LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, dp(36)).apply { marginEnd = dp(4) }
             setOnCheckedChangeListener { _, checked -> cond.put("negate", checked) }
         }
@@ -337,7 +342,7 @@ class CustomViewEditorActivity : AppCompatActivity() {
         val removeBtn = Button(this)
         removeBtn.text = "✕"
         removeBtn.textSize = 12f
-        removeBtn.setTextColor(ContextCompat.getColor(this, R.color.login_error))
+        removeBtn.setTextColor(ThemeManager.color(C.ERROR))
         removeBtn.setBackgroundColor(Color.TRANSPARENT)
         removeBtn.layoutParams = LinearLayout.LayoutParams(dp(32), dp(32))
         removeBtn.setOnClickListener {
@@ -362,8 +367,8 @@ class CustomViewEditorActivity : AppCompatActivity() {
                 setText(value)
                 hint = if (isWithin) "N" else if (getFieldType(field) == "date") "YYYY-MM-DD" else "Value"
                 textSize = 13f
-                setTextColor(ContextCompat.getColor(this@CustomViewEditorActivity, R.color.login_text))
-                setHintTextColor(ContextCompat.getColor(this@CustomViewEditorActivity, R.color.login_text_secondary))
+                setTextColor(ThemeManager.color(C.TEXT))
+                setHintTextColor(ThemeManager.color(C.TEXT_SECONDARY))
                 background = ContextCompat.getDrawable(this@CustomViewEditorActivity, R.drawable.input_bg)
                 setPadding(dp(10), dp(6), dp(10), dp(6))
                 layoutParams = linParams().apply { topMargin = dp(4) }
@@ -409,7 +414,7 @@ class CustomViewEditorActivity : AppCompatActivity() {
         if (orderBy.length() == 0) {
             contentContainer.addView(TextView(this).apply {
                 text = "No sort fields — entries will use default order."
-                setTextColor(ContextCompat.getColor(this@CustomViewEditorActivity, R.color.login_text_secondary))
+                setTextColor(ThemeManager.color(C.TEXT_SECONDARY))
                 textSize = 13f
                 setPadding(dp(4), dp(4), dp(4), dp(8))
             })
@@ -424,7 +429,7 @@ class CustomViewEditorActivity : AppCompatActivity() {
         addSortBtn.text = "+ Add Sort Field"
         addSortBtn.textSize = 13f
         addSortBtn.isAllCaps = false
-        addSortBtn.setTextColor(ContextCompat.getColor(this, R.color.login_accent))
+        addSortBtn.setTextColor(ThemeManager.color(C.ACCENT))
         addSortBtn.setBackgroundColor(Color.TRANSPARENT)
         addSortBtn.layoutParams = linParams().apply { topMargin = dp(4); bottomMargin = dp(8) }
         addSortBtn.setOnClickListener {
@@ -472,7 +477,7 @@ class CustomViewEditorActivity : AppCompatActivity() {
         val removeBtn = Button(this)
         removeBtn.text = "✕"
         removeBtn.textSize = 12f
-        removeBtn.setTextColor(ContextCompat.getColor(this, R.color.login_error))
+        removeBtn.setTextColor(ThemeManager.color(C.ERROR))
         removeBtn.setBackgroundColor(Color.TRANSPARENT)
         removeBtn.layoutParams = LinearLayout.LayoutParams(dp(32), dp(32))
         removeBtn.setOnClickListener {
@@ -589,7 +594,7 @@ class CustomViewEditorActivity : AppCompatActivity() {
 
         container.addView(TextView(this).apply {
             text = "${sorted.size} of ${allEntries.size} entries match"
-            setTextColor(ContextCompat.getColor(this@CustomViewEditorActivity, R.color.login_accent))
+            setTextColor(ThemeManager.color(C.ACCENT))
             textSize = 14f
             setTypeface(null, Typeface.BOLD)
             layoutParams = linParams().apply { bottomMargin = dp(8) }
@@ -598,7 +603,7 @@ class CustomViewEditorActivity : AppCompatActivity() {
         if (sorted.isEmpty()) {
             container.addView(TextView(this).apply {
                 text = "No entries match these conditions."
-                setTextColor(ContextCompat.getColor(this@CustomViewEditorActivity, R.color.login_text_secondary))
+                setTextColor(ThemeManager.color(C.TEXT_SECONDARY))
                 textSize = 13f
             })
         } else {
@@ -610,7 +615,7 @@ class CustomViewEditorActivity : AppCompatActivity() {
             if (sorted.size > 20) {
                 container.addView(TextView(this).apply {
                     text = "... and ${sorted.size - 20} more entries"
-                    setTextColor(ContextCompat.getColor(this@CustomViewEditorActivity, R.color.login_text_secondary))
+                    setTextColor(ThemeManager.color(C.TEXT_SECONDARY))
                     textSize = 12f
                     setPadding(0, dp(8), 0, 0)
                 })
@@ -635,7 +640,7 @@ class CustomViewEditorActivity : AppCompatActivity() {
 
         row.addView(TextView(this).apply {
             text = "$num"
-            setTextColor(ContextCompat.getColor(this@CustomViewEditorActivity, R.color.login_text_secondary))
+            setTextColor(ThemeManager.color(C.TEXT_SECONDARY))
             textSize = 10f
             layoutParams = LinearLayout.LayoutParams(dp(24), LinearLayout.LayoutParams.WRAP_CONTENT)
         })
@@ -647,7 +652,7 @@ class CustomViewEditorActivity : AppCompatActivity() {
         val title = entry.optString("title", "").ifEmpty { "Untitled" }
         textCol.addView(TextView(this).apply {
             text = title
-            setTextColor(ContextCompat.getColor(this@CustomViewEditorActivity, R.color.login_text))
+            setTextColor(ThemeManager.color(C.TEXT))
             textSize = 13f
             setTypeface(null, Typeface.BOLD)
             maxLines = 1
@@ -656,7 +661,7 @@ class CustomViewEditorActivity : AppCompatActivity() {
         if (date.isNotEmpty()) {
             textCol.addView(TextView(this).apply {
                 text = date
-                setTextColor(ContextCompat.getColor(this@CustomViewEditorActivity, R.color.login_accent))
+                setTextColor(ThemeManager.color(C.ACCENT))
                 textSize = 11f
             })
         }
@@ -819,7 +824,7 @@ class CustomViewEditorActivity : AppCompatActivity() {
     private fun addSectionHeader(text: String) {
         contentContainer.addView(TextView(this).apply {
             this.text = text
-            setTextColor(ContextCompat.getColor(this@CustomViewEditorActivity, R.color.login_accent))
+            setTextColor(ThemeManager.color(C.ACCENT))
             textSize = 15f
             setTypeface(null, Typeface.BOLD)
             setPadding(dp(4), dp(4), dp(4), dp(8))
@@ -829,7 +834,7 @@ class CustomViewEditorActivity : AppCompatActivity() {
     private fun addLabel(text: String) {
         contentContainer.addView(TextView(this).apply {
             this.text = text
-            setTextColor(ContextCompat.getColor(this@CustomViewEditorActivity, R.color.login_text_secondary))
+            setTextColor(ThemeManager.color(C.TEXT_SECONDARY))
             textSize = 12f
             setPadding(dp(4), dp(4), dp(4), dp(2))
         })
@@ -846,8 +851,8 @@ class CustomViewEditorActivity : AppCompatActivity() {
             this.hint = hint
             setText(text)
             textSize = 14f
-            setTextColor(ContextCompat.getColor(this@CustomViewEditorActivity, R.color.login_text))
-            setHintTextColor(ContextCompat.getColor(this@CustomViewEditorActivity, R.color.login_text_secondary))
+            setTextColor(ThemeManager.color(C.TEXT))
+            setHintTextColor(ThemeManager.color(C.TEXT_SECONDARY))
             background = ContextCompat.getDrawable(this@CustomViewEditorActivity, R.drawable.input_bg)
             setPadding(dp(12), dp(10), dp(12), dp(10))
             layoutParams = linParams().apply { bottomMargin = dp(8) }
@@ -864,15 +869,15 @@ class CustomViewEditorActivity : AppCompatActivity() {
         val adapter = object : ArrayAdapter<String>(this, android.R.layout.simple_spinner_item, items) {
             override fun getView(position: Int, convertView: View?, parent: ViewGroup): View {
                 return (super.getView(position, convertView, parent) as TextView).apply {
-                    setTextColor(ContextCompat.getColor(this@CustomViewEditorActivity, R.color.login_text))
+                    setTextColor(ThemeManager.color(C.TEXT))
                     textSize = 13f
                     setPadding(dp(4), dp(4), dp(4), dp(4))
                 }
             }
             override fun getDropDownView(position: Int, convertView: View?, parent: ViewGroup): View {
                 return (super.getDropDownView(position, convertView, parent) as TextView).apply {
-                    setTextColor(ContextCompat.getColor(this@CustomViewEditorActivity, R.color.login_text))
-                    setBackgroundColor(ContextCompat.getColor(this@CustomViewEditorActivity, R.color.login_input_bg))
+                    setTextColor(ThemeManager.color(C.TEXT))
+                    setBackgroundColor(ThemeManager.color(C.INPUT_BG))
                     textSize = 13f
                     setPadding(dp(12), dp(8), dp(12), dp(8))
                 }
@@ -928,4 +933,13 @@ class CustomViewEditorActivity : AppCompatActivity() {
             resources.displayMetrics
         ).toInt()
     }
+
+    override fun onResume() {
+        super.onResume()
+        if (lastThemeVersion != ThemeManager.themeVersion) {
+            finish()
+            return
+        }
+    }
+
 }

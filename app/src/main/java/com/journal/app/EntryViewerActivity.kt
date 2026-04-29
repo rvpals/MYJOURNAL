@@ -29,11 +29,14 @@ import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
+import com.journal.app.ThemeManager.C
 import org.json.JSONArray
 import org.json.JSONObject
 import kotlin.math.abs
 
 class EntryViewerActivity : AppCompatActivity() {
+
+    private var lastThemeVersion = 0
 
     companion object {
         @JvmStatic
@@ -61,6 +64,8 @@ class EntryViewerActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_entry_viewer)
+        ThemeManager.applyToActivity(this)
+        lastThemeVersion = ThemeManager.themeVersion
 
         currentEntryId = pendingEntryId ?: ""
         entryIds = pendingEntryIds ?: listOf()
@@ -455,13 +460,13 @@ class EntryViewerActivity : AppCompatActivity() {
         }
         row.addView(TextView(this).apply {
             text = label
-            setTextColor(ContextCompat.getColor(this@EntryViewerActivity, R.color.login_accent))
+            setTextColor(ThemeManager.color(C.ACCENT))
             setTextSize(TypedValue.COMPLEX_UNIT_SP, 11f)
             setTypeface(null, Typeface.BOLD)
         })
         row.addView(TextView(this).apply {
             text = value
-            setTextColor(ContextCompat.getColor(this@EntryViewerActivity, R.color.login_text))
+            setTextColor(ThemeManager.color(C.TEXT))
             setTextSize(TypedValue.COMPLEX_UNIT_SP, 13f)
             setPadding(0, dp(2), 0, 0)
         })
@@ -494,7 +499,7 @@ class EntryViewerActivity : AppCompatActivity() {
         }
         row.addView(TextView(this).apply {
             text = "🗺️ Locations"
-            setTextColor(ContextCompat.getColor(this@EntryViewerActivity, R.color.login_accent))
+            setTextColor(ThemeManager.color(C.ACCENT))
             setTextSize(TypedValue.COMPLEX_UNIT_SP, 11f)
             setTypeface(null, Typeface.BOLD)
         })
@@ -532,7 +537,7 @@ class EntryViewerActivity : AppCompatActivity() {
         row.addView(TextView(this).apply {
             text = spannable
             movementMethod = LinkMovementMethod.getInstance()
-            setTextColor(ContextCompat.getColor(this@EntryViewerActivity, R.color.login_text))
+            setTextColor(ThemeManager.color(C.TEXT))
             setTextSize(TypedValue.COMPLEX_UNIT_SP, 13f)
             setPadding(0, dp(2), 0, 0)
         })
@@ -696,4 +701,13 @@ class EntryViewerActivity : AppCompatActivity() {
             resources.displayMetrics
         ).toInt()
     }
+
+    override fun onResume() {
+        super.onResume()
+        if (lastThemeVersion != ThemeManager.themeVersion) {
+            finish()
+            return
+        }
+    }
+
 }

@@ -260,6 +260,19 @@ summary: "Version-by-version feature completion history (v0.9–v1.5) and remain
 - [x] **Fix: Widget icon not showing on dashboard** — `DashboardActivity.createWidgetCard()` never read the widget `icon` field; added `ImageView` with `loadBase64Image()` to render 40x40 icon in widget card header
 - [x] **Widget editor color picker dialog** — Tapping the color swatch or hex input in widget editor now opens a color picker dialog with 24 preset color grid, hex input field, and live preview swatch
 
+### v1.5.0+ (2026-04-29, Today in History + edit fix)
+- [x] **Fix: EntryFormActivity edit not loading existing data** — `loadEntryData()` loaded metadata (categories, tags, people, etc.) but never set `dateValue`, `timeValue`, `titleValue`, `contentValue`. Editing an entry opened a blank form. Added four missing field assignments.
+- [x] **Today in History dashboard component** — New dashboard panel showing entries from the same month/day in past years. Displays entry title, 20-character content preview, and "N year(s) ago" badge. Entries are clickable to open in EntryViewerActivity.
+- [x] **DashboardDataBuilder.buildTodayInHistory()** — Matches entries by MM-dd against today's date, excludes current year, sorted by most recent year first.
+- [x] **Dashboard component settings** — `today_history` added to Settings > Dashboard tab for toggle/reorder (11 components total).
+
+### v1.5.0+ (2026-04-29, runtime themes + CSV fixes)
+- [x] **Runtime theme system** — New `ThemeManager.kt` singleton with all 12 theme color maps (transcribed from web CSS). `ThemeManager.applyToActivity()` sets status/nav bar colors, walks the view tree to recolor XML-set backgrounds (`ColorDrawable` and `GradientDrawable`) and text colors. Light/dark status bar icons set automatically based on theme luminance.
+- [x] **Theme switching works** — Selecting a theme in Settings > Preferences now immediately applies: `ThemeManager.setTheme()` + `recreate()`. All other activities detect theme changes via `themeVersion` counter in `onResume` and rebuild/finish accordingly.
+- [x] **350 ContextCompat.getColor() calls replaced** — All 12 activity files migrated from static `R.color.login_*` XML resources to dynamic `ThemeManager.color(C.*)` calls.
+- [x] **Fix: CSV import date/time parsing regex syntax error** — `parseDateWithFormat()` and `parseTimeWithFormat()` used chained `.replace()` where single-char tokens (`M`, `D`, `H`) corrupted named groups already inserted by double-char tokens (`MM`, `DD`, `HH`). Rewritten to use single-pass `Regex("YYYY|YY|MM|DD|M|D").replace()` with lambda.
+- [x] **Restored "Use space to separate tags" option** — Checkbox added to CsvMappingActivity Import Options, saved as `csvTagsSpaceSep` in settings DB, used in `handleCsvImport()` to split tags by whitespace when enabled (matching web version behavior).
+
 ## Remaining / TODO
 
 - [ ] Re-test all features after WebView removal (all native screens)

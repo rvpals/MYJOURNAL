@@ -19,11 +19,14 @@ import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
 import androidx.biometric.BiometricManager
 import androidx.core.content.ContextCompat
+import com.journal.app.ThemeManager.C
 import org.json.JSONArray
 import org.json.JSONObject
 import kotlin.concurrent.thread
 
 class SettingsActivity : AppCompatActivity() {
+
+    private var lastThemeVersion = 0
 
     companion object {
         @JvmStatic var databaseService: DatabaseService? = null
@@ -51,6 +54,8 @@ class SettingsActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_settings)
+        ThemeManager.applyToActivity(this)
+        lastThemeVersion = ThemeManager.themeVersion
 
         db = databaseService ?: run { finish(); return }
         bs = bootstrapService ?: run { finish(); return }
@@ -113,11 +118,11 @@ class SettingsActivity : AppCompatActivity() {
         activeTab = tabId
         for ((id, btn) in tabButtons) {
             if (id == tabId) {
-                btn.setTextColor(ContextCompat.getColor(this, R.color.login_card_bg))
+                btn.setTextColor(ThemeManager.color(C.CARD_BG))
                 btn.background = ContextCompat.getDrawable(this, R.drawable.tab_active_3d)
                 btn.elevation = dp(4).toFloat()
             } else {
-                btn.setTextColor(ContextCompat.getColor(this, R.color.login_text_secondary))
+                btn.setTextColor(ThemeManager.color(C.TEXT_SECONDARY))
                 btn.background = ContextCompat.getDrawable(this, R.drawable.tab_inactive_3d)
                 btn.elevation = dp(2).toFloat()
             }
@@ -216,7 +221,7 @@ class SettingsActivity : AppCompatActivity() {
         // Font preview
         fontPreview = TextView(this).apply {
             text = "The quick brown fox jumps over the lazy dog."
-            setTextColor(ContextCompat.getColor(this@SettingsActivity, R.color.login_text))
+            setTextColor(ThemeManager.color(C.TEXT))
             textSize = 14f
             setPadding(dp(12), dp(10), dp(12), dp(10))
             background = ContextCompat.getDrawable(this@SettingsActivity, R.drawable.input_bg)
@@ -347,6 +352,8 @@ class SettingsActivity : AppCompatActivity() {
         val currentTheme = settings.optString("theme", "dark")
         buildSpinner("Theme", themes.map { it.replaceFirstChar { c -> c.uppercase() } }, themes.indexOf(currentTheme).coerceAtLeast(0)) { idx ->
             db.setSettings(JSONObject().apply { put("theme", themes[idx]) }.toString())
+            ThemeManager.setTheme(themes[idx])
+            recreate()
         }
 
         buildSpacer()
@@ -376,7 +383,7 @@ class SettingsActivity : AppCompatActivity() {
             text = "Browse"
             textSize = 13f
             isAllCaps = false
-            setTextColor(ContextCompat.getColor(this@SettingsActivity, R.color.login_text))
+            setTextColor(ThemeManager.color(C.TEXT))
             background = ContextCompat.getDrawable(this@SettingsActivity, R.drawable.btn_secondary)
             layoutParams = LinearLayout.LayoutParams(0, dp(38), 1f).apply { marginEnd = dp(6) }
             setOnClickListener { pickWallpaper() }
@@ -385,7 +392,7 @@ class SettingsActivity : AppCompatActivity() {
             text = "Clear"
             textSize = 13f
             isAllCaps = false
-            setTextColor(ContextCompat.getColor(this@SettingsActivity, R.color.login_text_secondary))
+            setTextColor(ThemeManager.color(C.TEXT_SECONDARY))
             background = ContextCompat.getDrawable(this@SettingsActivity, R.drawable.btn_secondary)
             layoutParams = LinearLayout.LayoutParams(0, dp(38), 1f)
             setOnClickListener {
@@ -464,7 +471,7 @@ class SettingsActivity : AppCompatActivity() {
             text = "+ New View"
             textSize = 13f
             isAllCaps = false
-            setTextColor(ContextCompat.getColor(this@SettingsActivity, R.color.login_card_bg))
+            setTextColor(ThemeManager.color(C.CARD_BG))
             background = ContextCompat.getDrawable(this@SettingsActivity, R.drawable.btn_accent)
             layoutParams = LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.WRAP_CONTENT, dp(38)
@@ -498,7 +505,7 @@ class SettingsActivity : AppCompatActivity() {
             }
             textCol.addView(TextView(this).apply {
                 text = name
-                setTextColor(ContextCompat.getColor(this@SettingsActivity, R.color.login_text))
+                setTextColor(ThemeManager.color(C.TEXT))
                 textSize = 14f
                 setTypeface(null, Typeface.BOLD)
             })
@@ -509,7 +516,7 @@ class SettingsActivity : AppCompatActivity() {
             if (badges.isNotEmpty()) {
                 textCol.addView(TextView(this).apply {
                     text = badges.joinToString("  ·  ")
-                    setTextColor(ContextCompat.getColor(this@SettingsActivity, R.color.login_text_secondary))
+                    setTextColor(ThemeManager.color(C.TEXT_SECONDARY))
                     textSize = 11f
                 })
             }
@@ -526,7 +533,7 @@ class SettingsActivity : AppCompatActivity() {
             row.addView(Button(this).apply {
                 text = "✕"
                 textSize = 14f
-                setTextColor(ContextCompat.getColor(this@SettingsActivity, R.color.login_error))
+                setTextColor(ThemeManager.color(C.ERROR))
                 setBackgroundColor(Color.TRANSPARENT)
                 layoutParams = LinearLayout.LayoutParams(dp(36), dp(36))
                 setOnClickListener {
@@ -624,8 +631,8 @@ class SettingsActivity : AppCompatActivity() {
             setText(view.optString("name", ""))
             hint = "View name"
             textSize = 14f
-            setTextColor(ContextCompat.getColor(this@SettingsActivity, R.color.login_text))
-            setHintTextColor(ContextCompat.getColor(this@SettingsActivity, R.color.login_text_secondary))
+            setTextColor(ThemeManager.color(C.TEXT))
+            setHintTextColor(ThemeManager.color(C.TEXT_SECONDARY))
             background = ContextCompat.getDrawable(this@SettingsActivity, R.drawable.input_bg)
             setPadding(dp(12), dp(10), dp(12), dp(10))
             layoutParams = linParams().apply { bottomMargin = dp(10) }
@@ -660,7 +667,7 @@ class SettingsActivity : AppCompatActivity() {
             text = "+ Add Condition"
             textSize = 12f
             isAllCaps = false
-            setTextColor(ContextCompat.getColor(this@SettingsActivity, R.color.login_accent))
+            setTextColor(ThemeManager.color(C.ACCENT))
             setBackgroundColor(Color.TRANSPARENT)
             layoutParams = linParams().apply { bottomMargin = dp(10) }
             setOnClickListener {
@@ -704,7 +711,7 @@ class SettingsActivity : AppCompatActivity() {
             text = "+ Add Sort Field"
             textSize = 12f
             isAllCaps = false
-            setTextColor(ContextCompat.getColor(this@SettingsActivity, R.color.login_accent))
+            setTextColor(ThemeManager.color(C.ACCENT))
             setBackgroundColor(Color.TRANSPARENT)
             layoutParams = linParams().apply { bottomMargin = dp(10) }
             setOnClickListener {
@@ -727,18 +734,18 @@ class SettingsActivity : AppCompatActivity() {
         val pinCb = CheckBox(this).apply {
             text = "Pin to Dashboard"
             isChecked = view.optBoolean("pinToDashboard", false)
-            setTextColor(ContextCompat.getColor(this@SettingsActivity, R.color.login_text))
+            setTextColor(ThemeManager.color(C.TEXT))
             textSize = 14f
-            buttonTintList = ContextCompat.getColorStateList(this@SettingsActivity, R.color.login_accent)
+            buttonTintList = ThemeManager.colorStateList(C.ACCENT)
         }
         container.addView(pinCb)
 
         val defaultCb = CheckBox(this).apply {
             text = "Set as Default Entry View"
             isChecked = view.optBoolean("defaultEntryView", false)
-            setTextColor(ContextCompat.getColor(this@SettingsActivity, R.color.login_text))
+            setTextColor(ThemeManager.color(C.TEXT))
             textSize = 14f
-            buttonTintList = ContextCompat.getColorStateList(this@SettingsActivity, R.color.login_accent)
+            buttonTintList = ThemeManager.colorStateList(C.ACCENT)
         }
         container.addView(defaultCb)
 
@@ -805,7 +812,7 @@ class SettingsActivity : AppCompatActivity() {
         topRow.addView(Button(this).apply {
             text = "✕"
             textSize = 12f
-            setTextColor(ContextCompat.getColor(this@SettingsActivity, R.color.login_error))
+            setTextColor(ThemeManager.color(C.ERROR))
             setBackgroundColor(Color.TRANSPARENT)
             layoutParams = LinearLayout.LayoutParams(dp(32), dp(32))
             setOnClickListener { onRemove() }
@@ -826,8 +833,8 @@ class SettingsActivity : AppCompatActivity() {
                 setText(value)
                 hint = "Value"
                 textSize = 13f
-                setTextColor(ContextCompat.getColor(this@SettingsActivity, R.color.login_text))
-                setHintTextColor(ContextCompat.getColor(this@SettingsActivity, R.color.login_text_secondary))
+                setTextColor(ThemeManager.color(C.TEXT))
+                setHintTextColor(ThemeManager.color(C.TEXT_SECONDARY))
                 background = ContextCompat.getDrawable(this@SettingsActivity, R.drawable.input_bg)
                 setPadding(dp(10), dp(6), dp(10), dp(6))
                 layoutParams = linParams().apply { topMargin = dp(4) }
@@ -884,7 +891,7 @@ class SettingsActivity : AppCompatActivity() {
         row.addView(Button(this).apply {
             text = "✕"
             textSize = 12f
-            setTextColor(ContextCompat.getColor(this@SettingsActivity, R.color.login_error))
+            setTextColor(ThemeManager.color(C.ERROR))
             setBackgroundColor(Color.TRANSPARENT)
             layoutParams = LinearLayout.LayoutParams(dp(32), dp(32))
             setOnClickListener { onRemove() }
@@ -902,7 +909,7 @@ class SettingsActivity : AppCompatActivity() {
             text = "+ New Template"
             textSize = 13f
             isAllCaps = false
-            setTextColor(ContextCompat.getColor(this@SettingsActivity, R.color.login_card_bg))
+            setTextColor(ThemeManager.color(C.CARD_BG))
             background = ContextCompat.getDrawable(this@SettingsActivity, R.drawable.btn_accent)
             layoutParams = LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.WRAP_CONTENT, dp(38)
@@ -934,13 +941,13 @@ class SettingsActivity : AppCompatActivity() {
             }
             textCol.addView(TextView(this).apply {
                 text = name
-                setTextColor(ContextCompat.getColor(this@SettingsActivity, R.color.login_text))
+                setTextColor(ThemeManager.color(C.TEXT))
                 textSize = 14f
             })
             if (desc.isNotEmpty()) {
                 textCol.addView(TextView(this).apply {
                     text = desc
-                    setTextColor(ContextCompat.getColor(this@SettingsActivity, R.color.login_text_secondary))
+                    setTextColor(ThemeManager.color(C.TEXT_SECONDARY))
                     textSize = 11f
                 })
             }
@@ -957,7 +964,7 @@ class SettingsActivity : AppCompatActivity() {
             row.addView(Button(this).apply {
                 text = "✕"
                 textSize = 14f
-                setTextColor(ContextCompat.getColor(this@SettingsActivity, R.color.login_error))
+                setTextColor(ThemeManager.color(C.ERROR))
                 setBackgroundColor(Color.TRANSPARENT)
                 layoutParams = LinearLayout.LayoutParams(dp(36), dp(36))
                 setOnClickListener {
@@ -1015,18 +1022,18 @@ class SettingsActivity : AppCompatActivity() {
         val autoDateCb = CheckBox(this).apply {
             text = "Auto-fill today's date"
             isChecked = tpl.optBoolean("autoDate", true)
-            setTextColor(ContextCompat.getColor(this@SettingsActivity, R.color.login_text))
+            setTextColor(ThemeManager.color(C.TEXT))
             textSize = 14f
-            buttonTintList = ContextCompat.getColorStateList(this@SettingsActivity, R.color.login_accent)
+            buttonTintList = ThemeManager.colorStateList(C.ACCENT)
         }
         container.addView(autoDateCb)
 
         val autoTimeCb = CheckBox(this).apply {
             text = "Auto-fill current time"
             isChecked = tpl.optBoolean("autoTime", false)
-            setTextColor(ContextCompat.getColor(this@SettingsActivity, R.color.login_text))
+            setTextColor(ThemeManager.color(C.TEXT))
             textSize = 14f
-            buttonTintList = ContextCompat.getColorStateList(this@SettingsActivity, R.color.login_accent)
+            buttonTintList = ThemeManager.colorStateList(C.ACCENT)
         }
         container.addView(autoTimeCb)
 
@@ -1109,7 +1116,7 @@ class SettingsActivity : AppCompatActivity() {
             text = "+ New Report Template"
             textSize = 13f
             isAllCaps = false
-            setTextColor(ContextCompat.getColor(this@SettingsActivity, R.color.login_card_bg))
+            setTextColor(ThemeManager.color(C.CARD_BG))
             background = ContextCompat.getDrawable(this@SettingsActivity, R.drawable.btn_accent)
             layoutParams = LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.WRAP_CONTENT, dp(38)
@@ -1121,7 +1128,7 @@ class SettingsActivity : AppCompatActivity() {
         // Available tags info
         contentContainer.addView(TextView(this).apply {
             text = "Tags: <%TITLE%> <%DATE%> <%TIME%> <%CONTENT%> <%RICH_CONTENT%> <%CATEGORIES%> <%TAGS%> <%WEATHER%> <%PLACES%> <%ID%> <%DT_CREATED%> <%DT_UPDATED%>"
-            setTextColor(ContextCompat.getColor(this@SettingsActivity, R.color.login_text_secondary))
+            setTextColor(ThemeManager.color(C.TEXT_SECONDARY))
             textSize = 10f
             setPadding(dp(4), dp(0), dp(4), dp(8))
         })
@@ -1144,7 +1151,7 @@ class SettingsActivity : AppCompatActivity() {
 
             row.addView(TextView(this).apply {
                 text = name
-                setTextColor(ContextCompat.getColor(this@SettingsActivity, R.color.login_text))
+                setTextColor(ThemeManager.color(C.TEXT))
                 textSize = 14f
                 layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
             })
@@ -1160,7 +1167,7 @@ class SettingsActivity : AppCompatActivity() {
             row.addView(Button(this).apply {
                 text = "✕"
                 textSize = 14f
-                setTextColor(ContextCompat.getColor(this@SettingsActivity, R.color.login_error))
+                setTextColor(ThemeManager.color(C.ERROR))
                 setBackgroundColor(Color.TRANSPARENT)
                 layoutParams = LinearLayout.LayoutParams(dp(36), dp(36))
                 setOnClickListener {
@@ -1211,8 +1218,8 @@ class SettingsActivity : AppCompatActivity() {
         val htmlInput = EditText(this).apply {
             setText(tpl.optString("html"))
             textSize = 12f
-            setTextColor(ContextCompat.getColor(this@SettingsActivity, R.color.login_text))
-            setHintTextColor(ContextCompat.getColor(this@SettingsActivity, R.color.login_text_secondary))
+            setTextColor(ThemeManager.color(C.TEXT))
+            setHintTextColor(ThemeManager.color(C.TEXT_SECONDARY))
             background = ContextCompat.getDrawable(this@SettingsActivity, R.drawable.input_bg)
             setPadding(dp(10), dp(8), dp(10), dp(8))
             inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_FLAG_MULTI_LINE
@@ -1296,7 +1303,7 @@ class SettingsActivity : AppCompatActivity() {
             text = "+ New Widget"
             textSize = 13f
             isAllCaps = false
-            setTextColor(ContextCompat.getColor(this@SettingsActivity, R.color.login_card_bg))
+            setTextColor(ThemeManager.color(C.CARD_BG))
             background = ContextCompat.getDrawable(this@SettingsActivity, R.drawable.btn_accent)
             layoutParams = LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.WRAP_CONTENT, dp(38)
@@ -1343,7 +1350,7 @@ class SettingsActivity : AppCompatActivity() {
             }
             textCol.addView(TextView(this).apply {
                 text = name
-                setTextColor(ContextCompat.getColor(this@SettingsActivity, R.color.login_text))
+                setTextColor(ThemeManager.color(C.TEXT))
                 textSize = 14f
                 setTypeface(null, Typeface.BOLD)
             })
@@ -1355,7 +1362,7 @@ class SettingsActivity : AppCompatActivity() {
             if (info.isNotEmpty()) {
                 textCol.addView(TextView(this).apply {
                     text = info.joinToString("  ·  ")
-                    setTextColor(ContextCompat.getColor(this@SettingsActivity, R.color.login_text_secondary))
+                    setTextColor(ThemeManager.color(C.TEXT_SECONDARY))
                     textSize = 11f
                 })
             }
@@ -1372,7 +1379,7 @@ class SettingsActivity : AppCompatActivity() {
             row.addView(Button(this).apply {
                 text = "✕"
                 textSize = 14f
-                setTextColor(ContextCompat.getColor(this@SettingsActivity, R.color.login_error))
+                setTextColor(ThemeManager.color(C.ERROR))
                 setBackgroundColor(Color.TRANSPARENT)
                 layoutParams = LinearLayout.LayoutParams(dp(36), dp(36))
                 setOnClickListener {
@@ -1445,7 +1452,7 @@ class SettingsActivity : AppCompatActivity() {
         // === Header Info ===
         container.addView(makeLabelView("Header Info").apply {
             setTypeface(null, Typeface.BOLD)
-            setTextColor(ContextCompat.getColor(this@SettingsActivity, R.color.login_accent))
+            setTextColor(ThemeManager.color(C.ACCENT))
         })
 
         val nameInput = makeDialogInput("Widget name", w.optString("name"))
@@ -1460,9 +1467,9 @@ class SettingsActivity : AppCompatActivity() {
         val enabledCb = CheckBox(this).apply {
             text = "Show in Dashboard"
             isChecked = w.optBoolean("enabledInDashboard", true)
-            setTextColor(ContextCompat.getColor(this@SettingsActivity, R.color.login_text))
+            setTextColor(ThemeManager.color(C.TEXT))
             textSize = 14f
-            buttonTintList = ContextCompat.getColorStateList(this@SettingsActivity, R.color.login_accent)
+            buttonTintList = ThemeManager.colorStateList(C.ACCENT)
             layoutParams = linParams().apply { bottomMargin = dp(10) }
         }
         container.addView(enabledCb)
@@ -1470,7 +1477,7 @@ class SettingsActivity : AppCompatActivity() {
         // === Filters ===
         container.addView(makeLabelView("Filters").apply {
             setTypeface(null, Typeface.BOLD)
-            setTextColor(ContextCompat.getColor(this@SettingsActivity, R.color.login_accent))
+            setTextColor(ThemeManager.color(C.ACCENT))
         })
 
         val filterContainer = LinearLayout(this).apply {
@@ -1492,7 +1499,7 @@ class SettingsActivity : AppCompatActivity() {
             text = "+ Add Filter"
             textSize = 12f
             isAllCaps = false
-            setTextColor(ContextCompat.getColor(this@SettingsActivity, R.color.login_accent))
+            setTextColor(ThemeManager.color(C.ACCENT))
             setBackgroundColor(Color.TRANSPARENT)
             layoutParams = linParams().apply { bottomMargin = dp(10) }
             setOnClickListener {
@@ -1508,7 +1515,7 @@ class SettingsActivity : AppCompatActivity() {
         // === Functions ===
         container.addView(makeLabelView("Aggregate Functions").apply {
             setTypeface(null, Typeface.BOLD)
-            setTextColor(ContextCompat.getColor(this@SettingsActivity, R.color.login_accent))
+            setTextColor(ThemeManager.color(C.ACCENT))
         })
 
         val funcContainer = LinearLayout(this).apply {
@@ -1530,7 +1537,7 @@ class SettingsActivity : AppCompatActivity() {
             text = "+ Add Function"
             textSize = 12f
             isAllCaps = false
-            setTextColor(ContextCompat.getColor(this@SettingsActivity, R.color.login_accent))
+            setTextColor(ThemeManager.color(C.ACCENT))
             setBackgroundColor(Color.TRANSPARENT)
             layoutParams = linParams().apply { bottomMargin = dp(10) }
             setOnClickListener {
@@ -1592,7 +1599,7 @@ class SettingsActivity : AppCompatActivity() {
         topRow.addView(Button(this).apply {
             text = "✕"
             textSize = 12f
-            setTextColor(ContextCompat.getColor(this@SettingsActivity, R.color.login_error))
+            setTextColor(ThemeManager.color(C.ERROR))
             setBackgroundColor(Color.TRANSPARENT)
             layoutParams = LinearLayout.LayoutParams(dp(32), dp(32))
             setOnClickListener { onRemove() }
@@ -1611,8 +1618,8 @@ class SettingsActivity : AppCompatActivity() {
                 setText(value)
                 hint = "Value"
                 textSize = 13f
-                setTextColor(ContextCompat.getColor(this@SettingsActivity, R.color.login_text))
-                setHintTextColor(ContextCompat.getColor(this@SettingsActivity, R.color.login_text_secondary))
+                setTextColor(ThemeManager.color(C.TEXT))
+                setHintTextColor(ThemeManager.color(C.TEXT_SECONDARY))
                 background = ContextCompat.getDrawable(this@SettingsActivity, R.drawable.input_bg)
                 setPadding(dp(10), dp(6), dp(10), dp(6))
                 layoutParams = linParams().apply { topMargin = dp(4) }
@@ -1669,7 +1676,7 @@ class SettingsActivity : AppCompatActivity() {
         topRow.addView(Button(this).apply {
             text = "✕"
             textSize = 12f
-            setTextColor(ContextCompat.getColor(this@SettingsActivity, R.color.login_error))
+            setTextColor(ThemeManager.color(C.ERROR))
             setBackgroundColor(Color.TRANSPARENT)
             layoutParams = LinearLayout.LayoutParams(dp(32), dp(32))
             setOnClickListener { onRemove() }
@@ -1681,8 +1688,8 @@ class SettingsActivity : AppCompatActivity() {
             setText(value)
             hint = "Match value (optional)"
             textSize = 13f
-            setTextColor(ContextCompat.getColor(this@SettingsActivity, R.color.login_text))
-            setHintTextColor(ContextCompat.getColor(this@SettingsActivity, R.color.login_text_secondary))
+            setTextColor(ThemeManager.color(C.TEXT))
+            setHintTextColor(ThemeManager.color(C.TEXT_SECONDARY))
             background = ContextCompat.getDrawable(this@SettingsActivity, R.drawable.input_bg)
             setPadding(dp(10), dp(6), dp(10), dp(6))
             layoutParams = linParams().apply { topMargin = dp(4) }
@@ -1702,8 +1709,8 @@ class SettingsActivity : AppCompatActivity() {
             setText(prefix)
             hint = "Prefix"
             textSize = 12f
-            setTextColor(ContextCompat.getColor(this@SettingsActivity, R.color.login_text))
-            setHintTextColor(ContextCompat.getColor(this@SettingsActivity, R.color.login_text_secondary))
+            setTextColor(ThemeManager.color(C.TEXT))
+            setHintTextColor(ThemeManager.color(C.TEXT_SECONDARY))
             background = ContextCompat.getDrawable(this@SettingsActivity, R.drawable.input_bg)
             setPadding(dp(8), dp(4), dp(8), dp(4))
             layoutParams = LinearLayout.LayoutParams(0, dp(32), 1f).apply { marginEnd = dp(4) }
@@ -1718,8 +1725,8 @@ class SettingsActivity : AppCompatActivity() {
             setText(postfix)
             hint = "Postfix"
             textSize = 12f
-            setTextColor(ContextCompat.getColor(this@SettingsActivity, R.color.login_text))
-            setHintTextColor(ContextCompat.getColor(this@SettingsActivity, R.color.login_text_secondary))
+            setTextColor(ThemeManager.color(C.TEXT))
+            setHintTextColor(ThemeManager.color(C.TEXT_SECONDARY))
             background = ContextCompat.getDrawable(this@SettingsActivity, R.drawable.input_bg)
             setPadding(dp(8), dp(4), dp(8), dp(4))
             layoutParams = LinearLayout.LayoutParams(0, dp(32), 1f)
@@ -1779,8 +1786,8 @@ class SettingsActivity : AppCompatActivity() {
         val catInput = EditText(this).apply {
             hint = "New category..."
             textSize = 14f
-            setTextColor(ContextCompat.getColor(this@SettingsActivity, R.color.login_text))
-            setHintTextColor(ContextCompat.getColor(this@SettingsActivity, R.color.login_text_secondary))
+            setTextColor(ThemeManager.color(C.TEXT))
+            setHintTextColor(ThemeManager.color(C.TEXT_SECONDARY))
             background = ContextCompat.getDrawable(this@SettingsActivity, R.drawable.input_bg)
             setPadding(dp(12), dp(8), dp(12), dp(8))
             layoutParams = LinearLayout.LayoutParams(0, dp(40), 1f).apply { marginEnd = dp(6) }
@@ -1791,7 +1798,7 @@ class SettingsActivity : AppCompatActivity() {
             text = "Add"
             textSize = 13f
             isAllCaps = false
-            setTextColor(ContextCompat.getColor(this@SettingsActivity, R.color.login_card_bg))
+            setTextColor(ThemeManager.color(C.CARD_BG))
             background = ContextCompat.getDrawable(this@SettingsActivity, R.drawable.btn_accent)
             layoutParams = LinearLayout.LayoutParams(dp(60), dp(40))
             setOnClickListener {
@@ -1861,13 +1868,13 @@ class SettingsActivity : AppCompatActivity() {
             }
             textCol.addView(TextView(this).apply {
                 text = name
-                setTextColor(ContextCompat.getColor(this@SettingsActivity, R.color.login_text))
+                setTextColor(ThemeManager.color(C.TEXT))
                 textSize = 14f
             })
             if (desc.isNotEmpty()) {
                 textCol.addView(TextView(this).apply {
                     text = desc
-                    setTextColor(ContextCompat.getColor(this@SettingsActivity, R.color.login_text_secondary))
+                    setTextColor(ThemeManager.color(C.TEXT_SECONDARY))
                     textSize = 11f
                 })
             }
@@ -1886,7 +1893,7 @@ class SettingsActivity : AppCompatActivity() {
             row.addView(Button(this).apply {
                 text = "✕"
                 textSize = 14f
-                setTextColor(ContextCompat.getColor(this@SettingsActivity, R.color.login_error))
+                setTextColor(ThemeManager.color(C.ERROR))
                 setBackgroundColor(Color.TRANSPARENT)
                 layoutParams = LinearLayout.LayoutParams(dp(36), dp(36))
                 setOnClickListener { confirmDeleteCategory(name) }
@@ -1901,8 +1908,8 @@ class SettingsActivity : AppCompatActivity() {
             setText(currentDesc)
             hint = "Description"
             textSize = 14f
-            setTextColor(ContextCompat.getColor(this@SettingsActivity, R.color.login_text))
-            setHintTextColor(ContextCompat.getColor(this@SettingsActivity, R.color.login_text_secondary))
+            setTextColor(ThemeManager.color(C.TEXT))
+            setHintTextColor(ThemeManager.color(C.TEXT_SECONDARY))
             background = ContextCompat.getDrawable(this@SettingsActivity, R.drawable.input_bg)
             setPadding(dp(12), dp(10), dp(12), dp(10))
             inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_FLAG_MULTI_LINE
@@ -1994,13 +2001,13 @@ class SettingsActivity : AppCompatActivity() {
             }
             textCol.addView(TextView(this).apply {
                 text = name
-                setTextColor(ContextCompat.getColor(this@SettingsActivity, R.color.login_text))
+                setTextColor(ThemeManager.color(C.TEXT))
                 textSize = 14f
             })
             if (desc.isNotEmpty()) {
                 textCol.addView(TextView(this).apply {
                     text = desc
-                    setTextColor(ContextCompat.getColor(this@SettingsActivity, R.color.login_text_secondary))
+                    setTextColor(ThemeManager.color(C.TEXT_SECONDARY))
                     textSize = 11f
                 })
             }
@@ -2023,8 +2030,8 @@ class SettingsActivity : AppCompatActivity() {
             setText(currentDesc)
             hint = "Description"
             textSize = 14f
-            setTextColor(ContextCompat.getColor(this@SettingsActivity, R.color.login_text))
-            setHintTextColor(ContextCompat.getColor(this@SettingsActivity, R.color.login_text_secondary))
+            setTextColor(ThemeManager.color(C.TEXT))
+            setHintTextColor(ThemeManager.color(C.TEXT_SECONDARY))
             background = ContextCompat.getDrawable(this@SettingsActivity, R.drawable.input_bg)
             setPadding(dp(12), dp(10), dp(12), dp(10))
             inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_FLAG_MULTI_LINE
@@ -2054,7 +2061,7 @@ class SettingsActivity : AppCompatActivity() {
             text = "+ New Person"
             textSize = 13f
             isAllCaps = false
-            setTextColor(ContextCompat.getColor(this@SettingsActivity, R.color.login_card_bg))
+            setTextColor(ThemeManager.color(C.CARD_BG))
             background = ContextCompat.getDrawable(this@SettingsActivity, R.drawable.btn_accent)
             layoutParams = LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.WRAP_CONTENT, dp(38)
@@ -2096,13 +2103,13 @@ class SettingsActivity : AppCompatActivity() {
             }
             textCol.addView(TextView(this).apply {
                 text = fullName
-                setTextColor(ContextCompat.getColor(this@SettingsActivity, R.color.login_text))
+                setTextColor(ThemeManager.color(C.TEXT))
                 textSize = 14f
             })
             if (desc.isNotEmpty()) {
                 textCol.addView(TextView(this).apply {
                     text = desc
-                    setTextColor(ContextCompat.getColor(this@SettingsActivity, R.color.login_text_secondary))
+                    setTextColor(ThemeManager.color(C.TEXT_SECONDARY))
                     textSize = 11f
                 })
             }
@@ -2119,7 +2126,7 @@ class SettingsActivity : AppCompatActivity() {
             row.addView(Button(this).apply {
                 text = "✕"
                 textSize = 14f
-                setTextColor(ContextCompat.getColor(this@SettingsActivity, R.color.login_error))
+                setTextColor(ThemeManager.color(C.ERROR))
                 setBackgroundColor(Color.TRANSPARENT)
                 layoutParams = LinearLayout.LayoutParams(dp(36), dp(36))
                 setOnClickListener { confirmDeletePerson(firstName, lastName) }
@@ -2139,8 +2146,8 @@ class SettingsActivity : AppCompatActivity() {
             setText(origFirst)
             hint = "First name"
             textSize = 14f
-            setTextColor(ContextCompat.getColor(this@SettingsActivity, R.color.login_text))
-            setHintTextColor(ContextCompat.getColor(this@SettingsActivity, R.color.login_text_secondary))
+            setTextColor(ThemeManager.color(C.TEXT))
+            setHintTextColor(ThemeManager.color(C.TEXT_SECONDARY))
             background = ContextCompat.getDrawable(this@SettingsActivity, R.drawable.input_bg)
             setPadding(dp(12), dp(10), dp(12), dp(10))
             layoutParams = LinearLayout.LayoutParams(
@@ -2151,8 +2158,8 @@ class SettingsActivity : AppCompatActivity() {
             setText(origLast)
             hint = "Last name"
             textSize = 14f
-            setTextColor(ContextCompat.getColor(this@SettingsActivity, R.color.login_text))
-            setHintTextColor(ContextCompat.getColor(this@SettingsActivity, R.color.login_text_secondary))
+            setTextColor(ThemeManager.color(C.TEXT))
+            setHintTextColor(ThemeManager.color(C.TEXT_SECONDARY))
             background = ContextCompat.getDrawable(this@SettingsActivity, R.drawable.input_bg)
             setPadding(dp(12), dp(10), dp(12), dp(10))
             layoutParams = LinearLayout.LayoutParams(
@@ -2163,8 +2170,8 @@ class SettingsActivity : AppCompatActivity() {
             setText(currentDesc)
             hint = "Description"
             textSize = 14f
-            setTextColor(ContextCompat.getColor(this@SettingsActivity, R.color.login_text))
-            setHintTextColor(ContextCompat.getColor(this@SettingsActivity, R.color.login_text_secondary))
+            setTextColor(ThemeManager.color(C.TEXT))
+            setHintTextColor(ThemeManager.color(C.TEXT_SECONDARY))
             background = ContextCompat.getDrawable(this@SettingsActivity, R.drawable.input_bg)
             setPadding(dp(12), dp(10), dp(12), dp(10))
             inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_FLAG_MULTI_LINE
@@ -2226,7 +2233,7 @@ class SettingsActivity : AppCompatActivity() {
                 text = label
                 textSize = 13f
                 isAllCaps = false
-                setTextColor(ContextCompat.getColor(this@SettingsActivity, R.color.login_text))
+                setTextColor(ThemeManager.color(C.TEXT))
                 background = ContextCompat.getDrawable(this@SettingsActivity, R.drawable.btn_secondary)
                 layoutParams = LinearLayout.LayoutParams(
                     LinearLayout.LayoutParams.MATCH_PARENT, dp(40)
@@ -2248,7 +2255,7 @@ class SettingsActivity : AppCompatActivity() {
                 text = label
                 textSize = 13f
                 isAllCaps = false
-                setTextColor(ContextCompat.getColor(this@SettingsActivity, R.color.login_text))
+                setTextColor(ThemeManager.color(C.TEXT))
                 background = ContextCompat.getDrawable(this@SettingsActivity, R.drawable.btn_secondary)
                 layoutParams = LinearLayout.LayoutParams(
                     LinearLayout.LayoutParams.MATCH_PARENT, dp(40)
@@ -2273,7 +2280,7 @@ class SettingsActivity : AppCompatActivity() {
             text = "Define Mapping"
             textSize = 13f
             isAllCaps = false
-            setTextColor(ContextCompat.getColor(this@SettingsActivity, R.color.login_text))
+            setTextColor(ThemeManager.color(C.TEXT))
             background = ContextCompat.getDrawable(this@SettingsActivity, R.drawable.btn_secondary)
             layoutParams = LinearLayout.LayoutParams(0, dp(40), 1f).apply { marginEnd = dp(4) }
             setOnClickListener {
@@ -2285,7 +2292,7 @@ class SettingsActivity : AppCompatActivity() {
             text = "Start Import"
             textSize = 13f
             isAllCaps = false
-            setTextColor(ContextCompat.getColor(this@SettingsActivity, R.color.login_card_bg))
+            setTextColor(ThemeManager.color(C.CARD_BG))
             background = ContextCompat.getDrawable(this@SettingsActivity, R.drawable.btn_accent)
             layoutParams = LinearLayout.LayoutParams(0, dp(40), 1f)
             setOnClickListener { pickCsvFile() }
@@ -2311,8 +2318,8 @@ class SettingsActivity : AppCompatActivity() {
         val currentPwInput = EditText(this).apply {
             hint = "Current password"
             textSize = 14f
-            setTextColor(ContextCompat.getColor(this@SettingsActivity, R.color.login_text))
-            setHintTextColor(ContextCompat.getColor(this@SettingsActivity, R.color.login_text_secondary))
+            setTextColor(ThemeManager.color(C.TEXT))
+            setHintTextColor(ThemeManager.color(C.TEXT_SECONDARY))
             background = ContextCompat.getDrawable(this@SettingsActivity, R.drawable.input_bg)
             setPadding(dp(12), dp(10), dp(12), dp(10))
             inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_PASSWORD
@@ -2323,8 +2330,8 @@ class SettingsActivity : AppCompatActivity() {
         val newPwInput = EditText(this).apply {
             hint = "New password"
             textSize = 14f
-            setTextColor(ContextCompat.getColor(this@SettingsActivity, R.color.login_text))
-            setHintTextColor(ContextCompat.getColor(this@SettingsActivity, R.color.login_text_secondary))
+            setTextColor(ThemeManager.color(C.TEXT))
+            setHintTextColor(ThemeManager.color(C.TEXT_SECONDARY))
             background = ContextCompat.getDrawable(this@SettingsActivity, R.drawable.input_bg)
             setPadding(dp(12), dp(10), dp(12), dp(10))
             inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_PASSWORD
@@ -2335,8 +2342,8 @@ class SettingsActivity : AppCompatActivity() {
         val confirmPwInput = EditText(this).apply {
             hint = "Confirm new password"
             textSize = 14f
-            setTextColor(ContextCompat.getColor(this@SettingsActivity, R.color.login_text))
-            setHintTextColor(ContextCompat.getColor(this@SettingsActivity, R.color.login_text_secondary))
+            setTextColor(ThemeManager.color(C.TEXT))
+            setHintTextColor(ThemeManager.color(C.TEXT_SECONDARY))
             background = ContextCompat.getDrawable(this@SettingsActivity, R.drawable.input_bg)
             setPadding(dp(12), dp(10), dp(12), dp(10))
             inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_PASSWORD
@@ -2361,7 +2368,7 @@ class SettingsActivity : AppCompatActivity() {
             text = "Change Password"
             textSize = 14f
             isAllCaps = false
-            setTextColor(ContextCompat.getColor(this@SettingsActivity, R.color.login_card_bg))
+            setTextColor(ThemeManager.color(C.CARD_BG))
             background = ContextCompat.getDrawable(this@SettingsActivity, R.drawable.btn_accent)
             layoutParams = LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT, dp(42)
@@ -2373,26 +2380,26 @@ class SettingsActivity : AppCompatActivity() {
 
                 if (current.isEmpty() || newPw.isEmpty() || confirm.isEmpty()) {
                     pwMsg.text = "All fields are required"
-                    pwMsg.setTextColor(ContextCompat.getColor(this@SettingsActivity, R.color.login_error))
+                    pwMsg.setTextColor(ThemeManager.color(C.ERROR))
                     pwMsg.visibility = View.VISIBLE
                     return@setOnClickListener
                 }
                 if (newPw != confirm) {
                     pwMsg.text = "New passwords do not match"
-                    pwMsg.setTextColor(ContextCompat.getColor(this@SettingsActivity, R.color.login_error))
+                    pwMsg.setTextColor(ThemeManager.color(C.ERROR))
                     pwMsg.visibility = View.VISIBLE
                     return@setOnClickListener
                 }
                 if (!crypto.verifyPassword(current, journalId)) {
                     pwMsg.text = "Current password is incorrect"
-                    pwMsg.setTextColor(ContextCompat.getColor(this@SettingsActivity, R.color.login_error))
+                    pwMsg.setTextColor(ThemeManager.color(C.ERROR))
                     pwMsg.visibility = View.VISIBLE
                     return@setOnClickListener
                 }
 
                 crypto.setupPassword(newPw, journalId)
                 pwMsg.text = "Password changed successfully"
-                pwMsg.setTextColor(ContextCompat.getColor(this@SettingsActivity, R.color.login_accent))
+                pwMsg.setTextColor(ThemeManager.color(C.ACCENT))
                 pwMsg.visibility = View.VISIBLE
                 currentPwInput.text.clear()
                 newPwInput.text.clear()
@@ -2502,8 +2509,8 @@ class SettingsActivity : AppCompatActivity() {
         val searchInput = EditText(this).apply {
             hint = "Search city..."
             textSize = 14f
-            setTextColor(ContextCompat.getColor(this@SettingsActivity, R.color.login_text))
-            setHintTextColor(ContextCompat.getColor(this@SettingsActivity, R.color.login_text_secondary))
+            setTextColor(ThemeManager.color(C.TEXT))
+            setHintTextColor(ThemeManager.color(C.TEXT_SECONDARY))
             background = ContextCompat.getDrawable(this@SettingsActivity, R.drawable.search_bg)
             setPadding(dp(12), dp(8), dp(12), dp(8))
             layoutParams = LinearLayout.LayoutParams(0, dp(40), 1f).apply { marginEnd = dp(6) }
@@ -2546,7 +2553,7 @@ class SettingsActivity : AppCompatActivity() {
                                 textSize = 13f
                                 isAllCaps = false
                                 gravity = Gravity.START or Gravity.CENTER_VERTICAL
-                                setTextColor(ContextCompat.getColor(this@SettingsActivity, R.color.login_text))
+                                setTextColor(ThemeManager.color(C.TEXT))
                                 background = ContextCompat.getDrawable(this@SettingsActivity, R.drawable.entry_row_bg)
                                 layoutParams = LinearLayout.LayoutParams(
                                     LinearLayout.LayoutParams.MATCH_PARENT, dp(40)
@@ -2563,7 +2570,7 @@ class SettingsActivity : AppCompatActivity() {
                         if (results.length() == 0) {
                             resultsContainer.addView(TextView(this@SettingsActivity).apply {
                                 text = "No results found"
-                                setTextColor(ContextCompat.getColor(this@SettingsActivity, R.color.login_text_secondary))
+                                setTextColor(ThemeManager.color(C.TEXT_SECONDARY))
                                 textSize = 13f
                             })
                         }
@@ -2595,7 +2602,7 @@ class SettingsActivity : AppCompatActivity() {
     private fun handleCsvImport(uri: Uri) {
         val statusView = contentContainer.findViewWithTag<TextView>("csv_import_status") ?: return
         statusView.visibility = View.VISIBLE
-        statusView.setTextColor(ContextCompat.getColor(this, R.color.login_text_secondary))
+        statusView.setTextColor(ThemeManager.color(C.TEXT_SECONDARY))
         statusView.text = "Reading CSV file..."
 
         thread {
@@ -2604,7 +2611,7 @@ class SettingsActivity : AppCompatActivity() {
                 if (text.isBlank()) {
                     runOnUiThread {
                         statusView.text = "CSV file is empty"
-                        statusView.setTextColor(ContextCompat.getColor(this, R.color.login_error))
+                        statusView.setTextColor(ThemeManager.color(C.ERROR))
                     }
                     return@thread
                 }
@@ -2613,7 +2620,7 @@ class SettingsActivity : AppCompatActivity() {
                 if (allRows.size < 2) {
                     runOnUiThread {
                         statusView.text = "CSV must have a header row and at least one data row"
-                        statusView.setTextColor(ContextCompat.getColor(this, R.color.login_error))
+                        statusView.setTextColor(ThemeManager.color(C.ERROR))
                     }
                     return@thread
                 }
@@ -2624,6 +2631,7 @@ class SettingsActivity : AppCompatActivity() {
                 val settings = try { JSONObject(db.getSettings()) } catch (_: Exception) { JSONObject() }
                 val mapping = settings.optJSONArray("csvMapping") ?: JSONArray()
                 val separator = settings.optString("csvSeparator", ",")
+                val tagsSpaceSep = settings.optBoolean("csvTagsSpaceSep", false)
 
                 // Build column index map: csvFieldName -> (colIndex, entryField, misc)
                 val colMap = mutableListOf<Triple<Int, String, String>>()
@@ -2641,7 +2649,7 @@ class SettingsActivity : AppCompatActivity() {
                 if (colMap.isEmpty()) {
                     runOnUiThread {
                         statusView.text = "No CSV columns matched the mapping. Check column names."
-                        statusView.setTextColor(ContextCompat.getColor(this, R.color.login_error))
+                        statusView.setTextColor(ThemeManager.color(C.ERROR))
                     }
                     return@thread
                 }
@@ -2725,7 +2733,10 @@ class SettingsActivity : AppCompatActivity() {
                             "content" -> entry.put("content", value)
                             "richContent" -> entry.put("richContent", value)
                             "categories" -> entry.put("categories", JSONArray(value.split(separator).map { it.trim() }.filter { it.isNotEmpty() }))
-                            "tags" -> entry.put("tags", JSONArray(value.split(separator).map { it.trim() }.filter { it.isNotEmpty() }))
+                            "tags" -> {
+                                val tagSep = if (tagsSpaceSep) Regex("\\s+") else Regex(Regex.escape(separator))
+                                entry.put("tags", JSONArray(value.split(tagSep).map { it.trim() }.filter { it.isNotEmpty() }))
+                            }
                             "people" -> {
                                 val peopleArr = JSONArray()
                                 value.split(separator).map { it.trim() }.filter { it.isNotEmpty() }.forEach { name ->
@@ -2832,12 +2843,12 @@ class SettingsActivity : AppCompatActivity() {
 
                 runOnUiThread {
                     statusView.text = msg.toString()
-                    statusView.setTextColor(ContextCompat.getColor(this, R.color.login_accent))
+                    statusView.setTextColor(ThemeManager.color(C.ACCENT))
                 }
             } catch (e: Exception) {
                 runOnUiThread {
                     statusView.text = "Import failed: ${e.message}"
-                    statusView.setTextColor(ContextCompat.getColor(this, R.color.login_error))
+                    statusView.setTextColor(ThemeManager.color(C.ERROR))
                 }
             }
         }
@@ -2891,14 +2902,16 @@ class SettingsActivity : AppCompatActivity() {
         if (value.isEmpty()) return ""
         if (fmt.isEmpty()) return normalizeDate(value)
 
-        val pattern = fmt
-            .replace(Regex("[.*+?^\${}()|\\[\\]\\\\]")) { "\\${it.value}" }
-            .replace("YYYY", "(?<Y>\\d{4})")
-            .replace("YY", "(?<Y>\\d{2})")
-            .replace("MM", "(?<M>\\d{1,2})")
-            .replace("DD", "(?<D>\\d{1,2})")
-            .replace("M", "(?<M>\\d{1,2})")
-            .replace("D", "(?<D>\\d{1,2})")
+        val escaped = Regex("""[.*+?^${'$'}{}()\[\]\\|]""").replace(fmt) { "\\${it.value}" }
+        val pattern = Regex("YYYY|YY|MM|DD|M|D").replace(escaped) { mr ->
+            when (mr.value) {
+                "YYYY" -> """(?<Y>\d{4})"""
+                "YY" -> """(?<Y>\d{2})"""
+                "MM", "M" -> """(?<M>\d{1,2})"""
+                "DD", "D" -> """(?<D>\d{1,2})"""
+                else -> mr.value
+            }
+        }
 
         val match = Regex("^$pattern$").find(value)
         if (match != null) {
@@ -2915,13 +2928,15 @@ class SettingsActivity : AppCompatActivity() {
         if (value.isEmpty()) return ""
         if (fmt.isEmpty()) return normalizeTime(value)
 
-        val pattern = fmt
-            .replace(Regex("[.*+?^\${}()|\\[\\]\\\\]")) { "\\${it.value}" }
-            .replace("HH", "(?<H>\\d{1,2})")
-            .replace("H", "(?<H>\\d{1,2})")
-            .replace("mm", "(?<m>\\d{2})")
-            .replace("A", "(?<A>[AaPp][Mm])")
-            .replace("a", "(?<A>[AaPp][Mm])")
+        val escaped = Regex("""[.*+?^${'$'}{}()\[\]\\|]""").replace(fmt) { "\\${it.value}" }
+        val pattern = Regex("HH|H|mm|A|a").replace(escaped) { mr ->
+            when (mr.value) {
+                "HH", "H" -> """(?<H>\d{1,2})"""
+                "mm" -> """(?<m>\d{2})"""
+                "A", "a" -> "(?<A>[AaPp][Mm])"
+                else -> mr.value
+            }
+        }
 
         val match = Regex("^$pattern$").find(value.trim())
         if (match != null) {
@@ -3034,7 +3049,7 @@ class SettingsActivity : AppCompatActivity() {
     private fun buildSectionHeader(text: String) {
         contentContainer.addView(TextView(this).apply {
             this.text = text
-            setTextColor(ContextCompat.getColor(this@SettingsActivity, R.color.login_accent))
+            setTextColor(ThemeManager.color(C.ACCENT))
             textSize = 15f
             setTypeface(null, Typeface.BOLD)
             setPadding(dp(4), dp(8), dp(4), dp(8))
@@ -3048,7 +3063,7 @@ class SettingsActivity : AppCompatActivity() {
     private fun buildLabel(text: String) {
         contentContainer.addView(TextView(this).apply {
             this.text = text
-            setTextColor(ContextCompat.getColor(this@SettingsActivity, R.color.login_text))
+            setTextColor(ThemeManager.color(C.TEXT))
             textSize = 13f
             setTypeface(null, Typeface.BOLD)
             setPadding(dp(4), dp(4), dp(4), dp(4))
@@ -3072,11 +3087,11 @@ class SettingsActivity : AppCompatActivity() {
 
         val cb = CheckBox(this).apply {
             this.isChecked = checked
-            buttonTintList = ContextCompat.getColorStateList(this@SettingsActivity, R.color.login_accent)
+            buttonTintList = ThemeManager.colorStateList(C.ACCENT)
         }
         val tv = TextView(this).apply {
             text = label
-            setTextColor(ContextCompat.getColor(this@SettingsActivity, R.color.login_text))
+            setTextColor(ThemeManager.color(C.TEXT))
             textSize = 14f
             layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f).apply {
                 marginStart = dp(8)
@@ -3095,7 +3110,7 @@ class SettingsActivity : AppCompatActivity() {
     private fun buildSpinner(label: String, items: List<String>, selectedIdx: Int, onChange: (Int) -> Unit) {
         contentContainer.addView(TextView(this).apply {
             text = label
-            setTextColor(ContextCompat.getColor(this@SettingsActivity, R.color.login_text_secondary))
+            setTextColor(ThemeManager.color(C.TEXT_SECONDARY))
             textSize = 12f
             setPadding(dp(4), dp(4), dp(4), dp(2))
         })
@@ -3112,15 +3127,15 @@ class SettingsActivity : AppCompatActivity() {
         val adapter = object : ArrayAdapter<String>(this, android.R.layout.simple_spinner_item, items) {
             override fun getView(position: Int, convertView: View?, parent: ViewGroup): View {
                 return (super.getView(position, convertView, parent) as TextView).apply {
-                    setTextColor(ContextCompat.getColor(this@SettingsActivity, R.color.login_text))
+                    setTextColor(ThemeManager.color(C.TEXT))
                     textSize = 14f
                     setPadding(dp(4), dp(6), dp(4), dp(6))
                 }
             }
             override fun getDropDownView(position: Int, convertView: View?, parent: ViewGroup): View {
                 return (super.getDropDownView(position, convertView, parent) as TextView).apply {
-                    setTextColor(ContextCompat.getColor(this@SettingsActivity, R.color.login_text))
-                    setBackgroundColor(ContextCompat.getColor(this@SettingsActivity, R.color.login_input_bg))
+                    setTextColor(ThemeManager.color(C.TEXT))
+                    setBackgroundColor(ThemeManager.color(C.INPUT_BG))
                     textSize = 14f
                     setPadding(dp(12), dp(10), dp(12), dp(10))
                 }
@@ -3154,7 +3169,7 @@ class SettingsActivity : AppCompatActivity() {
 
         row.addView(TextView(this).apply {
             text = label
-            setTextColor(ContextCompat.getColor(this@SettingsActivity, R.color.login_text))
+            setTextColor(ThemeManager.color(C.TEXT))
             textSize = 14f
             layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
         })
@@ -3162,7 +3177,7 @@ class SettingsActivity : AppCompatActivity() {
         val input = EditText(this).apply {
             setText(currentValue.toString())
             textSize = 14f
-            setTextColor(ContextCompat.getColor(this@SettingsActivity, R.color.login_text))
+            setTextColor(ThemeManager.color(C.TEXT))
             background = ContextCompat.getDrawable(this@SettingsActivity, R.drawable.input_bg)
             setPadding(dp(12), dp(6), dp(12), dp(6))
             inputType = InputType.TYPE_CLASS_NUMBER
@@ -3202,13 +3217,13 @@ class SettingsActivity : AppCompatActivity() {
 
             addView(TextView(this@SettingsActivity).apply {
                 this.text = text
-                setTextColor(ContextCompat.getColor(this@SettingsActivity, R.color.login_text))
+                setTextColor(ThemeManager.color(C.TEXT))
                 textSize = 13f
             })
             addView(Button(this@SettingsActivity).apply {
                 this.text = "✕"
                 textSize = 12f
-                setTextColor(ContextCompat.getColor(this@SettingsActivity, R.color.login_text_secondary))
+                setTextColor(ThemeManager.color(C.TEXT_SECONDARY))
                 setBackgroundColor(Color.TRANSPARENT)
                 layoutParams = LinearLayout.LayoutParams(dp(28), dp(28)).apply { marginStart = dp(4) }
                 setOnClickListener { onRemove() }
@@ -3260,15 +3275,15 @@ class SettingsActivity : AppCompatActivity() {
         val adapter = object : ArrayAdapter<String>(this, android.R.layout.simple_spinner_item, items) {
             override fun getView(position: Int, convertView: View?, parent: ViewGroup): View {
                 return (super.getView(position, convertView, parent) as TextView).apply {
-                    setTextColor(ContextCompat.getColor(this@SettingsActivity, R.color.login_text))
+                    setTextColor(ThemeManager.color(C.TEXT))
                     textSize = 13f
                     setPadding(dp(4), dp(4), dp(4), dp(4))
                 }
             }
             override fun getDropDownView(position: Int, convertView: View?, parent: ViewGroup): View {
                 return (super.getDropDownView(position, convertView, parent) as TextView).apply {
-                    setTextColor(ContextCompat.getColor(this@SettingsActivity, R.color.login_text))
-                    setBackgroundColor(ContextCompat.getColor(this@SettingsActivity, R.color.login_input_bg))
+                    setTextColor(ThemeManager.color(C.TEXT))
+                    setBackgroundColor(ThemeManager.color(C.INPUT_BG))
                     textSize = 13f
                     setPadding(dp(12), dp(8), dp(12), dp(8))
                 }
@@ -3285,8 +3300,8 @@ class SettingsActivity : AppCompatActivity() {
             this.hint = hint
             setText(text)
             textSize = 14f
-            setTextColor(ContextCompat.getColor(this@SettingsActivity, R.color.login_text))
-            setHintTextColor(ContextCompat.getColor(this@SettingsActivity, R.color.login_text_secondary))
+            setTextColor(ThemeManager.color(C.TEXT))
+            setHintTextColor(ThemeManager.color(C.TEXT_SECONDARY))
             background = ContextCompat.getDrawable(this@SettingsActivity, R.drawable.input_bg)
             setPadding(dp(12), dp(10), dp(12), dp(10))
             layoutParams = linParams().apply { bottomMargin = dp(8) }
@@ -3304,7 +3319,7 @@ class SettingsActivity : AppCompatActivity() {
     private fun makeLabelView(text: String): TextView {
         return TextView(this).apply {
             this.text = text
-            setTextColor(ContextCompat.getColor(this@SettingsActivity, R.color.login_text_secondary))
+            setTextColor(ThemeManager.color(C.TEXT_SECONDARY))
             textSize = 12f
             setPadding(dp(4), dp(4), dp(4), dp(2))
         }
@@ -3330,6 +3345,7 @@ class SettingsActivity : AppCompatActivity() {
         "widgets" to "Widgets",
         "pinned" to "Pinned Entries",
         "recent" to "Recent Entries",
+        "today_history" to "Today in History",
         "tags" to "Top Tags",
         "categories" to "Top Categories",
         "places" to "Top Places",
@@ -3435,7 +3451,7 @@ class SettingsActivity : AppCompatActivity() {
 
         val cb = CheckBox(this).apply {
             isChecked = enabled
-            buttonTintList = ContextCompat.getColorStateList(this@SettingsActivity, R.color.login_accent)
+            buttonTintList = ThemeManager.colorStateList(C.ACCENT)
             setOnCheckedChangeListener { _, _ -> onAction("toggle") }
         }
         row.addView(cb)
@@ -3443,8 +3459,8 @@ class SettingsActivity : AppCompatActivity() {
         val label = TextView(this).apply {
             text = getComponentLabel(id)
             setTextColor(
-                if (enabled) ContextCompat.getColor(this@SettingsActivity, R.color.login_text)
-                else ContextCompat.getColor(this@SettingsActivity, R.color.login_text_secondary)
+                if (enabled) ThemeManager.color(C.TEXT)
+                else ThemeManager.color(C.TEXT_SECONDARY)
             )
             textSize = 14f
             layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f).apply {
@@ -3457,7 +3473,7 @@ class SettingsActivity : AppCompatActivity() {
         val btnUp = Button(this).apply {
             text = "▲"
             textSize = 14f
-            setTextColor(ContextCompat.getColor(this@SettingsActivity, R.color.login_text))
+            setTextColor(ThemeManager.color(C.TEXT))
             setBackgroundColor(Color.TRANSPARENT)
             setPadding(dp(8), dp(4), dp(8), dp(4))
             minWidth = 0
@@ -3471,7 +3487,7 @@ class SettingsActivity : AppCompatActivity() {
         val btnDown = Button(this).apply {
             text = "▼"
             textSize = 14f
-            setTextColor(ContextCompat.getColor(this@SettingsActivity, R.color.login_text))
+            setTextColor(ThemeManager.color(C.TEXT))
             setBackgroundColor(Color.TRANSPARENT)
             setPadding(dp(8), dp(4), dp(8), dp(4))
             minWidth = 0

@@ -30,6 +30,7 @@ import android.widget.*
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
+import com.journal.app.ThemeManager.C
 import org.json.JSONArray
 import org.json.JSONObject
 import java.io.ByteArrayOutputStream
@@ -42,6 +43,8 @@ import java.util.Date
 import java.util.Locale
 
 class EntryFormActivity : AppCompatActivity() {
+
+    private var lastThemeVersion = 0
 
     companion object {
         @JvmStatic var databaseService: DatabaseService? = null
@@ -125,6 +128,8 @@ class EntryFormActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_entry_form)
+        ThemeManager.applyToActivity(this)
+        lastThemeVersion = ThemeManager.themeVersion
 
         db = databaseService ?: run { finish(); return }
         bs = bootstrapService ?: run { finish(); return }
@@ -198,6 +203,11 @@ class EntryFormActivity : AppCompatActivity() {
     }
 
     private fun loadEntryData(entry: JSONObject) {
+        dateValue = entry.optString("date", "")
+        timeValue = entry.optString("time", "")
+        titleValue = entry.optString("title", "")
+        contentValue = entry.optString("content", "")
+
         // Categories
         val cats = entry.optJSONArray("categories") ?: JSONArray()
         selectedCategories = (0 until cats.length()).map { cats.getString(it) }.toMutableSet()
@@ -242,10 +252,10 @@ class EntryFormActivity : AppCompatActivity() {
             val btn = findViewById<Button>(id)
             if (key == tab) {
                 btn.background = ContextCompat.getDrawable(this, R.drawable.btn_accent)
-                btn.setTextColor(ContextCompat.getColor(this, R.color.login_card_bg))
+                btn.setTextColor(ThemeManager.color(C.CARD_BG))
             } else {
                 btn.background = ContextCompat.getDrawable(this, R.drawable.btn_secondary)
-                btn.setTextColor(ContextCompat.getColor(this, R.color.login_text))
+                btn.setTextColor(ThemeManager.color(C.TEXT))
             }
         }
 
@@ -348,8 +358,8 @@ class EntryFormActivity : AppCompatActivity() {
             textSize = 14f
             minLines = 5
             maxLines = 12
-            setTextColor(ContextCompat.getColor(this@EntryFormActivity, R.color.login_text))
-            setHintTextColor(ContextCompat.getColor(this@EntryFormActivity, R.color.login_text_secondary))
+            setTextColor(ThemeManager.color(C.TEXT))
+            setHintTextColor(ThemeManager.color(C.TEXT_SECONDARY))
             background = ContextCompat.getDrawable(this@EntryFormActivity, R.drawable.input_bg)
             setPadding(dp(12), dp(10), dp(12), dp(10))
             layoutParams = linParams().apply { bottomMargin = dp(8) }
@@ -367,8 +377,8 @@ class EntryFormActivity : AppCompatActivity() {
             textSize = 14f
             minLines = 4
             maxLines = 10
-            setTextColor(ContextCompat.getColor(this@EntryFormActivity, R.color.login_text))
-            setHintTextColor(ContextCompat.getColor(this@EntryFormActivity, R.color.login_text_secondary))
+            setTextColor(ThemeManager.color(C.TEXT))
+            setHintTextColor(ThemeManager.color(C.TEXT_SECONDARY))
             background = ContextCompat.getDrawable(this@EntryFormActivity, R.drawable.input_bg)
             setPadding(dp(12), dp(10), dp(12), dp(10))
             layoutParams = linParams().apply { bottomMargin = dp(8) }
@@ -412,7 +422,7 @@ class EntryFormActivity : AppCompatActivity() {
                 text = label
                 textSize = 13f
                 isAllCaps = false
-                setTextColor(ContextCompat.getColor(this@EntryFormActivity, R.color.login_text))
+                setTextColor(ThemeManager.color(C.TEXT))
                 setBackgroundColor(Color.TRANSPARENT)
                 layoutParams = LinearLayout.LayoutParams(dp(38), dp(34))
                 setPadding(0, 0, 0, 0)
@@ -504,7 +514,7 @@ class EntryFormActivity : AppCompatActivity() {
                     scaleType = ImageView.ScaleType.CENTER_CROP
                     val bg = GradientDrawable().apply {
                         cornerRadius = dp(6).toFloat()
-                        setColor(ContextCompat.getColor(this@EntryFormActivity, R.color.login_input_bg))
+                        setColor(ThemeManager.color(C.INPUT_BG))
                     }
                     background = bg
                     clipToOutline = true
@@ -638,8 +648,8 @@ class EntryFormActivity : AppCompatActivity() {
         val newCatInput = EditText(this).apply {
             hint = "New category"
             textSize = 13f
-            setTextColor(ContextCompat.getColor(this@EntryFormActivity, R.color.login_text))
-            setHintTextColor(ContextCompat.getColor(this@EntryFormActivity, R.color.login_text_secondary))
+            setTextColor(ThemeManager.color(C.TEXT))
+            setHintTextColor(ThemeManager.color(C.TEXT_SECONDARY))
             background = ContextCompat.getDrawable(this@EntryFormActivity, R.drawable.input_bg)
             setPadding(dp(10), dp(6), dp(10), dp(6))
             layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f).apply { marginEnd = dp(4) }
@@ -675,9 +685,9 @@ class EntryFormActivity : AppCompatActivity() {
             val cb = CheckBox(this).apply {
                 text = cat
                 isChecked = selectedCategories.contains(cat)
-                setTextColor(ContextCompat.getColor(this@EntryFormActivity, R.color.login_text))
+                setTextColor(ThemeManager.color(C.TEXT))
                 textSize = 14f
-                buttonTintList = ContextCompat.getColorStateList(this@EntryFormActivity, R.color.login_accent)
+                buttonTintList = ThemeManager.colorStateList(C.ACCENT)
                 setOnCheckedChangeListener { _, checked ->
                     if (checked) selectedCategories.add(cat) else selectedCategories.remove(cat)
                 }
@@ -689,7 +699,7 @@ class EntryFormActivity : AppCompatActivity() {
         if (allCategories.isEmpty()) {
             contentContainer.addView(TextView(this).apply {
                 text = "No categories yet."
-                setTextColor(ContextCompat.getColor(this@EntryFormActivity, R.color.login_text_secondary))
+                setTextColor(ThemeManager.color(C.TEXT_SECONDARY))
                 textSize = 12f
                 setPadding(dp(4), dp(4), dp(4), dp(4))
             })
@@ -715,21 +725,21 @@ class EntryFormActivity : AppCompatActivity() {
                     setPadding(dp(8), dp(4), dp(4), dp(4))
                     val bg = GradientDrawable().apply {
                         cornerRadius = dp(12).toFloat()
-                        setColor(ContextCompat.getColor(this@EntryFormActivity, R.color.login_input_bg))
+                        setColor(ThemeManager.color(C.INPUT_BG))
                     }
                     background = bg
                     layoutParams = LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT).apply { marginEnd = dp(4) }
                 }
                 chip.addView(TextView(this).apply {
                     text = tag
-                    setTextColor(ContextCompat.getColor(this@EntryFormActivity, R.color.login_text))
+                    setTextColor(ThemeManager.color(C.TEXT))
                     textSize = 13f
                 })
                 val removeTag = tag
                 chip.addView(Button(this).apply {
                     text = "✕"
                     textSize = 10f
-                    setTextColor(ContextCompat.getColor(this@EntryFormActivity, R.color.login_error))
+                    setTextColor(ThemeManager.color(C.ERROR))
                     setBackgroundColor(Color.TRANSPARENT)
                     layoutParams = LinearLayout.LayoutParams(dp(24), dp(24)).apply { marginStart = dp(2) }
                     setPadding(0, 0, 0, 0)
@@ -752,8 +762,8 @@ class EntryFormActivity : AppCompatActivity() {
         val tagInput = AutoCompleteTextView(this).apply {
             hint = "Type a tag and tap Add"
             textSize = 14f
-            setTextColor(ContextCompat.getColor(this@EntryFormActivity, R.color.login_text))
-            setHintTextColor(ContextCompat.getColor(this@EntryFormActivity, R.color.login_text_secondary))
+            setTextColor(ThemeManager.color(C.TEXT))
+            setHintTextColor(ThemeManager.color(C.TEXT_SECONDARY))
             background = ContextCompat.getDrawable(this@EntryFormActivity, R.drawable.input_bg)
             setPadding(dp(12), dp(8), dp(12), dp(8))
             layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f).apply { marginEnd = dp(4) }
@@ -798,21 +808,21 @@ class EntryFormActivity : AppCompatActivity() {
                     setPadding(dp(8), dp(4), dp(4), dp(4))
                     val bg = GradientDrawable().apply {
                         cornerRadius = dp(12).toFloat()
-                        setColor(ContextCompat.getColor(this@EntryFormActivity, R.color.login_input_bg))
+                        setColor(ThemeManager.color(C.INPUT_BG))
                     }
                     background = bg
                     layoutParams = LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT).apply { marginEnd = dp(4) }
                 }
                 chip.addView(TextView(this).apply {
                     text = "👤 $fullName"
-                    setTextColor(ContextCompat.getColor(this@EntryFormActivity, R.color.login_text))
+                    setTextColor(ThemeManager.color(C.TEXT))
                     textSize = 13f
                 })
                 val removePerson = person
                 chip.addView(Button(this).apply {
                     text = "✕"
                     textSize = 10f
-                    setTextColor(ContextCompat.getColor(this@EntryFormActivity, R.color.login_error))
+                    setTextColor(ThemeManager.color(C.ERROR))
                     setBackgroundColor(Color.TRANSPARENT)
                     layoutParams = LinearLayout.LayoutParams(dp(24), dp(24)).apply { marginStart = dp(2) }
                     setPadding(0, 0, 0, 0)
@@ -836,9 +846,9 @@ class EntryFormActivity : AppCompatActivity() {
             val cb = CheckBox(this).apply {
                 text = fullName
                 isChecked = isSelected
-                setTextColor(ContextCompat.getColor(this@EntryFormActivity, R.color.login_text))
+                setTextColor(ThemeManager.color(C.TEXT))
                 textSize = 14f
-                buttonTintList = ContextCompat.getColorStateList(this@EntryFormActivity, R.color.login_accent)
+                buttonTintList = ThemeManager.colorStateList(C.ACCENT)
                 setOnCheckedChangeListener { _, checked ->
                     if (checked) {
                         if (!currentPeople.any { it.optString("firstName") == first && it.optString("lastName") == last }) {
@@ -855,7 +865,7 @@ class EntryFormActivity : AppCompatActivity() {
         if (allPeople.isEmpty()) {
             contentContainer.addView(TextView(this).apply {
                 text = "No people yet. Add people in Settings > Edit Metadata."
-                setTextColor(ContextCompat.getColor(this@EntryFormActivity, R.color.login_text_secondary))
+                setTextColor(ThemeManager.color(C.TEXT_SECONDARY))
                 textSize = 12f
                 setPadding(dp(4), dp(4), dp(4), dp(4))
             })
@@ -871,8 +881,8 @@ class EntryFormActivity : AppCompatActivity() {
         val firstInput = EditText(this).apply {
             hint = "First"
             textSize = 13f
-            setTextColor(ContextCompat.getColor(this@EntryFormActivity, R.color.login_text))
-            setHintTextColor(ContextCompat.getColor(this@EntryFormActivity, R.color.login_text_secondary))
+            setTextColor(ThemeManager.color(C.TEXT))
+            setHintTextColor(ThemeManager.color(C.TEXT_SECONDARY))
             background = ContextCompat.getDrawable(this@EntryFormActivity, R.drawable.input_bg)
             setPadding(dp(8), dp(6), dp(8), dp(6))
             layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f).apply { marginEnd = dp(4) }
@@ -881,8 +891,8 @@ class EntryFormActivity : AppCompatActivity() {
         val lastInput = EditText(this).apply {
             hint = "Last"
             textSize = 13f
-            setTextColor(ContextCompat.getColor(this@EntryFormActivity, R.color.login_text))
-            setHintTextColor(ContextCompat.getColor(this@EntryFormActivity, R.color.login_text_secondary))
+            setTextColor(ThemeManager.color(C.TEXT))
+            setHintTextColor(ThemeManager.color(C.TEXT_SECONDARY))
             background = ContextCompat.getDrawable(this@EntryFormActivity, R.drawable.input_bg)
             setPadding(dp(8), dp(6), dp(8), dp(6))
             layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f).apply { marginEnd = dp(4) }
@@ -930,8 +940,8 @@ class EntryFormActivity : AppCompatActivity() {
                 hint = "Name (optional)"
                 setText(loc.optString("name", ""))
                 textSize = 13f
-                setTextColor(ContextCompat.getColor(this@EntryFormActivity, R.color.login_text))
-                setHintTextColor(ContextCompat.getColor(this@EntryFormActivity, R.color.login_text_secondary))
+                setTextColor(ThemeManager.color(C.TEXT))
+                setHintTextColor(ThemeManager.color(C.TEXT_SECONDARY))
                 setBackgroundColor(Color.TRANSPARENT)
                 layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
                 isSingleLine = true
@@ -946,7 +956,7 @@ class EntryFormActivity : AppCompatActivity() {
             topRow.addView(Button(this).apply {
                 text = "✕"
                 textSize = 12f
-                setTextColor(ContextCompat.getColor(this@EntryFormActivity, R.color.login_error))
+                setTextColor(ThemeManager.color(C.ERROR))
                 setBackgroundColor(Color.TRANSPARENT)
                 layoutParams = LinearLayout.LayoutParams(dp(32), dp(32))
                 setPadding(0, 0, 0, 0)
@@ -961,7 +971,7 @@ class EntryFormActivity : AppCompatActivity() {
             if (addr.isNotEmpty()) {
                 card.addView(TextView(this).apply {
                     text = addr
-                    setTextColor(ContextCompat.getColor(this@EntryFormActivity, R.color.login_text_secondary))
+                    setTextColor(ThemeManager.color(C.TEXT_SECONDARY))
                     textSize = 12f
                     setPadding(0, dp(2), 0, 0)
                 })
@@ -970,7 +980,7 @@ class EntryFormActivity : AppCompatActivity() {
             if (!loc.isNull("lat")) {
                 card.addView(TextView(this).apply {
                     text = "${loc.optDouble("lat")}, ${loc.optDouble("lng")}"
-                    setTextColor(ContextCompat.getColor(this@EntryFormActivity, R.color.login_accent))
+                    setTextColor(ThemeManager.color(C.ACCENT))
                     textSize = 11f
                     setPadding(0, dp(2), 0, 0)
                 })
@@ -988,8 +998,8 @@ class EntryFormActivity : AppCompatActivity() {
         locationSearchInput = EditText(this).apply {
             hint = "Name, address, or coordinates..."
             textSize = 13f
-            setTextColor(ContextCompat.getColor(this@EntryFormActivity, R.color.login_text))
-            setHintTextColor(ContextCompat.getColor(this@EntryFormActivity, R.color.login_text_secondary))
+            setTextColor(ThemeManager.color(C.TEXT))
+            setHintTextColor(ThemeManager.color(C.TEXT_SECONDARY))
             background = ContextCompat.getDrawable(this@EntryFormActivity, R.drawable.input_bg)
             setPadding(dp(10), dp(8), dp(10), dp(8))
             layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f).apply { marginEnd = dp(4) }
@@ -1162,8 +1172,8 @@ class EntryFormActivity : AppCompatActivity() {
             hint = "No weather data"
             setText(weatherText)
             textSize = 13f
-            setTextColor(ContextCompat.getColor(this@EntryFormActivity, R.color.login_text))
-            setHintTextColor(ContextCompat.getColor(this@EntryFormActivity, R.color.login_text_secondary))
+            setTextColor(ThemeManager.color(C.TEXT))
+            setHintTextColor(ThemeManager.color(C.TEXT_SECONDARY))
             background = ContextCompat.getDrawable(this@EntryFormActivity, R.drawable.input_bg)
             setPadding(dp(10), dp(8), dp(10), dp(8))
             layoutParams = linParams().apply { bottomMargin = dp(4) }
@@ -1437,7 +1447,7 @@ class EntryFormActivity : AppCompatActivity() {
     private fun addSectionHeader(text: String) {
         contentContainer.addView(TextView(this).apply {
             this.text = text
-            setTextColor(ContextCompat.getColor(this@EntryFormActivity, R.color.login_accent))
+            setTextColor(ThemeManager.color(C.ACCENT))
             textSize = 15f
             setTypeface(null, Typeface.BOLD)
             setPadding(dp(4), dp(4), dp(4), dp(8))
@@ -1447,7 +1457,7 @@ class EntryFormActivity : AppCompatActivity() {
     private fun addLabel(text: String) {
         contentContainer.addView(TextView(this).apply {
             this.text = text
-            setTextColor(ContextCompat.getColor(this@EntryFormActivity, R.color.login_text_secondary))
+            setTextColor(ThemeManager.color(C.TEXT_SECONDARY))
             textSize = 12f
             setPadding(dp(4), dp(4), dp(4), dp(2))
         })
@@ -1464,8 +1474,8 @@ class EntryFormActivity : AppCompatActivity() {
             this.hint = hint
             setText(text)
             textSize = 14f
-            setTextColor(ContextCompat.getColor(this@EntryFormActivity, R.color.login_text))
-            setHintTextColor(ContextCompat.getColor(this@EntryFormActivity, R.color.login_text_secondary))
+            setTextColor(ThemeManager.color(C.TEXT))
+            setHintTextColor(ThemeManager.color(C.TEXT_SECONDARY))
             background = ContextCompat.getDrawable(this@EntryFormActivity, R.drawable.input_bg)
             setPadding(dp(12), dp(10), dp(12), dp(10))
             layoutParams = linParams().apply { bottomMargin = dp(8) }
@@ -1479,7 +1489,7 @@ class EntryFormActivity : AppCompatActivity() {
             this.text = text
             textSize = 13f
             isAllCaps = false
-            setTextColor(ContextCompat.getColor(this@EntryFormActivity, R.color.login_card_bg))
+            setTextColor(ThemeManager.color(C.CARD_BG))
             background = ContextCompat.getDrawable(this@EntryFormActivity, R.drawable.btn_accent)
             setPadding(dp(12), dp(6), dp(12), dp(6))
             setOnClickListener { onClick() }
@@ -1491,7 +1501,7 @@ class EntryFormActivity : AppCompatActivity() {
             this.text = text
             textSize = 12f
             isAllCaps = false
-            setTextColor(ContextCompat.getColor(this@EntryFormActivity, R.color.login_text))
+            setTextColor(ThemeManager.color(C.TEXT))
             background = ContextCompat.getDrawable(this@EntryFormActivity, R.drawable.btn_secondary)
             setPadding(dp(10), dp(6), dp(10), dp(6))
             setOnClickListener { onClick() }
@@ -1516,4 +1526,13 @@ class EntryFormActivity : AppCompatActivity() {
             resources.displayMetrics
         ).toInt()
     }
+
+    override fun onResume() {
+        super.onResume()
+        if (lastThemeVersion != ThemeManager.themeVersion) {
+            finish()
+            return
+        }
+    }
+
 }

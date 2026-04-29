@@ -15,11 +15,14 @@ import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
+import com.journal.app.ThemeManager.C
 import org.json.JSONArray
 import org.json.JSONException
 import org.json.JSONObject
 
 class SearchActivity : AppCompatActivity() {
+
+    private var lastThemeVersion = 0
 
     companion object {
         @JvmStatic
@@ -32,6 +35,8 @@ class SearchActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_search)
+        ThemeManager.applyToActivity(this)
+        lastThemeVersion = ThemeManager.themeVersion
 
         val db = databaseService ?: ServiceProvider.databaseService
         if (db != null) {
@@ -141,7 +146,7 @@ class SearchActivity : AppCompatActivity() {
         val titleText = entry.optString("title", "")
         val title = TextView(this).apply {
             text = if (titleText.isEmpty()) "Untitled" else titleText
-            setTextColor(ContextCompat.getColor(this@SearchActivity, R.color.login_text))
+            setTextColor(ThemeManager.color(C.TEXT))
             setTextSize(TypedValue.COMPLEX_UNIT_SP, 14f)
             setTypeface(null, Typeface.BOLD)
             maxLines = 1
@@ -156,7 +161,7 @@ class SearchActivity : AppCompatActivity() {
         if (dateTime.isNotEmpty()) {
             val dateView = TextView(this).apply {
                 text = dateTime
-                setTextColor(ContextCompat.getColor(this@SearchActivity, R.color.login_accent))
+                setTextColor(ThemeManager.color(C.ACCENT))
                 setTextSize(TypedValue.COMPLEX_UNIT_SP, 11f)
                 setPadding(dp(8), 0, 0, 0)
             }
@@ -170,7 +175,7 @@ class SearchActivity : AppCompatActivity() {
         if (snippet.isNotEmpty()) {
             val sub = TextView(this).apply {
                 text = snippet
-                setTextColor(ContextCompat.getColor(this@SearchActivity, R.color.login_text_secondary))
+                setTextColor(ThemeManager.color(C.TEXT_SECONDARY))
                 setTextSize(TypedValue.COMPLEX_UNIT_SP, 12f)
                 maxLines = 3
                 ellipsize = TextUtils.TruncateAt.END
@@ -186,7 +191,7 @@ class SearchActivity : AppCompatActivity() {
         if (meta.isNotEmpty()) {
             val metaView = TextView(this).apply {
                 text = meta
-                setTextColor(ContextCompat.getColor(this@SearchActivity, R.color.login_text_secondary))
+                setTextColor(ThemeManager.color(C.TEXT_SECONDARY))
                 setTextSize(TypedValue.COMPLEX_UNIT_SP, 11f)
                 maxLines = 1
                 ellipsize = TextUtils.TruncateAt.END
@@ -253,4 +258,13 @@ class SearchActivity : AppCompatActivity() {
             resources.displayMetrics
         ).toInt()
     }
+
+    override fun onResume() {
+        super.onResume()
+        if (lastThemeVersion != ThemeManager.themeVersion) {
+            recreate()
+            return
+        }
+    }
+
 }

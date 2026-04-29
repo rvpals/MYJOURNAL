@@ -17,11 +17,14 @@ import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
+import com.journal.app.ThemeManager.C
 import org.json.JSONArray
 import org.json.JSONException
 import org.json.JSONObject
 
 class DashboardActivity : AppCompatActivity() {
+
+    private var lastThemeVersion = 0
 
     companion object {
         @JvmStatic var pendingData: String? = null
@@ -32,6 +35,8 @@ class DashboardActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_dashboard)
+        ThemeManager.applyToActivity(this)
+        lastThemeVersion = ThemeManager.themeVersion
 
         val json = pendingData
         pendingData = null
@@ -56,6 +61,7 @@ class DashboardActivity : AppCompatActivity() {
         populateWidgets()
         populatePinnedEntries()
         populateRecentEntries()
+        populateTodayInHistory()
         populateRankedPanel(R.id.tags_list, R.id.panel_tags, "topTags", "tags")
         populateRankedPanel(R.id.categories_list, R.id.panel_categories, "topCategories", "categories")
         populateRankedPanel(R.id.places_list, R.id.panel_places, "topPlaces", "placeName")
@@ -79,12 +85,13 @@ class DashboardActivity : AppCompatActivity() {
             "tags" to findViewById<View>(R.id.panel_tags),
             "categories" to findViewById<View>(R.id.panel_categories),
             "places" to findViewById<View>(R.id.panel_places),
-            "people" to findViewById<View>(R.id.panel_people)
+            "people" to findViewById<View>(R.id.panel_people),
+            "today_history" to findViewById<View>(R.id.panel_today_history)
         )
 
         val defaultOrder = listOf(
             "weather_streak", "stats", "quick_actions", "widgets",
-            "pinned", "recent", "tags", "categories", "places", "people"
+            "pinned", "recent", "today_history", "tags", "categories", "places", "people"
         )
 
         val components = mutableListOf<Pair<String, Boolean>>()
@@ -237,7 +244,7 @@ class DashboardActivity : AppCompatActivity() {
 
             val btn = Button(this).apply {
                 text = "$name ($count)"
-                setTextColor(ContextCompat.getColor(this@DashboardActivity, R.color.login_text))
+                setTextColor(ThemeManager.color(C.TEXT))
                 setTextSize(TypedValue.COMPLEX_UNIT_SP, 12f)
                 background = ContextCompat.getDrawable(this@DashboardActivity, R.drawable.btn_secondary)
                 isAllCaps = false
@@ -285,7 +292,7 @@ class DashboardActivity : AppCompatActivity() {
         } catch (_: Exception) { null }
 
         val textColor = if (parsedBg != null) getContrastColor(parsedBg) else
-            ContextCompat.getColor(this, R.color.login_text)
+            ThemeManager.color(C.TEXT)
 
         val card = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
@@ -296,8 +303,8 @@ class DashboardActivity : AppCompatActivity() {
                 if (parsedBg != null) {
                     setColor(parsedBg)
                 } else {
-                    setColor(ContextCompat.getColor(this@DashboardActivity, R.color.login_card_bg))
-                    setStroke(dp(1), ContextCompat.getColor(this@DashboardActivity, R.color.login_text_secondary))
+                    setColor(ThemeManager.color(C.CARD_BG))
+                    setStroke(dp(1), ThemeManager.color(C.TEXT_SECONDARY))
                 }
             }
             background = bg
@@ -451,7 +458,7 @@ class DashboardActivity : AppCompatActivity() {
         if (recent == null || recent.length() == 0) {
             val empty = TextView(this).apply {
                 text = "No entries yet. Tap \u270F\uFE0F to create your first entry!"
-                setTextColor(ContextCompat.getColor(this@DashboardActivity, R.color.login_text_secondary))
+                setTextColor(ThemeManager.color(C.TEXT_SECONDARY))
                 setTextSize(TypedValue.COMPLEX_UNIT_SP, 13f)
                 setPadding(dp(4), dp(8), dp(4), dp(8))
             }
@@ -462,6 +469,95 @@ class DashboardActivity : AppCompatActivity() {
         for (i in 0 until recent.length()) {
             val entry = recent.optJSONObject(i) ?: continue
             list.addView(createEntryRow(entry, showPreview = false))
+        }
+    }
+
+    // ========== Today in History ==========
+
+    private fun populateTodayInHistory() {
+        val items = dashboardData.optJSONArray("todayInHistory")
+        val panel = findViewById<LinearLayout>(R.id.panel_today_history)
+        val list = findViewById<LinearLayout>(R.id.today_history_list)
+
+        if (items == null || items.length() == 0) {
+            panel.visibility = View.GONE
+            return
+        }
+
+        panel.visibility = View.VISIBLE
+        list.removeAllViews()
+
+        for (i in 0 until items.length()) {
+            val item = items.optJSONObject(i) ?: continue
+            val title = item.optString("title", "Untitled")
+            val preview = item.optString("contentPreview", "")
+            val yearsAgo = item.optInt("yearsAgo", 0)
+            val entryId = item.optString("id", "")
+
+            val row = LinearLayout(this).apply {
+                orientation = LinearLayout.VERTICAL
+                setPadding(dp(10), dp(10), dp(10), dp(10))
+                background = ContextCompat.getDrawable(this@DashboardActivity, R.drawable.entry_row_bg)
+                isClickable = true
+                isFocusable = true
+                layoutParams = LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.MATCH_PARENT,
+                    LinearLayout.LayoutParams.WRAP_CONTENT
+                ).apply { bottomMargin = dp(4) }
+            }
+
+            val topRow = LinearLayout(this).apply {
+                orientation = LinearLayout.HORIZONTAL
+                gravity = Gravity.CENTER_VERTICAL
+            }
+
+            topRow.addView(TextView(this).apply {
+                text = title.ifEmpty { "Untitled" }
+                setTextColor(ThemeManager.color(C.TEXT))
+                setTextSize(TypedValue.COMPLEX_UNIT_SP, 14f)
+                setTypeface(null, Typeface.BOLD)
+                maxLines = 1
+                ellipsize = TextUtils.TruncateAt.END
+                layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
+            })
+
+            val badge = TextView(this).apply {
+                text = "$yearsAgo year${if (yearsAgo != 1) "s" else ""} ago"
+                setTextSize(TypedValue.COMPLEX_UNIT_SP, 11f)
+                setTextColor(Color.WHITE)
+                setTypeface(null, Typeface.BOLD)
+                gravity = Gravity.CENTER
+                val bg = GradientDrawable().apply {
+                    cornerRadius = dp(8).toFloat()
+                    setColor(ThemeManager.color(C.ACCENT))
+                }
+                background = bg
+                setPadding(dp(8), dp(3), dp(8), dp(3))
+            }
+            topRow.addView(badge)
+            row.addView(topRow)
+
+            if (preview.isNotEmpty()) {
+                row.addView(TextView(this).apply {
+                    text = preview
+                    setTextColor(ThemeManager.color(C.TEXT_SECONDARY))
+                    setTextSize(TypedValue.COMPLEX_UNIT_SP, 12f)
+                    maxLines = 1
+                    ellipsize = TextUtils.TruncateAt.END
+                    setPadding(0, dp(2), 0, 0)
+                })
+            }
+
+            row.setOnClickListener {
+                if (entryId.isNotEmpty()) {
+                    EntryViewerActivity.pendingEntryId = entryId
+                    EntryViewerActivity.databaseService = ServiceProvider.databaseService
+                    EntryViewerActivity.bootstrapService = ServiceProvider.bootstrapService
+                    startActivity(Intent(this, EntryViewerActivity::class.java))
+                }
+            }
+
+            list.addView(row)
         }
     }
 
@@ -482,7 +578,7 @@ class DashboardActivity : AppCompatActivity() {
         val titleText = entry.optString("title", "")
         val title = TextView(this).apply {
             text = if (titleText.isEmpty()) "Untitled" else titleText
-            setTextColor(ContextCompat.getColor(this@DashboardActivity, R.color.login_text))
+            setTextColor(ThemeManager.color(C.TEXT))
             setTextSize(TypedValue.COMPLEX_UNIT_SP, 14f)
             setTypeface(null, Typeface.BOLD)
             maxLines = 1
@@ -495,7 +591,7 @@ class DashboardActivity : AppCompatActivity() {
         if (date.isNotEmpty()) {
             val dateText = TextView(this).apply {
                 text = date
-                setTextColor(ContextCompat.getColor(this@DashboardActivity, R.color.login_accent))
+                setTextColor(ThemeManager.color(C.ACCENT))
                 setTextSize(TypedValue.COMPLEX_UNIT_SP, 11f)
                 setPadding(dp(8), 0, 0, 0)
             }
@@ -515,7 +611,7 @@ class DashboardActivity : AppCompatActivity() {
         if (subtitle.isNotEmpty()) {
             val sub = TextView(this).apply {
                 text = subtitle
-                setTextColor(ContextCompat.getColor(this@DashboardActivity, R.color.login_text_secondary))
+                setTextColor(ThemeManager.color(C.TEXT_SECONDARY))
                 setTextSize(TypedValue.COMPLEX_UNIT_SP, 12f)
                 maxLines = if (showPreview) 3 else 1
                 ellipsize = TextUtils.TruncateAt.END
@@ -569,7 +665,7 @@ class DashboardActivity : AppCompatActivity() {
         if (items.length() > 10) {
             val more = TextView(this).apply {
                 text = "+${items.length() - 10} more"
-                setTextColor(ContextCompat.getColor(this@DashboardActivity, R.color.login_accent))
+                setTextColor(ThemeManager.color(C.ACCENT))
                 setTextSize(TypedValue.COMPLEX_UNIT_SP, 12f)
                 setPadding(dp(6), dp(6), dp(6), dp(2))
                 setOnClickListener { openFilteredEntryList(null, null) }
@@ -589,7 +685,7 @@ class DashboardActivity : AppCompatActivity() {
             isFocusable = true
         }
 
-        val accentColor = ContextCompat.getColor(this@DashboardActivity, R.color.login_accent)
+        val accentColor = ThemeManager.color(C.ACCENT)
         val rankBadge = TextView(this).apply {
             text = rank.toString()
             setTextSize(TypedValue.COMPLEX_UNIT_SP, 12f)
@@ -626,10 +722,10 @@ class DashboardActivity : AppCompatActivity() {
                 try {
                     Color.parseColor(color)
                 } catch (_: Exception) {
-                    ContextCompat.getColor(this@DashboardActivity, R.color.login_text)
+                    ThemeManager.color(C.TEXT)
                 }
             } else {
-                ContextCompat.getColor(this@DashboardActivity, R.color.login_text)
+                ThemeManager.color(C.TEXT)
             }
             setTextColor(textColor)
         }
@@ -751,4 +847,21 @@ class DashboardActivity : AppCompatActivity() {
             resources.displayMetrics
         ).toInt()
     }
+
+    override fun onResume() {
+        super.onResume()
+        if (lastThemeVersion != ThemeManager.themeVersion) {
+            val db = ServiceProvider.databaseService ?: return
+            val bs = ServiceProvider.bootstrapService ?: return
+            Thread {
+                val json = DashboardDataBuilder.build(db, bs)
+                runOnUiThread {
+                    pendingData = json
+                    recreate()
+                }
+            }.start()
+            return
+        }
+    }
+
 }

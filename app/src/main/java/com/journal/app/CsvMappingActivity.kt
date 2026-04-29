@@ -9,10 +9,13 @@ import android.view.ViewGroup
 import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
+import com.journal.app.ThemeManager.C
 import org.json.JSONArray
 import org.json.JSONObject
 
 class CsvMappingActivity : AppCompatActivity() {
+
+    private var lastThemeVersion = 0
 
     companion object {
         @JvmStatic var databaseService: DatabaseService? = null
@@ -47,6 +50,8 @@ class CsvMappingActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_csv_mapping)
+        ThemeManager.applyToActivity(this)
+        lastThemeVersion = ThemeManager.themeVersion
 
         val dbRef = databaseService
         if (dbRef == null) { finish(); return }
@@ -122,7 +127,7 @@ class CsvMappingActivity : AppCompatActivity() {
         // Description
         contentContainer.addView(TextView(this).apply {
             text = "Define how CSV columns map to journal entry fields.\nUse \"Misc\" for date/time formats."
-            setTextColor(ContextCompat.getColor(this@CsvMappingActivity, R.color.login_text_secondary))
+            setTextColor(ThemeManager.color(C.TEXT_SECONDARY))
             textSize = 12f
             setPadding(dp(4), dp(4), dp(4), dp(12))
         })
@@ -138,7 +143,7 @@ class CsvMappingActivity : AppCompatActivity() {
         for ((label, weight) in listOf("CSV Field" to 1.2f, "Entry Field" to 1.5f, "Misc" to 1f)) {
             headerRow.addView(TextView(this).apply {
                 text = label
-                setTextColor(ContextCompat.getColor(this@CsvMappingActivity, R.color.login_accent))
+                setTextColor(ThemeManager.color(C.ACCENT))
                 textSize = 12f
                 setTypeface(null, Typeface.BOLD)
                 layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, weight).apply {
@@ -150,7 +155,7 @@ class CsvMappingActivity : AppCompatActivity() {
 
         // Divider
         contentContainer.addView(View(this).apply {
-            setBackgroundColor(ContextCompat.getColor(this@CsvMappingActivity, R.color.login_text_secondary))
+            setBackgroundColor(ThemeManager.color(C.TEXT_SECONDARY))
             layoutParams = LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT, dp(1)
             ).apply { bottomMargin = dp(6) }
@@ -171,7 +176,7 @@ class CsvMappingActivity : AppCompatActivity() {
             text = "+ Add Row"
             textSize = 13f
             isAllCaps = false
-            setTextColor(ContextCompat.getColor(this@CsvMappingActivity, R.color.login_accent))
+            setTextColor(ThemeManager.color(C.ACCENT))
             background = ContextCompat.getDrawable(this@CsvMappingActivity, R.drawable.btn_secondary)
             layoutParams = LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.WRAP_CONTENT, dp(36)
@@ -187,7 +192,7 @@ class CsvMappingActivity : AppCompatActivity() {
         })
         contentContainer.addView(TextView(this).apply {
             text = "Import Options"
-            setTextColor(ContextCompat.getColor(this@CsvMappingActivity, R.color.login_accent))
+            setTextColor(ThemeManager.color(C.ACCENT))
             textSize = 14f
             setTypeface(null, Typeface.BOLD)
             setPadding(dp(4), dp(4), dp(4), dp(8))
@@ -204,7 +209,7 @@ class CsvMappingActivity : AppCompatActivity() {
         }
         sepRow.addView(TextView(this).apply {
             text = "Separator (categories, tags)"
-            setTextColor(ContextCompat.getColor(this@CsvMappingActivity, R.color.login_text))
+            setTextColor(ThemeManager.color(C.TEXT))
             textSize = 13f
             layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
         })
@@ -212,13 +217,38 @@ class CsvMappingActivity : AppCompatActivity() {
             tag = "csv_separator"
             setText(settings.optString("csvSeparator", ","))
             textSize = 14f
-            setTextColor(ContextCompat.getColor(this@CsvMappingActivity, R.color.login_text))
+            setTextColor(ThemeManager.color(C.TEXT))
             background = ContextCompat.getDrawable(this@CsvMappingActivity, R.drawable.input_bg)
             setPadding(dp(10), dp(6), dp(10), dp(6))
             layoutParams = LinearLayout.LayoutParams(dp(80), LinearLayout.LayoutParams.WRAP_CONTENT)
         }
         sepRow.addView(sepInput)
         contentContainer.addView(sepRow)
+
+        // Tags space separator checkbox
+        val tagsSpaceRow = LinearLayout(this).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = Gravity.CENTER_VERTICAL
+            layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT
+            ).apply { bottomMargin = dp(6) }
+        }
+        val tagsSpaceCb = CheckBox(this).apply {
+            tag = "csv_tags_space_sep"
+            isChecked = settings.optBoolean("csvTagsSpaceSep", false)
+            buttonTintList = ThemeManager.colorStateList(C.ACCENT)
+        }
+        tagsSpaceRow.addView(tagsSpaceCb)
+        tagsSpaceRow.addView(TextView(this).apply {
+            text = "Use space to separate tags"
+            setTextColor(ThemeManager.color(C.TEXT))
+            textSize = 13f
+            layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f).apply {
+                marginStart = dp(8)
+            }
+            setOnClickListener { tagsSpaceCb.isChecked = !tagsSpaceCb.isChecked }
+        })
+        contentContainer.addView(tagsSpaceRow)
     }
 
     private fun addMappingRow(csvField: String, entryField: String, misc: String) {
@@ -234,7 +264,7 @@ class CsvMappingActivity : AppCompatActivity() {
         val csvInput = EditText(this).apply {
             setText(csvField)
             textSize = 13f
-            setTextColor(ContextCompat.getColor(this@CsvMappingActivity, R.color.login_text))
+            setTextColor(ThemeManager.color(C.TEXT))
             background = ContextCompat.getDrawable(this@CsvMappingActivity, R.drawable.input_bg)
             setPadding(dp(8), dp(6), dp(8), dp(6))
             layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1.2f).apply {
@@ -255,15 +285,15 @@ class CsvMappingActivity : AppCompatActivity() {
         val adapter = object : ArrayAdapter<String>(this, android.R.layout.simple_spinner_item, labels) {
             override fun getView(position: Int, convertView: View?, parent: ViewGroup): View {
                 return (super.getView(position, convertView, parent) as TextView).apply {
-                    setTextColor(ContextCompat.getColor(this@CsvMappingActivity, R.color.login_text))
+                    setTextColor(ThemeManager.color(C.TEXT))
                     textSize = 12f
                     setPadding(dp(4), dp(4), dp(4), dp(4))
                 }
             }
             override fun getDropDownView(position: Int, convertView: View?, parent: ViewGroup): View {
                 return (super.getDropDownView(position, convertView, parent) as TextView).apply {
-                    setTextColor(ContextCompat.getColor(this@CsvMappingActivity, R.color.login_text))
-                    setBackgroundColor(ContextCompat.getColor(this@CsvMappingActivity, R.color.login_input_bg))
+                    setTextColor(ThemeManager.color(C.TEXT))
+                    setBackgroundColor(ThemeManager.color(C.INPUT_BG))
                     textSize = 13f
                     setPadding(dp(12), dp(8), dp(12), dp(8))
                 }
@@ -282,8 +312,8 @@ class CsvMappingActivity : AppCompatActivity() {
             setText(misc)
             hint = "format"
             textSize = 12f
-            setTextColor(ContextCompat.getColor(this@CsvMappingActivity, R.color.login_text))
-            setHintTextColor(ContextCompat.getColor(this@CsvMappingActivity, R.color.login_text_secondary))
+            setTextColor(ThemeManager.color(C.TEXT))
+            setHintTextColor(ThemeManager.color(C.TEXT_SECONDARY))
             background = ContextCompat.getDrawable(this@CsvMappingActivity, R.drawable.input_bg)
             setPadding(dp(8), dp(6), dp(8), dp(6))
             layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f).apply {
@@ -297,7 +327,7 @@ class CsvMappingActivity : AppCompatActivity() {
             text = "✕"
             textSize = 12f
             isAllCaps = false
-            setTextColor(ContextCompat.getColor(this@CsvMappingActivity, R.color.login_text_secondary))
+            setTextColor(ThemeManager.color(C.TEXT_SECONDARY))
             background = ContextCompat.getDrawable(this@CsvMappingActivity, R.drawable.btn_secondary)
             layoutParams = LinearLayout.LayoutParams(dp(32), dp(32))
             setOnClickListener {
@@ -331,8 +361,8 @@ class CsvMappingActivity : AppCompatActivity() {
             setText(csvField)
             hint = "Column name"
             textSize = 13f
-            setTextColor(ContextCompat.getColor(this@CsvMappingActivity, R.color.login_text))
-            setHintTextColor(ContextCompat.getColor(this@CsvMappingActivity, R.color.login_text_secondary))
+            setTextColor(ThemeManager.color(C.TEXT))
+            setHintTextColor(ThemeManager.color(C.TEXT_SECONDARY))
             background = ContextCompat.getDrawable(this@CsvMappingActivity, R.drawable.input_bg)
             setPadding(dp(8), dp(6), dp(8), dp(6))
             layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1.2f).apply {
@@ -352,15 +382,15 @@ class CsvMappingActivity : AppCompatActivity() {
         val adapter = object : ArrayAdapter<String>(this, android.R.layout.simple_spinner_item, labels) {
             override fun getView(position: Int, convertView: View?, parent: ViewGroup): View {
                 return (super.getView(position, convertView, parent) as TextView).apply {
-                    setTextColor(ContextCompat.getColor(this@CsvMappingActivity, R.color.login_text))
+                    setTextColor(ThemeManager.color(C.TEXT))
                     textSize = 12f
                     setPadding(dp(4), dp(4), dp(4), dp(4))
                 }
             }
             override fun getDropDownView(position: Int, convertView: View?, parent: ViewGroup): View {
                 return (super.getDropDownView(position, convertView, parent) as TextView).apply {
-                    setTextColor(ContextCompat.getColor(this@CsvMappingActivity, R.color.login_text))
-                    setBackgroundColor(ContextCompat.getColor(this@CsvMappingActivity, R.color.login_input_bg))
+                    setTextColor(ThemeManager.color(C.TEXT))
+                    setBackgroundColor(ThemeManager.color(C.INPUT_BG))
                     textSize = 13f
                     setPadding(dp(12), dp(8), dp(12), dp(8))
                 }
@@ -376,8 +406,8 @@ class CsvMappingActivity : AppCompatActivity() {
             setText(misc)
             hint = "format"
             textSize = 12f
-            setTextColor(ContextCompat.getColor(this@CsvMappingActivity, R.color.login_text))
-            setHintTextColor(ContextCompat.getColor(this@CsvMappingActivity, R.color.login_text_secondary))
+            setTextColor(ThemeManager.color(C.TEXT))
+            setHintTextColor(ThemeManager.color(C.TEXT_SECONDARY))
             background = ContextCompat.getDrawable(this@CsvMappingActivity, R.drawable.input_bg)
             setPadding(dp(8), dp(6), dp(8), dp(6))
             layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f).apply {
@@ -390,7 +420,7 @@ class CsvMappingActivity : AppCompatActivity() {
             text = "✕"
             textSize = 12f
             isAllCaps = false
-            setTextColor(ContextCompat.getColor(this@CsvMappingActivity, R.color.login_text_secondary))
+            setTextColor(ThemeManager.color(C.TEXT_SECONDARY))
             background = ContextCompat.getDrawable(this@CsvMappingActivity, R.drawable.btn_secondary)
             layoutParams = LinearLayout.LayoutParams(dp(32), dp(32))
             setOnClickListener {
@@ -429,9 +459,13 @@ class CsvMappingActivity : AppCompatActivity() {
         val sepInput = contentContainer.findViewWithTag<EditText>("csv_separator")
         val separator = sepInput?.text?.toString()?.trim() ?: ","
 
+        val tagsSpaceCb = contentContainer.findViewWithTag<CheckBox>("csv_tags_space_sep")
+        val tagsSpaceSep = tagsSpaceCb?.isChecked ?: false
+
         val settingsUpdate = JSONObject().apply {
             put("csvMapping", arr)
             put("csvSeparator", separator)
+            put("csvTagsSpaceSep", tagsSpaceSep)
         }
         db.setSettings(settingsUpdate.toString())
 
@@ -445,4 +479,13 @@ class CsvMappingActivity : AppCompatActivity() {
             resources.displayMetrics
         ).toInt()
     }
+
+    override fun onResume() {
+        super.onResume()
+        if (lastThemeVersion != ThemeManager.themeVersion) {
+            recreate()
+            return
+        }
+    }
+
 }

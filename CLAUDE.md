@@ -20,7 +20,7 @@ MYJOURNAL/
 │   ├── build.gradle                # Android build config (compileSdk 34, minSdk 24)
 │   ├── src/main/
 │   │   ├── AndroidManifest.xml     # 14 activities, permissions (internet, location, camera, biometric)
-│   │   ├── java/com/journal/app/    # All Kotlin sources (20 files)
+│   │   ├── java/com/journal/app/    # All Kotlin sources (21 files)
 │   │   │   ├── LoginActivity.kt         # Entry point: journal select, password, biometric login
 │   │   │   ├── DashboardActivity.kt     # Native dashboard (stats, ranked lists, pinned/recent, widgets)
 │   │   │   ├── CalendarActivity.kt      # Native calendar view
@@ -36,11 +36,12 @@ MYJOURNAL/
 │   │   │   ├── CustomViewEditorActivity.kt # Native custom view editor (conditions, groupBy, orderBy, display)
 │   │   │   ├── CsvMappingActivity.kt    # Native CSV import mapping screen
 │   │   │   ├── ServiceProvider.kt       # Singleton service holder (replaces old MainActivity.instance)
-│   │   │   ├── DashboardDataBuilder.kt  # Computes dashboard JSON from DatabaseService
+│   │   │   ├── DashboardDataBuilder.kt  # Computes dashboard JSON from DatabaseService (stats, streaks, ranked lists, widgets, today in history)
 │   │   │   ├── BootstrapService.kt      # SharedPreferences wrapper
 │   │   │   ├── CryptoService.kt         # AES-256-GCM + PBKDF2
 │   │   │   ├── WeatherService.kt        # Open-Meteo HTTP client
 │   │   │   └── DatabaseService.kt       # SQLCipher encrypted DB
+│   │   │   ├── ThemeManager.kt          # Runtime theme system (12 themes, view tree recoloring)
 │   │   ├── res/
 │   │   │   ├── drawable/           # Button ripples, input/card/search/stat backgrounds, 3D tab/search drawables (25+ XML files)
 │   │   │   ├── layout/            # 14 activity layouts + 2 spinner item layouts
@@ -131,8 +132,9 @@ Output: `app/build/outputs/apk/debug/app-debug.apk`
 1. **LoginActivity** — User selects/creates journal, enters password, optional biometric
 2. `ServiceProvider.init(context)` — Creates all services
 3. `DatabaseService.open(password, journalId)` — Opens/creates encrypted SQLCipher DB
-4. `DashboardDataBuilder.build(db, bs)` — Computes dashboard JSON (stats, streaks, ranked lists, widgets, pinned/recent entries)
-5. **DashboardActivity** — Displays dashboard, launches other activities directly
+4. `ThemeManager.init()` — Loads active theme from DB settings
+5. `DashboardDataBuilder.build(db, bs)` — Computes dashboard JSON (stats, streaks, ranked lists, widgets, today in history, pinned/recent entries)
+6. **DashboardActivity** — Displays dashboard, launches other activities directly
 
 No WebView intermediary. All navigation between activities uses standard Android `startActivity()`.
 
@@ -140,15 +142,18 @@ No WebView intermediary. All navigation between activities uses standard Android
 
 Light, Dark, Ocean, Midnight, Forest, Amethyst, Aurora, Lavender, Frost, Navy, Sunflower, Meadow — theme selection stored in settings DB.
 
+`ThemeManager.kt` singleton provides runtime theme colors. All activities call `ThemeManager.applyToActivity(this)` in `onCreate` to recolor XML-set backgrounds/text. Activities detect theme changes via `themeVersion` counter in `onResume`.
+
 ## Key Conventions
 
 - **Fully native** — all 14 screens are Kotlin activities, no WebView
 - **ServiceProvider singleton** — all activities access services via `ServiceProvider.xxxService`
+- **ThemeManager singleton** — runtime theme colors via `ThemeManager.color(C.*)`, replaces static `R.color.login_*` resources
 - **DashboardDataBuilder** — computes dashboard JSON natively from DatabaseService
 - **Encryption everywhere** — SQLCipher auto-encrypts DB files
 - **Bootstrap store** — all key-value storage uses BootstrapService (SharedPreferences wrapper)
 - **Large data to activities** — SearchActivity, CalendarActivity use static `companion object` holders for entry data (avoids TransactionTooLargeException)
-- **Dashboard component settings** — Settings > Dashboard tab allows toggling/reordering 10 components; stored in BootstrapService as `dashboard_components` JSON
+- **Dashboard component settings** — Settings > Dashboard tab allows toggling/reordering 11 components; stored in BootstrapService as `dashboard_components` JSON
 - **DashboardActivity navigation** — launches other activities directly via `startActivity()`, stays in back stack
 - **Rich content rendering** — `Html.fromHtml()` + `TextView` (no WebView)
 - **File exports** — `ServiceProvider.saveFileToDownloads()` via MediaStore scoped storage (API 29+)

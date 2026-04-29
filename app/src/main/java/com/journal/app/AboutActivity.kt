@@ -8,9 +8,13 @@ import androidx.appcompat.app.AppCompatActivity
 
 class AboutActivity : AppCompatActivity() {
 
+    private var lastThemeVersion = 0
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_about)
+        ThemeManager.applyToActivity(this)
+        lastThemeVersion = ThemeManager.themeVersion
 
         val appName = getString(R.string.app_info_name)
         val appVersion = getString(R.string.app_info_version)
@@ -52,4 +56,13 @@ class AboutActivity : AppCompatActivity() {
 
         findViewById<android.view.View>(R.id.about_back_btn).setOnClickListener { finish() }
     }
+
+    override fun onResume() {
+        super.onResume()
+        if (lastThemeVersion != ThemeManager.themeVersion) {
+            recreate()
+            return
+        }
+    }
+
 }

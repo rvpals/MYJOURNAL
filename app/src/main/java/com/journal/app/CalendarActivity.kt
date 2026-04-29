@@ -12,11 +12,14 @@ import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
+import com.journal.app.ThemeManager.C
 import org.json.JSONArray
 import org.json.JSONException
 import java.util.Calendar
 
 class CalendarActivity : AppCompatActivity() {
+
+    private var lastThemeVersion = 0
 
     companion object {
         @JvmStatic
@@ -38,6 +41,8 @@ class CalendarActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_calendar)
+        ThemeManager.applyToActivity(this)
+        lastThemeVersion = ThemeManager.themeVersion
 
         val json = pendingData
         pendingData = null
@@ -87,7 +92,7 @@ class CalendarActivity : AppCompatActivity() {
         for (label in dayLabels) {
             val tv = TextView(this).apply {
                 text = label
-                setTextColor(ContextCompat.getColor(this@CalendarActivity, R.color.login_text_secondary))
+                setTextColor(ThemeManager.color(C.TEXT_SECONDARY))
                 setTextSize(TypedValue.COMPLEX_UNIT_SP, 12f)
                 gravity = Gravity.CENTER
                 typeface = Typeface.DEFAULT_BOLD
@@ -245,7 +250,7 @@ class CalendarActivity : AppCompatActivity() {
             selectedDayEntryIds = listOf()
             val empty = TextView(this).apply {
                 text = "No entries on this date."
-                setTextColor(ContextCompat.getColor(this@CalendarActivity, R.color.login_text_secondary))
+                setTextColor(ThemeManager.color(C.TEXT_SECONDARY))
                 setTextSize(TypedValue.COMPLEX_UNIT_SP, 13f)
                 setPadding(dp(4), dp(8), dp(4), dp(8))
             }
@@ -280,7 +285,7 @@ class CalendarActivity : AppCompatActivity() {
         val titleText = entry.optString("title", "")
         val title = TextView(this).apply {
             text = if (titleText.isEmpty()) "Untitled" else titleText
-            setTextColor(ContextCompat.getColor(this@CalendarActivity, R.color.login_text))
+            setTextColor(ThemeManager.color(C.TEXT))
             setTextSize(TypedValue.COMPLEX_UNIT_SP, 14f)
             setTypeface(null, Typeface.BOLD)
             maxLines = 1
@@ -293,7 +298,7 @@ class CalendarActivity : AppCompatActivity() {
         if (time.isNotEmpty()) {
             val timeView = TextView(this).apply {
                 text = time
-                setTextColor(ContextCompat.getColor(this@CalendarActivity, R.color.login_accent))
+                setTextColor(ThemeManager.color(C.ACCENT))
                 setTextSize(TypedValue.COMPLEX_UNIT_SP, 11f)
                 setPadding(dp(8), 0, 0, 0)
             }
@@ -306,7 +311,7 @@ class CalendarActivity : AppCompatActivity() {
         if (preview.isNotEmpty()) {
             val sub = TextView(this).apply {
                 text = preview
-                setTextColor(ContextCompat.getColor(this@CalendarActivity, R.color.login_text_secondary))
+                setTextColor(ThemeManager.color(C.TEXT_SECONDARY))
                 setTextSize(TypedValue.COMPLEX_UNIT_SP, 12f)
                 maxLines = 2
                 ellipsize = TextUtils.TruncateAt.END
@@ -381,4 +386,13 @@ class CalendarActivity : AppCompatActivity() {
             resources.displayMetrics
         ).toInt()
     }
+
+    override fun onResume() {
+        super.onResume()
+        if (lastThemeVersion != ThemeManager.themeVersion) {
+            finish()
+            return
+        }
+    }
+
 }

@@ -20,6 +20,7 @@ import android.widget.HorizontalScrollView
 import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
+import com.journal.app.ThemeManager.C
 import org.json.JSONArray
 import org.json.JSONObject
 import java.text.SimpleDateFormat
@@ -27,6 +28,8 @@ import java.util.Date
 import java.util.Locale
 
 class ReportsActivity : AppCompatActivity() {
+
+    private var lastThemeVersion = 0
 
     companion object {
         @JvmStatic var databaseService: DatabaseService? = null
@@ -51,6 +54,8 @@ class ReportsActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_reports)
+        ThemeManager.applyToActivity(this)
+        lastThemeVersion = ThemeManager.themeVersion
 
         db = databaseService ?: run { finish(); return }
         bs = bootstrapService ?: run { finish(); return }
@@ -93,8 +98,8 @@ class ReportsActivity : AppCompatActivity() {
         dateFromInput = EditText(this).apply {
             hint = "YYYY-MM-DD"
             textSize = 14f
-            setTextColor(ContextCompat.getColor(this@ReportsActivity, R.color.login_text))
-            setHintTextColor(ContextCompat.getColor(this@ReportsActivity, R.color.login_text_secondary))
+            setTextColor(ThemeManager.color(C.TEXT))
+            setHintTextColor(ThemeManager.color(C.TEXT_SECONDARY))
             background = ContextCompat.getDrawable(this@ReportsActivity, R.drawable.input_bg)
             setPadding(dp(12), dp(10), dp(12), dp(10))
             layoutParams = linParams().apply { bottomMargin = dp(8) }
@@ -108,8 +113,8 @@ class ReportsActivity : AppCompatActivity() {
         dateToInput = EditText(this).apply {
             hint = "YYYY-MM-DD"
             textSize = 14f
-            setTextColor(ContextCompat.getColor(this@ReportsActivity, R.color.login_text))
-            setHintTextColor(ContextCompat.getColor(this@ReportsActivity, R.color.login_text_secondary))
+            setTextColor(ThemeManager.color(C.TEXT))
+            setHintTextColor(ThemeManager.color(C.TEXT_SECONDARY))
             background = ContextCompat.getDrawable(this@ReportsActivity, R.drawable.input_bg)
             setPadding(dp(12), dp(10), dp(12), dp(10))
             layoutParams = linParams().apply { bottomMargin = dp(8) }
@@ -185,7 +190,7 @@ class ReportsActivity : AppCompatActivity() {
         // Report output placeholder
         contentContainer.addView(TextView(this).apply {
             text = "Configure filters and generate a report."
-            setTextColor(ContextCompat.getColor(this@ReportsActivity, R.color.login_text_secondary))
+            setTextColor(ThemeManager.color(C.TEXT_SECONDARY))
             textSize = 13f
             gravity = Gravity.CENTER
             setPadding(dp(12), dp(20), dp(12), dp(20))
@@ -853,7 +858,7 @@ class ReportsActivity : AppCompatActivity() {
     private fun addSectionHeader(text: String) {
         contentContainer.addView(TextView(this).apply {
             this.text = text
-            setTextColor(ContextCompat.getColor(this@ReportsActivity, R.color.login_accent))
+            setTextColor(ThemeManager.color(C.ACCENT))
             textSize = 15f
             setTypeface(null, android.graphics.Typeface.BOLD)
             setPadding(dp(4), dp(4), dp(4), dp(8))
@@ -863,7 +868,7 @@ class ReportsActivity : AppCompatActivity() {
     private fun addLabel(text: String) {
         contentContainer.addView(TextView(this).apply {
             this.text = text
-            setTextColor(ContextCompat.getColor(this@ReportsActivity, R.color.login_text_secondary))
+            setTextColor(ThemeManager.color(C.TEXT_SECONDARY))
             textSize = 12f
             setPadding(dp(4), dp(4), dp(4), dp(2))
         })
@@ -880,7 +885,7 @@ class ReportsActivity : AppCompatActivity() {
             this.text = text
             textSize = 13f
             isAllCaps = false
-            setTextColor(ContextCompat.getColor(this@ReportsActivity, R.color.login_card_bg))
+            setTextColor(ThemeManager.color(C.CARD_BG))
             background = ContextCompat.getDrawable(this@ReportsActivity, R.drawable.btn_accent)
             setPadding(dp(12), dp(8), dp(12), dp(8))
             setOnClickListener { onClick() }
@@ -892,7 +897,7 @@ class ReportsActivity : AppCompatActivity() {
             this.text = text
             textSize = 13f
             isAllCaps = false
-            setTextColor(ContextCompat.getColor(this@ReportsActivity, R.color.login_text))
+            setTextColor(ThemeManager.color(C.TEXT))
             background = ContextCompat.getDrawable(this@ReportsActivity, R.drawable.btn_secondary)
             setPadding(dp(12), dp(8), dp(12), dp(8))
             setOnClickListener { onClick() }
@@ -908,15 +913,15 @@ class ReportsActivity : AppCompatActivity() {
         val adapter = object : ArrayAdapter<String>(this, android.R.layout.simple_spinner_item, items) {
             override fun getView(position: Int, convertView: View?, parent: ViewGroup): View {
                 return (super.getView(position, convertView, parent) as TextView).apply {
-                    setTextColor(ContextCompat.getColor(this@ReportsActivity, R.color.login_text))
+                    setTextColor(ThemeManager.color(C.TEXT))
                     textSize = 14f
                     setPadding(dp(4), dp(4), dp(4), dp(4))
                 }
             }
             override fun getDropDownView(position: Int, convertView: View?, parent: ViewGroup): View {
                 return (super.getDropDownView(position, convertView, parent) as TextView).apply {
-                    setTextColor(ContextCompat.getColor(this@ReportsActivity, R.color.login_text))
-                    setBackgroundColor(ContextCompat.getColor(this@ReportsActivity, R.color.login_input_bg))
+                    setTextColor(ThemeManager.color(C.TEXT))
+                    setBackgroundColor(ThemeManager.color(C.INPUT_BG))
                     textSize = 14f
                     setPadding(dp(12), dp(8), dp(12), dp(8))
                 }
@@ -946,4 +951,13 @@ class ReportsActivity : AppCompatActivity() {
             resources.displayMetrics
         ).toInt()
     }
+
+    override fun onResume() {
+        super.onResume()
+        if (lastThemeVersion != ThemeManager.themeVersion) {
+            finish()
+            return
+        }
+    }
+
 }

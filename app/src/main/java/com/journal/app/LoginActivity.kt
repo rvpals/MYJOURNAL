@@ -317,6 +317,7 @@ class LoginActivity : AppCompatActivity() {
         Thread {
             try {
                 db.open(password, journalId)
+                ThemeManager.init()
                 val dashboardJson = DashboardDataBuilder.build(db, bs)
                 runOnUiThread {
                     showProgress(false)

@@ -11,6 +11,16 @@ summary: "Known bugs, platform limitations, fixed issues, and architectural note
 - **Large journals may be slow** — entire SQLite DB operations are synchronous; no lazy loading for 1000+ entries
 - **Image storage is inefficient** — full base64 images stored in SQLite; no server-side or file-system storage option
 
+## Fixed (2026-04-29, session 2)
+
+- ~~Theme selection in Settings does nothing~~ **FIXED** — Colors were hardcoded as static XML resources (`R.color.login_*`) matching only the "dark" theme. Created `ThemeManager.kt` singleton with all 12 theme color maps, replaced 350 `ContextCompat.getColor()` calls with `ThemeManager.color(C.*)`, added `applyToActivity()` that walks the view tree to recolor XML-set backgrounds and text colors. Theme changes now apply immediately via `recreate()`.
+- ~~CSV import fails with regex syntax error~~ **FIXED** — `parseDateWithFormat()` used chained `.replace()` where `replace("M", ...)` corrupted the `(?<M>` named group already inserted by `replace("MM", ...)`. Rewritten as single-pass `Regex("YYYY|YY|MM|DD|M|D").replace()` with lambda to avoid collision. Same fix applied to `parseTimeWithFormat()`.
+- ~~"Use space to separate tags" option missing from Kotlin CSV mapping~~ **FIXED** — The web version had a `csv-tags-space-sep` checkbox but it was lost during Kotlin conversion. Added checkbox to CsvMappingActivity Import Options, saved as `csvTagsSpaceSep` in settings DB, used in import logic.
+
+## Fixed (2026-04-29)
+
+- ~~EntryFormActivity edit opens blank form~~ **FIXED** — `loadEntryData()` populated metadata fields (categories, tags, people, locations, images, weather, placeName) but never set `dateValue`, `timeValue`, `titleValue`, or `contentValue`. The `buildMainTab()` method reads these variables to fill inputs, so they were always empty when editing. Added four missing assignments at the top of `loadEntryData()`.
+
 ## Fixed (2026-04-28, session 3)
 
 - ~~Widget icon not showing on dashboard badge~~ **FIXED** — `DashboardActivity.createWidgetCard()` never read the `icon` field from widget JSON. Added `ImageView` with `loadBase64Image()` to display 40x40 icon in widget card header, matching the preview layout in `WidgetEditorActivity`.
@@ -65,23 +75,32 @@ summary: "Known bugs, platform limitations, fixed issues, and architectural note
 
 ## Notes
 
-### Dashboard Component Settings (2026-04-28)
+### Dashboard Component Settings (2026-04-29)
 
-- Dashboard components (weather/streak, stats, quick actions, widgets, pinned, recent, tags, categories, places, people) are configurable via Settings > Dashboard tab.
+- Dashboard components (weather/streak, stats, quick actions, widgets, pinned, recent, today_history, tags, categories, places, people) are configurable via Settings > Dashboard tab.
+- 11 components total (added `today_history` — "Today in History").
 - Visibility and order stored in BootstrapService as `dashboard_components` JSON array of `{id, enabled}` objects.
 - `DashboardActivity.applyDashboardComponentSettings()` removes all component views from `content_container` and re-adds only enabled ones in saved order.
 - Stats grid wrapped in `stats_container` (id: `R.id.stats_container`) so both stat rows move as one unit.
 
-### Architecture (2026-04-28, WebView removal)
+### Today in History (2026-04-29)
+
+- `DashboardDataBuilder.buildTodayInHistory()` matches entries where `date.substring(5)` equals today's MM-dd, excluding current year.
+- Returns JSON array of `{id, title, date, contentPreview (20 chars + "..."), yearsAgo}`, sorted by most recent year first.
+- `DashboardActivity.populateTodayInHistory()` renders each entry as a row with title, content preview, and accent-colored "N year(s) ago" badge.
+- Panel hidden when no matching entries exist. Entries are clickable (opens EntryViewerActivity).
+
+### Architecture (2026-04-29, themes + WebView removal)
 
 - **Fully native Android app**: All 14 screens are Kotlin activities. No WebView, no AndroidBridge, no web assets in APK.
 - **ServiceProvider singleton**: Replaces old `MainActivity.instance` pattern. Holds CryptoService, BootstrapService, WeatherService, DatabaseService. Initialized in LoginActivity, accessed by all activities via `ServiceProvider.xxxService`.
+- **ThemeManager singleton**: Runtime theme system with all 12 theme color maps. `ThemeManager.color(C.*)` replaces `ContextCompat.getColor(ctx, R.color.login_*)`. `applyToActivity()` recolors XML-set backgrounds/text via view tree walk. Theme changes detected via `themeVersion` counter in `onResume`.
 - **DashboardDataBuilder**: Computes dashboard JSON natively from DatabaseService — stats, streaks, ranked lists, widgets, pinned/recent entries. Replaces the old JS `getDashboardDataJSON()`.
-- **Login flow**: LoginActivity → ServiceProvider.init() → DatabaseService.open() → DashboardDataBuilder.build() → DashboardActivity (no WebView intermediary).
+- **Login flow**: LoginActivity → ServiceProvider.init() → DatabaseService.open() → ThemeManager.init() → DashboardDataBuilder.build() → DashboardActivity (no WebView intermediary).
 - **Rich content rendering**: `Html.fromHtml()` + `TextView` replaces WebView for rich content in EntryViewerActivity and ReportsActivity.
 - **SearchActivity**: Queries DatabaseService directly via ServiceProvider (no longer receives all entries as JSON from WebView bridge).
 - **File exports**: `ServiceProvider.saveFileToDownloads()` handles MediaStore scoped storage downloads.
-- **20 Kotlin source files**: 14 activities + 4 services + ServiceProvider + DashboardDataBuilder.
+- **21 Kotlin source files**: 14 activities + 4 services + ServiceProvider + DashboardDataBuilder + ThemeManager.
 - **Web SPA preserved**: `/web/` directory still exists as standalone browser-only fallback but is NOT bundled in the Android APK.
 
 ### Widgets (2026-04-27)

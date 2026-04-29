@@ -129,6 +129,13 @@ summary: "Complete functional requirements for all feature areas — authenticat
 - 3D icon button (🔍) in navbar row, left of journal name
 - Opens SearchActivity on tap
 
+### Today in History
+- Matches entries where month/day equals today's date from past years (excludes current year)
+- `DashboardDataBuilder.buildTodayInHistory()` computes matches, sorted by most recent year first
+- Each entry shows: title, 20-character content preview, "N year(s) ago" accent badge
+- Entries clickable to open in EntryViewerActivity
+- Panel hidden when no matching entries exist
+
 ### Pinned & Recent Entries
 - Pinned entries and recent entries displayed as rows
 - Click opens EntryViewerActivity directly
@@ -205,6 +212,10 @@ summary: "Complete functional requirements for all feature areas — authenticat
 ### Themes (12)
 - Light, Dark, Ocean, Midnight, Forest, Amethyst, Aurora, Lavender, Frost, Navy, Sunflower, Meadow
 - Theme selection persisted in settings DB
+- Runtime theme system via `ThemeManager.kt` singleton: all activities use `ThemeManager.color(C.*)` for colors
+- `ThemeManager.applyToActivity()` recolors XML-set backgrounds (`ColorDrawable`/`GradientDrawable`) and text via view tree walk
+- Theme change: `ThemeManager.setTheme()` increments `themeVersion`; activities detect in `onResume` and recreate/finish
+- Light/dark status bar icons set automatically based on theme background luminance
 
 ### Metadata Editing
 - Categories: add, rename, delete, color picker, description, icons
@@ -228,7 +239,7 @@ summary: "Complete functional requirements for all feature areas — authenticat
 - Live preview in editor
 
 ### Dashboard Components
-- Toggle 10 dashboard components on/off: Weather & Streak, Stats Grid, Quick Actions, Widgets, Pinned Entries, Recent Entries, Top Tags, Top Categories, Top Places, People
+- Toggle 11 dashboard components on/off: Weather & Streak, Stats Grid, Quick Actions, Widgets, Pinned Entries, Recent Entries, Today in History, Top Tags, Top Categories, Top Places, People
 - Reorder components via ▲/▼ arrow buttons
 - Config stored in BootstrapService as `dashboard_components` JSON array of `{id, enabled}` objects
 - DashboardActivity reads config and reorders/hides panels dynamically
@@ -268,6 +279,7 @@ summary: "Complete functional requirements for all feature areas — authenticat
 
 ### Utilities
 - **DashboardDataBuilder.kt** — Computes dashboard JSON from DatabaseService
+- **ThemeManager.kt** — Runtime theme singleton with 12 theme color maps, view tree recoloring, light/dark status bar
 
 ### Permissions
 - INTERNET — API access (weather, geocoding, CDN)

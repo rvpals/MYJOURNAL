@@ -18,6 +18,7 @@ import android.view.ViewGroup
 import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
+import com.journal.app.ThemeManager.C
 import org.json.JSONArray
 import org.json.JSONObject
 import java.io.FileOutputStream
@@ -27,6 +28,8 @@ import java.util.Locale
 import java.util.UUID
 
 class ExplorerActivity : AppCompatActivity() {
+
+    private var lastThemeVersion = 0
 
     companion object {
         @JvmStatic var databaseService: DatabaseService? = null
@@ -70,6 +73,8 @@ class ExplorerActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_explorer)
+        ThemeManager.applyToActivity(this)
+        lastThemeVersion = ThemeManager.themeVersion
 
         db = databaseService ?: run { finish(); return }
         bs = bootstrapService ?: run { finish(); return }
@@ -144,7 +149,7 @@ class ExplorerActivity : AppCompatActivity() {
             // Table info header
             detail.addView(TextView(this).apply {
                 text = "$name — $rowCount row${if (rowCount != 1) "s" else ""}"
-                setTextColor(ContextCompat.getColor(this@ExplorerActivity, R.color.login_text))
+                setTextColor(ThemeManager.color(C.TEXT))
                 textSize = 13f
                 setTypeface(null, Typeface.BOLD)
                 setPadding(0, 0, 0, dp(4))
@@ -174,7 +179,7 @@ class ExplorerActivity : AppCompatActivity() {
                 if (sampleVals.length() > 0) {
                     detail.addView(TextView(this).apply {
                         text = "Sample data (${sampleVals.length()} row${if (sampleVals.length() != 1) "s" else ""})"
-                        setTextColor(ContextCompat.getColor(this@ExplorerActivity, R.color.login_text_secondary))
+                        setTextColor(ThemeManager.color(C.TEXT_SECONDARY))
                         textSize = 12f
                         setPadding(0, dp(8), 0, dp(4))
                     })
@@ -198,7 +203,7 @@ class ExplorerActivity : AppCompatActivity() {
             } else if (rowCount == 0) {
                 detail.addView(TextView(this).apply {
                     text = "Table is empty"
-                    setTextColor(ContextCompat.getColor(this@ExplorerActivity, R.color.login_text_secondary))
+                    setTextColor(ThemeManager.color(C.TEXT_SECONDARY))
                     textSize = 12f
                     setPadding(0, dp(6), 0, 0)
                 })
@@ -209,7 +214,7 @@ class ExplorerActivity : AppCompatActivity() {
         } catch (e: Exception) {
             detail.addView(TextView(this).apply {
                 text = "Error: ${e.message}"
-                setTextColor(ContextCompat.getColor(this@ExplorerActivity, R.color.login_error))
+                setTextColor(ThemeManager.color(C.ERROR))
                 textSize = 12f
             })
         }
@@ -319,8 +324,8 @@ class ExplorerActivity : AppCompatActivity() {
                 hint = "Value..."
                 setText(cond.value)
                 textSize = 12f
-                setTextColor(ContextCompat.getColor(this@ExplorerActivity, R.color.login_text))
-                setHintTextColor(ContextCompat.getColor(this@ExplorerActivity, R.color.login_text_secondary))
+                setTextColor(ThemeManager.color(C.TEXT))
+                setHintTextColor(ThemeManager.color(C.TEXT_SECONDARY))
                 background = ContextCompat.getDrawable(this@ExplorerActivity, R.drawable.input_bg)
                 setPadding(dp(8), dp(4), dp(8), dp(4))
                 this.inputType = inputType
@@ -334,7 +339,7 @@ class ExplorerActivity : AppCompatActivity() {
             if (cond.op == "between") {
                 row.addView(TextView(this).apply {
                     text = "and"
-                    setTextColor(ContextCompat.getColor(this@ExplorerActivity, R.color.login_text_secondary))
+                    setTextColor(ThemeManager.color(C.TEXT_SECONDARY))
                     textSize = 11f
                     setPadding(dp(2), 0, dp(4), 0)
                 })
@@ -343,8 +348,8 @@ class ExplorerActivity : AppCompatActivity() {
                     hint = "Value..."
                     setText(cond.value2)
                     textSize = 12f
-                    setTextColor(ContextCompat.getColor(this@ExplorerActivity, R.color.login_text))
-                    setHintTextColor(ContextCompat.getColor(this@ExplorerActivity, R.color.login_text_secondary))
+                    setTextColor(ThemeManager.color(C.TEXT))
+                    setHintTextColor(ThemeManager.color(C.TEXT_SECONDARY))
                     background = ContextCompat.getDrawable(this@ExplorerActivity, R.drawable.input_bg)
                     setPadding(dp(8), dp(4), dp(8), dp(4))
                     this.inputType = inputType
@@ -361,7 +366,7 @@ class ExplorerActivity : AppCompatActivity() {
         val removeBtn = Button(this).apply {
             text = "✕"
             textSize = 12f
-            setTextColor(ContextCompat.getColor(this@ExplorerActivity, R.color.login_error))
+            setTextColor(ThemeManager.color(C.ERROR))
             setBackgroundColor(Color.TRANSPARENT)
             layoutParams = LinearLayout.LayoutParams(dp(32), dp(32))
             setPadding(0, 0, 0, 0)
@@ -724,7 +729,7 @@ class ExplorerActivity : AppCompatActivity() {
             container.visibility = View.VISIBLE
             tableContainer.addView(TextView(this).apply {
                 text = "No matching entries."
-                setTextColor(ContextCompat.getColor(this@ExplorerActivity, R.color.login_text_secondary))
+                setTextColor(ThemeManager.color(C.TEXT_SECONDARY))
                 textSize = 13f
                 gravity = Gravity.CENTER
                 setPadding(dp(16), dp(24), dp(16), dp(24))
@@ -831,7 +836,7 @@ class ExplorerActivity : AppCompatActivity() {
         // Nav label
         content.addView(TextView(this).apply {
             text = "Record ${index + 1} of ${lastResults.size}"
-            setTextColor(ContextCompat.getColor(this@ExplorerActivity, R.color.login_text_secondary))
+            setTextColor(ThemeManager.color(C.TEXT_SECONDARY))
             textSize = 11f
             setPadding(0, 0, 0, dp(8))
         })
@@ -839,14 +844,14 @@ class ExplorerActivity : AppCompatActivity() {
         for ((label, value) in detailFields) {
             content.addView(TextView(this).apply {
                 text = label
-                setTextColor(ContextCompat.getColor(this@ExplorerActivity, R.color.login_accent))
+                setTextColor(ThemeManager.color(C.ACCENT))
                 textSize = 11f
                 setTypeface(null, Typeface.BOLD)
                 setPadding(0, dp(6), 0, dp(2))
             })
             content.addView(TextView(this).apply {
                 text = value.ifEmpty { "—" }
-                setTextColor(ContextCompat.getColor(this@ExplorerActivity, R.color.login_text))
+                setTextColor(ThemeManager.color(C.TEXT))
                 textSize = 13f
                 setPadding(0, 0, 0, dp(4))
             })
@@ -1054,11 +1059,11 @@ class ExplorerActivity : AppCompatActivity() {
             textSize = 12f
             setTypeface(null, if (active) Typeface.BOLD else Typeface.NORMAL)
             setTextColor(
-                if (active) ContextCompat.getColor(this@ExplorerActivity, R.color.login_card_bg)
-                else ContextCompat.getColor(this@ExplorerActivity, R.color.login_text)
+                if (active) ThemeManager.color(C.CARD_BG)
+                else ThemeManager.color(C.TEXT)
             )
             setBackgroundColor(
-                if (active) ContextCompat.getColor(this@ExplorerActivity, R.color.login_accent)
+                if (active) ThemeManager.color(C.ACCENT)
                 else Color.TRANSPARENT
             )
             background = if (active) {
@@ -1081,15 +1086,15 @@ class ExplorerActivity : AppCompatActivity() {
         return object : ArrayAdapter<String>(this, android.R.layout.simple_spinner_item, items) {
             override fun getView(position: Int, convertView: View?, parent: ViewGroup): View {
                 return (super.getView(position, convertView, parent) as TextView).apply {
-                    setTextColor(ContextCompat.getColor(this@ExplorerActivity, R.color.login_text))
+                    setTextColor(ThemeManager.color(C.TEXT))
                     textSize = 11f
                     setPadding(dp(4), dp(2), dp(4), dp(2))
                 }
             }
             override fun getDropDownView(position: Int, convertView: View?, parent: ViewGroup): View {
                 return (super.getDropDownView(position, convertView, parent) as TextView).apply {
-                    setTextColor(ContextCompat.getColor(this@ExplorerActivity, R.color.login_text))
-                    setBackgroundColor(ContextCompat.getColor(this@ExplorerActivity, R.color.login_input_bg))
+                    setTextColor(ThemeManager.color(C.TEXT))
+                    setBackgroundColor(ThemeManager.color(C.INPUT_BG))
                     textSize = 12f
                     setPadding(dp(10), dp(6), dp(10), dp(6))
                 }
@@ -1107,13 +1112,13 @@ class ExplorerActivity : AppCompatActivity() {
         // Header row
         val headerRow = LinearLayout(this).apply {
             orientation = LinearLayout.HORIZONTAL
-            setBackgroundColor(ContextCompat.getColor(this@ExplorerActivity, R.color.login_card_bg))
+            setBackgroundColor(ThemeManager.color(C.CARD_BG))
             setPadding(dp(4), dp(6), dp(4), dp(6))
         }
         for (h in headers) {
             headerRow.addView(TextView(this).apply {
                 text = h
-                setTextColor(ContextCompat.getColor(this@ExplorerActivity, R.color.login_accent))
+                setTextColor(ThemeManager.color(C.ACCENT))
                 textSize = 11f
                 setTypeface(null, Typeface.BOLD)
                 setPadding(dp(6), dp(2), dp(6), dp(2))
@@ -1134,7 +1139,7 @@ class ExplorerActivity : AppCompatActivity() {
             for (cell in row) {
                 dataRow.addView(TextView(this).apply {
                     text = cell
-                    setTextColor(ContextCompat.getColor(this@ExplorerActivity, R.color.login_text))
+                    setTextColor(ThemeManager.color(C.TEXT))
                     textSize = 11f
                     setPadding(dp(6), dp(2), dp(6), dp(2))
                     minWidth = dp(60)
@@ -1158,13 +1163,13 @@ class ExplorerActivity : AppCompatActivity() {
 
         val headerRow = LinearLayout(this).apply {
             orientation = LinearLayout.HORIZONTAL
-            setBackgroundColor(ContextCompat.getColor(this@ExplorerActivity, R.color.login_card_bg))
+            setBackgroundColor(ThemeManager.color(C.CARD_BG))
             setPadding(dp(4), dp(6), dp(4), dp(6))
         }
         for (h in headers) {
             headerRow.addView(TextView(this).apply {
                 text = h
-                setTextColor(ContextCompat.getColor(this@ExplorerActivity, R.color.login_accent))
+                setTextColor(ThemeManager.color(C.ACCENT))
                 textSize = 11f
                 setTypeface(null, Typeface.BOLD)
                 setPadding(dp(6), dp(2), dp(6), dp(2))
@@ -1188,7 +1193,7 @@ class ExplorerActivity : AppCompatActivity() {
             for (cell in rowData) {
                 dataRow.addView(TextView(this).apply {
                     text = cell
-                    setTextColor(ContextCompat.getColor(this@ExplorerActivity, R.color.login_text))
+                    setTextColor(ThemeManager.color(C.TEXT))
                     textSize = 11f
                     setPadding(dp(6), dp(2), dp(6), dp(2))
                     minWidth = dp(60)
@@ -1262,4 +1267,13 @@ class ExplorerActivity : AppCompatActivity() {
             }
         }
     }
+
+    override fun onResume() {
+        super.onResume()
+        if (lastThemeVersion != ThemeManager.themeVersion) {
+            finish()
+            return
+        }
+    }
+
 }

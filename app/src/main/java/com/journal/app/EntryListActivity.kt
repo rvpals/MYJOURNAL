@@ -19,12 +19,15 @@ import android.view.inputmethod.EditorInfo
 import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
+import com.journal.app.ThemeManager.C
 import org.json.JSONArray
 import org.json.JSONObject
 import java.text.SimpleDateFormat
 import java.util.Locale
 
 class EntryListActivity : AppCompatActivity() {
+
+    private var lastThemeVersion = 0
 
     companion object {
         @JvmStatic var databaseService: DatabaseService? = null
@@ -66,6 +69,8 @@ class EntryListActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_entry_list)
+        ThemeManager.applyToActivity(this)
+        lastThemeVersion = ThemeManager.themeVersion
 
         db = databaseService ?: run { finish(); return }
         bs = bootstrapService ?: run { finish(); return }
@@ -251,15 +256,15 @@ class EntryListActivity : AppCompatActivity() {
         return object : ArrayAdapter<String>(this, android.R.layout.simple_spinner_item, items) {
             override fun getView(position: Int, convertView: View?, parent: ViewGroup): View {
                 return (super.getView(position, convertView, parent) as TextView).apply {
-                    setTextColor(ContextCompat.getColor(this@EntryListActivity, R.color.login_text))
+                    setTextColor(ThemeManager.color(C.TEXT))
                     textSize = 12f
                     setPadding(dp(6), dp(4), dp(6), dp(4))
                 }
             }
             override fun getDropDownView(position: Int, convertView: View?, parent: ViewGroup): View {
                 return (super.getDropDownView(position, convertView, parent) as TextView).apply {
-                    setTextColor(ContextCompat.getColor(this@EntryListActivity, R.color.login_text))
-                    setBackgroundColor(ContextCompat.getColor(this@EntryListActivity, R.color.login_input_bg))
+                    setTextColor(ThemeManager.color(C.TEXT))
+                    setBackgroundColor(ThemeManager.color(C.INPUT_BG))
                     textSize = 13f
                     setPadding(dp(12), dp(8), dp(12), dp(8))
                 }
@@ -437,7 +442,7 @@ class EntryListActivity : AppCompatActivity() {
         if (total == 0) {
             entriesContainer.addView(TextView(this).apply {
                 text = "No entries found"
-                setTextColor(ContextCompat.getColor(this@EntryListActivity, R.color.login_text_secondary))
+                setTextColor(ThemeManager.color(C.TEXT_SECONDARY))
                 textSize = 14f
                 gravity = Gravity.CENTER
                 setPadding(dp(16), dp(40), dp(16), dp(40))
@@ -508,7 +513,7 @@ class EntryListActivity : AppCompatActivity() {
         // Row number
         headerRow.addView(TextView(this).apply {
             text = "$rowNum"
-            setTextColor(ContextCompat.getColor(this@EntryListActivity, R.color.login_text_secondary))
+            setTextColor(ThemeManager.color(C.TEXT_SECONDARY))
             textSize = 10f
             layoutParams = LinearLayout.LayoutParams(dp(24), LinearLayout.LayoutParams.WRAP_CONTENT)
         })
@@ -520,7 +525,7 @@ class EntryListActivity : AppCompatActivity() {
         if (dateTime.isNotEmpty()) {
             headerRow.addView(TextView(this).apply {
                 text = dateTime.joinToString("  ")
-                setTextColor(ContextCompat.getColor(this@EntryListActivity, R.color.login_accent))
+                setTextColor(ThemeManager.color(C.ACCENT))
                 textSize = 11f
             })
         }
@@ -547,7 +552,7 @@ class EntryListActivity : AppCompatActivity() {
             headerRow.addView(Button(this).apply {
                 text = "✕"
                 textSize = 11f
-                setTextColor(ContextCompat.getColor(this@EntryListActivity, R.color.login_error))
+                setTextColor(ThemeManager.color(C.ERROR))
                 setBackgroundColor(Color.TRANSPARENT)
                 layoutParams = LinearLayout.LayoutParams(dp(28), dp(28))
                 setOnClickListener { confirmDeleteEntry(id, title) }
@@ -560,7 +565,7 @@ class EntryListActivity : AppCompatActivity() {
         if (show("title") && title.isNotEmpty()) {
             card.addView(TextView(this).apply {
                 text = title
-                setTextColor(ContextCompat.getColor(this@EntryListActivity, R.color.login_text))
+                setTextColor(ThemeManager.color(C.TEXT))
                 textSize = 14f
                 setTypeface(null, Typeface.BOLD)
                 maxLines = 2
@@ -576,7 +581,7 @@ class EntryListActivity : AppCompatActivity() {
             val preview = if (content.length > 120) content.substring(0, 120) + "…" else content
             card.addView(TextView(this).apply {
                 text = preview
-                setTextColor(ContextCompat.getColor(this@EntryListActivity, R.color.login_text_secondary))
+                setTextColor(ThemeManager.color(C.TEXT_SECONDARY))
                 textSize = 12f
                 maxLines = 3
                 layoutParams = LinearLayout.LayoutParams(
@@ -590,7 +595,7 @@ class EntryListActivity : AppCompatActivity() {
         if (show("places") && placeName.isNotEmpty()) {
             card.addView(TextView(this).apply {
                 text = "📍 $placeName"
-                setTextColor(ContextCompat.getColor(this@EntryListActivity, R.color.login_text_secondary))
+                setTextColor(ThemeManager.color(C.TEXT_SECONDARY))
                 textSize = 11f
                 layoutParams = LinearLayout.LayoutParams(
                     LinearLayout.LayoutParams.MATCH_PARENT,
@@ -605,7 +610,7 @@ class EntryListActivity : AppCompatActivity() {
             if (weatherText.isNotEmpty()) {
                 card.addView(TextView(this).apply {
                     text = "🌤️ $weatherText"
-                    setTextColor(ContextCompat.getColor(this@EntryListActivity, R.color.login_text_secondary))
+                    setTextColor(ThemeManager.color(C.TEXT_SECONDARY))
                     textSize = 11f
                     layoutParams = LinearLayout.LayoutParams(
                         LinearLayout.LayoutParams.MATCH_PARENT,
@@ -640,7 +645,7 @@ class EntryListActivity : AppCompatActivity() {
             if (images.length() > 4) {
                 imgRow.addView(TextView(this).apply {
                     text = "+${images.length() - 4}"
-                    setTextColor(ContextCompat.getColor(this@EntryListActivity, R.color.login_text_secondary))
+                    setTextColor(ThemeManager.color(C.TEXT_SECONDARY))
                     textSize = 11f
                     gravity = Gravity.CENTER
                     layoutParams = LinearLayout.LayoutParams(dp(32), dp(40))
@@ -679,7 +684,7 @@ class EntryListActivity : AppCompatActivity() {
             this.text = text
             textSize = 10f
             try { setTextColor(Color.parseColor(colorHex)) } catch (_: Exception) {
-                setTextColor(ContextCompat.getColor(this@EntryListActivity, R.color.login_text_secondary))
+                setTextColor(ThemeManager.color(C.TEXT_SECONDARY))
             }
             setPadding(dp(6), dp(2), dp(6), dp(2))
             background = ContextCompat.getDrawable(this@EntryListActivity, R.drawable.input_bg)
@@ -712,7 +717,7 @@ class EntryListActivity : AppCompatActivity() {
             if (p == -1) {
                 paginationBar.addView(TextView(this).apply {
                     text = "…"
-                    setTextColor(ContextCompat.getColor(this@EntryListActivity, R.color.login_text_secondary))
+                    setTextColor(ThemeManager.color(C.TEXT_SECONDARY))
                     textSize = 12f
                     gravity = Gravity.CENTER
                     setPadding(dp(4), 0, dp(4), 0)
@@ -724,10 +729,10 @@ class EntryListActivity : AppCompatActivity() {
                     textSize = 12f
                     isAllCaps = false
                     if (isCurrent) {
-                        setTextColor(ContextCompat.getColor(this@EntryListActivity, R.color.login_card_bg))
-                        setBackgroundColor(ContextCompat.getColor(this@EntryListActivity, R.color.login_accent))
+                        setTextColor(ThemeManager.color(C.CARD_BG))
+                        setBackgroundColor(ThemeManager.color(C.ACCENT))
                     } else {
-                        setTextColor(ContextCompat.getColor(this@EntryListActivity, R.color.login_text))
+                        setTextColor(ThemeManager.color(C.TEXT))
                         setBackgroundColor(Color.TRANSPARENT)
                     }
                     layoutParams = LinearLayout.LayoutParams(dp(32), dp(32)).apply { marginEnd = dp(2) }
@@ -746,7 +751,7 @@ class EntryListActivity : AppCompatActivity() {
         // Info
         paginationBar.addView(TextView(this).apply {
             text = "  $start-$end of $totalEntries"
-            setTextColor(ContextCompat.getColor(this@EntryListActivity, R.color.login_text_secondary))
+            setTextColor(ThemeManager.color(C.TEXT_SECONDARY))
             textSize = 11f
             setPadding(dp(8), 0, 0, 0)
         })
@@ -772,7 +777,7 @@ class EntryListActivity : AppCompatActivity() {
             isAllCaps = false
             isEnabled = enabled
             alpha = if (enabled) 1f else 0.3f
-            setTextColor(ContextCompat.getColor(this@EntryListActivity, R.color.login_text))
+            setTextColor(ThemeManager.color(C.TEXT))
             setBackgroundColor(Color.TRANSPARENT)
             layoutParams = LinearLayout.LayoutParams(dp(36), dp(32))
             setPadding(0, 0, 0, 0)
@@ -866,6 +871,7 @@ class EntryListActivity : AppCompatActivity() {
 
     override fun onResume() {
         super.onResume()
+        if (lastThemeVersion != ThemeManager.themeVersion) { finish(); return }
         loadEntries()
         applyFilters()
     }

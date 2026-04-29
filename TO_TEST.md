@@ -34,7 +34,8 @@ summary: "Feature-by-feature test checklist for the fully native Android app (14
 - [ ] **ReportsActivity** — HTML report generation with template, date/category/tag filters, CSV export, PDF export via native PdfDocument, template selection
 - [ ] **WidgetEditorActivity** — Create widget: name/desc/icon/color, add filter rows, add function rows, preview, save. Edit existing widget: loads data, updates correctly. Color picker dialog opens on swatch/input tap with presets and hex input
 - [ ] **CustomViewEditorActivity** — Create view: name, conditions (field/op/value), groupBy, orderBy, displayMode, pinToDashboard. Edit existing view, delete
-- [ ] **CsvMappingActivity** — Column mapping dropdowns, date/time format config, duplicate detection, import executes correctly
+- [ ] **CsvMappingActivity** — Column mapping dropdowns, date/time format config, "Use space to separate tags" checkbox, duplicate detection, import executes correctly
+- [ ] **CSV date/time parsing** — Import with custom date formats (YYYY-MM-DD, MM/DD/YYYY, DD-MM-YYYY) and time formats (HH:mm, H:mm A) parses correctly without regex errors
 - [ ] **Back button** — Proper navigation between all activities
 
 ## Entry Form
@@ -48,7 +49,7 @@ summary: "Feature-by-feature test checklist for the fully native Android app (14
 - [ ] **Weather** — Fetch current weather via WeatherService, display in form and viewer
 - [ ] **Date/Time** — DatePickerDialog and TimePickerDialog
 - [ ] **Pin entry** — Toggle pin, verify appears in dashboard pinned list
-- [ ] **Edit from viewer** — EntryViewerActivity edit button launches EntryFormActivity with entry ID (bug fixed: was passing null bootstrapService)
+- [ ] **Edit from viewer** — EntryViewerActivity edit button launches EntryFormActivity with entry ID, all existing fields pre-populated (bug fixed: was not loading date/time/title/content)
 
 ## Entry List & Viewer
 
@@ -68,7 +69,8 @@ summary: "Feature-by-feature test checklist for the fully native Android app (14
 - [x] **Recent entries** — Display, click to view (verified 2026-04-06)
 - [x] **Dashboard weather** — Inset 3D styling, click to navigate to Settings > Weather Location (verified 2026-04-06)
 - [x] **Quick actions** — Pinned custom views on dashboard (verified 2026-04-06)
-- [ ] **Dashboard component settings** — Toggle components on/off in Settings > Dashboard, verify hidden components disappear from dashboard
+- [ ] **Today in History** — Verify panel shows entries from same month/day in past years, displays title + 20-char content preview + "N year(s) ago" badge, hidden when no matches, entries clickable to viewer
+- [ ] **Dashboard component settings** — Toggle components on/off in Settings > Dashboard (11 components including Today in History), verify hidden components disappear from dashboard
 - [ ] **Dashboard component reorder** — Reorder components via ▲/▼ in Settings > Dashboard, verify new order on dashboard
 - [ ] **Dashboard ranked badge 3D** — Rank badges show gradient + shadow, count badges show dark gradient + shadow
 - [ ] **Dashboard search button** — 3D icon button in navbar row (left of journal name) opens SearchActivity
@@ -117,7 +119,9 @@ summary: "Feature-by-feature test checklist for the fully native Android app (14
 ## Settings
 
 - [ ] **Preferences tab** — Auto-open journal, confirm delete, biometric toggle, geocoding provider, viewer font with live preview, date/time format, max pinned, sort order
-- [ ] **Theme picker** — All 12 themes apply correctly
+- [ ] **Theme picker** — All 12 themes apply correctly (ThemeManager recolors backgrounds, text, status bar)
+- [ ] **Theme persistence** — Selected theme survives app restart (saved in DB settings, loaded via ThemeManager.init())
+- [ ] **Theme propagation** — After theme change in Settings, Dashboard and other activities update colors on return
 - [ ] **Wallpaper** — Browse image, preview thumbnail, clear wallpaper
 - [ ] **Weather city search** — Search city, select from results, save location
 - [ ] **Categories editor** — Add, rename, delete, color picker, icon upload
