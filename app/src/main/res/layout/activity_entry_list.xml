@@ -45,97 +45,26 @@
             android:background="@drawable/btn_accent" />
     </LinearLayout>
 
-    <!-- Search Bar -->
+    <!-- Filter Info collapsible header -->
     <LinearLayout
+        android:id="@+id/el_filter_header"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
         android:gravity="center_vertical"
         android:paddingHorizontal="12dp"
-        android:paddingTop="8dp"
-        android:paddingBottom="4dp">
+        android:paddingVertical="6dp"
+        android:background="@color/login_card_bg">
 
-        <EditText
-            android:id="@+id/el_search"
-            android:layout_width="0dp"
-            android:layout_height="40dp"
-            android:layout_weight="1"
-            android:hint="Search entries..."
-            android:textColor="@color/login_text"
-            android:textColorHint="@color/login_text_secondary"
-            android:textSize="14sp"
-            android:background="@drawable/search_bg"
-            android:inputType="text"
-            android:imeOptions="actionSearch"
-            android:singleLine="true"
-            android:paddingHorizontal="12dp"
-            android:layout_marginEnd="6dp" />
-
-        <Button
-            android:id="@+id/btn_search"
-            android:layout_width="42dp"
-            android:layout_height="40dp"
-            android:text="🔍"
-            android:textSize="16sp"
-            android:background="@drawable/btn_accent" />
-    </LinearLayout>
-
-    <!-- Filter Row -->
-    <LinearLayout
-        android:id="@+id/el_filter_row"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:gravity="center_vertical"
-        android:paddingHorizontal="12dp"
-        android:paddingBottom="4dp">
-
-        <Spinner
-            android:id="@+id/el_filter_category"
-            android:layout_width="0dp"
-            android:layout_height="36dp"
-            android:layout_weight="1"
-            android:background="@drawable/spinner_bg"
-            android:layout_marginEnd="4dp" />
-
-        <Spinner
-            android:id="@+id/el_filter_tag"
-            android:layout_width="0dp"
-            android:layout_height="36dp"
-            android:layout_weight="1"
-            android:background="@drawable/spinner_bg"
-            android:layout_marginEnd="4dp" />
-
-        <Button
-            android:id="@+id/btn_clear_filters"
-            android:layout_width="36dp"
-            android:layout_height="36dp"
-            android:text="✕"
-            android:textSize="12sp"
-            android:textColor="@color/login_text_secondary"
-            android:background="@drawable/btn_secondary" />
-    </LinearLayout>
-
-    <!-- Toolbar Row -->
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:gravity="center_vertical"
-        android:paddingHorizontal="12dp"
-        android:paddingBottom="6dp">
-
-        <Button
-            android:id="@+id/btn_select_mode"
+        <TextView
+            android:id="@+id/el_filter_toggle"
             android:layout_width="wrap_content"
-            android:layout_height="34dp"
-            android:text="Select"
-            android:textSize="12sp"
-            android:textAllCaps="false"
-            android:textColor="@color/login_text"
-            android:background="@drawable/btn_secondary"
-            android:paddingHorizontal="12dp"
-            android:layout_marginEnd="6dp" />
+            android:layout_height="wrap_content"
+            android:text="▶ Filter Info"
+            android:textColor="@color/login_accent"
+            android:textSize="13sp"
+            android:textStyle="bold"
+            android:paddingVertical="2dp" />
 
         <TextView
             android:id="@+id/el_entry_count"
@@ -144,13 +73,151 @@
             android:layout_weight="1"
             android:textColor="@color/login_text_secondary"
             android:textSize="12sp"
-            android:gravity="center" />
+            android:gravity="end"
+            android:paddingEnd="4dp" />
+    </LinearLayout>
 
-        <Spinner
-            android:id="@+id/el_page_size"
-            android:layout_width="70dp"
-            android:layout_height="34dp"
-            android:background="@drawable/spinner_bg" />
+    <!-- Filter Info collapsible body -->
+    <LinearLayout
+        android:id="@+id/el_filter_body"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:paddingHorizontal="12dp"
+        android:paddingBottom="6dp"
+        android:visibility="gone">
+
+        <!-- Search Bar -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:paddingTop="6dp"
+            android:paddingBottom="4dp">
+
+            <EditText
+                android:id="@+id/el_search"
+                android:layout_width="0dp"
+                android:layout_height="40dp"
+                android:layout_weight="1"
+                android:hint="Search entries..."
+                android:textColor="@color/login_text"
+                android:textColorHint="@color/login_text_secondary"
+                android:textSize="14sp"
+                android:background="@drawable/search_bg"
+                android:inputType="text"
+                android:imeOptions="actionSearch"
+                android:singleLine="true"
+                android:paddingHorizontal="12dp"
+                android:layout_marginEnd="6dp" />
+
+            <Button
+                android:id="@+id/btn_search"
+                android:layout_width="42dp"
+                android:layout_height="40dp"
+                android:text="🔍"
+                android:textSize="16sp"
+                android:background="@drawable/btn_accent" />
+        </LinearLayout>
+
+        <!-- Filter Row -->
+        <LinearLayout
+            android:id="@+id/el_filter_row"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:paddingBottom="4dp">
+
+            <Spinner
+                android:id="@+id/el_filter_category"
+                android:layout_width="0dp"
+                android:layout_height="36dp"
+                android:layout_weight="1"
+                android:background="@drawable/spinner_bg"
+                android:layout_marginEnd="4dp" />
+
+            <Spinner
+                android:id="@+id/el_filter_tag"
+                android:layout_width="0dp"
+                android:layout_height="36dp"
+                android:layout_weight="1"
+                android:background="@drawable/spinner_bg"
+                android:layout_marginEnd="4dp" />
+
+            <Button
+                android:id="@+id/btn_clear_filters"
+                android:layout_width="36dp"
+                android:layout_height="36dp"
+                android:text="✕"
+                android:textSize="12sp"
+                android:textColor="@color/login_text_secondary"
+                android:background="@drawable/btn_secondary" />
+        </LinearLayout>
+
+        <!-- Order By Row -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:paddingBottom="4dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Order by:"
+                android:textColor="@color/login_text_secondary"
+                android:textSize="12sp"
+                android:layout_marginEnd="6dp" />
+
+            <Spinner
+                android:id="@+id/el_order_field"
+                android:layout_width="0dp"
+                android:layout_height="36dp"
+                android:layout_weight="1"
+                android:background="@drawable/spinner_bg"
+                android:layout_marginEnd="4dp" />
+
+            <Spinner
+                android:id="@+id/el_order_dir"
+                android:layout_width="80dp"
+                android:layout_height="36dp"
+                android:background="@drawable/spinner_bg" />
+        </LinearLayout>
+
+        <!-- Toolbar Row -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:paddingBottom="2dp">
+
+            <Button
+                android:id="@+id/btn_select_mode"
+                android:layout_width="wrap_content"
+                android:layout_height="34dp"
+                android:text="Select"
+                android:textSize="12sp"
+                android:textAllCaps="false"
+                android:textColor="@color/login_text"
+                android:background="@drawable/btn_secondary"
+                android:paddingHorizontal="12dp"
+                android:layout_marginEnd="6dp" />
+
+            <View
+                android:layout_width="0dp"
+                android:layout_height="0dp"
+                android:layout_weight="1" />
+
+            <Spinner
+                android:id="@+id/el_page_size"
+                android:layout_width="70dp"
+                android:layout_height="34dp"
+                android:background="@drawable/spinner_bg" />
+        </LinearLayout>
     </LinearLayout>
 
     <!-- Batch Actions (hidden by default) -->

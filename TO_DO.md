@@ -1,12 +1,25 @@
 ---
-tags: [testing, checklist, QA, verification, regression, manual-test, critical-path]
-related_files: [ISSUES.md, TODO.md, REQUIREMENT.md]
-summary: "Feature-by-feature test checklist for the fully native Android app (14 activities, no WebView)."
+tags: [todo, testing, backlog, checklist, QA, version-history]
+related_files: [CLAUDE.md, ISSUES.md, REQUIREMENT.md]
+summary: "Remaining backlog, test checklist, version-by-version completion history, and Kotlin migration status."
 ---
 
-# TO TEST — MYJOURNAL
+# TO DO — MYJOURNAL
 
-## Critical Path (must work)
+## Remaining TODO
+
+- [ ] Re-test all features after WebView removal (all native screens)
+- [ ] Web app: HTTPS requirement for Web Crypto API (browser-only fallback)
+- [ ] Entry image thumbnails could be optimized (currently full base64 stored)
+- [ ] Consider lazy loading for large journal databases (1000+ entries)
+- [ ] Password strength indicator on journal creation
+- [ ] Entry search: full-text search across rich content (currently plain text only)
+- [ ] Accessibility audit (screen reader support, keyboard navigation)
+- [ ] Localization / i18n support
+
+## Test Checklist
+
+### Critical Path (must work)
 
 - [x] **Login flow** — Create new journal with password, re-open existing journal, wrong password rejection (verified 2026-04-02)
 - [x] **Biometric login** — Enable in settings, lock app, re-authenticate with fingerprint/face (fixed double-prompt bug 2026-04-01)
@@ -15,7 +28,7 @@ summary: "Feature-by-feature test checklist for the fully native Android app (14
 - [ ] **Encryption** — Lock app, re-login, verify entries are intact and decrypted correctly
 - [ ] **Data persistence** — Close app completely, reopen, verify data survives
 
-## Native Android Activities (all Kotlin — 14 activities, no WebView)
+### Native Android Activities (14 activities, no WebView)
 
 - [ ] **LoginActivity → DashboardActivity** — Login completes, ServiceProvider initialized, DB opened, DashboardDataBuilder computes data, DashboardActivity launches directly (no WebView)
 - [ ] **DashboardActivity** — Stats grid (total, week, month, year), pinned entries, recent entries, ranked panels (tags, categories, places, people), widgets with colored backgrounds
@@ -24,7 +37,7 @@ summary: "Feature-by-feature test checklist for the fully native Android app (14
 - [ ] **SearchActivity** — Search icon button on dashboard opens native search screen, text input with search/clear, whole-word checkbox, results show title/date/content snippet/metadata, back button returns to dashboard
 - [ ] **EntryViewerActivity** — Font settings applied (reads ev_font_family/ev_font_size from BootstrapService), rich content via Html.fromHtml() + TextView, title bold at 1.3x
 - [ ] **SettingsActivity** — All 6 tabs load and function: Preferences (toggles, font, date/time, theme, wallpaper, weather), Templates (views/entry/report), Metadata (categories/tags/people CRUD with icons/colors), Data (export/import, password change), Widgets (list/editor with filters/functions), Dashboard (component toggle/reorder)
-- [ ] **Settings tab icons** — All 6 tabs show emoji icons (⚙️📝🏷️💾🧩📊) with 3D active/inactive styling
+- [ ] **Settings tab icons** — All 6 tabs show emoji icons with 3D active/inactive styling
 - [ ] **EntryListActivity** — Search across all fields, category/tag filter spinners, sort by configured field, pagination (10/20/50/100), card view with all entry metadata, select mode with batch delete, navigation to EntryViewerActivity
 - [ ] **ExplorerActivity** — Table browser (click chip shows schema + sample), SQL textarea (raw SQL on any table), condition builder (add/remove rows, field/op/value spinners), field chips (toggle columns), Run Query, results table (clickable rows → record detail dialog), CSV export, iCalendar export, Clear button
 - [ ] **EntryFormActivity** — New entry: date/time pickers, title, content with B/I/U/S formatting toolbar, image add (gallery + camera), save. Edit entry: loads existing data, updates correctly. Categories checkboxes + quick-add, tags autocomplete + chips, people checkboxes + quick-add, place name, location search (Photon/Nominatim) + GPS, weather import, delete button on existing entries
@@ -38,7 +51,7 @@ summary: "Feature-by-feature test checklist for the fully native Android app (14
 - [ ] **CSV date/time parsing** — Import with custom date formats (YYYY-MM-DD, MM/DD/YYYY, DD-MM-YYYY) and time formats (HH:mm, H:mm A) parses correctly without regex errors
 - [ ] **Back button** — Proper navigation between all activities
 
-## Entry Form
+### Entry Form
 
 - [ ] **Rich text editor** — Bold, italic, underline, strikethrough via Spannable toolbar buttons, formatting visible in EditText
 - [ ] **Image attachments** — Gallery picker via GetMultipleContents, camera capture via TakePicturePreview, thumbnail grid, remove button per image
@@ -51,7 +64,7 @@ summary: "Feature-by-feature test checklist for the fully native Android app (14
 - [ ] **Pin entry** — Toggle pin, verify appears in dashboard pinned list
 - [ ] **Edit from viewer** — EntryViewerActivity edit button launches EntryFormActivity with entry ID, all existing fields pre-populated (bug fixed: was not loading date/time/title/content)
 
-## Entry List & Viewer
+### Entry List & Viewer
 
 - [x] **List view** — Card mode and list/table mode toggle (verified 2026-04-03)
 - [x] **Search** — Debounced search across title, content, tags, categories (verified 2026-04-03)
@@ -61,7 +74,7 @@ summary: "Feature-by-feature test checklist for the fully native Android app (14
 - [ ] **Entry viewer** — Read-only view with all fields, prev/next navigation, icon-only action buttons
 - [ ] **Date/Time format** — Verify all 6 date formats and 12h/24h time display
 
-## Dashboard
+### Dashboard
 
 - [x] **Stats cards** — Total entries, this week, this month, this year (verified 2026-04-06)
 - [x] **Ranked panels** — Top tags, categories, places, people (verified 2026-04-06)
@@ -71,18 +84,20 @@ summary: "Feature-by-feature test checklist for the fully native Android app (14
 - [x] **Quick actions** — Pinned custom views on dashboard (verified 2026-04-06)
 - [ ] **Today in History** — Verify panel shows entries from same month/day in past years, displays title + 20-char content preview + "N year(s) ago" badge, hidden when no matches, entries clickable to viewer
 - [ ] **Dashboard component settings** — Toggle components on/off in Settings > Dashboard (11 components including Today in History), verify hidden components disappear from dashboard
-- [ ] **Dashboard component reorder** — Reorder components via ▲/▼ in Settings > Dashboard, verify new order on dashboard
+- [ ] **Dashboard component reorder** — Reorder components via arrows in Settings > Dashboard, verify new order on dashboard
 - [ ] **Dashboard ranked badge 3D** — Rank badges show gradient + shadow, count badges show dark gradient + shadow
 - [ ] **Dashboard search button** — 3D icon button in navbar row (left of journal name) opens SearchActivity
 
-## Dashboard Navigation (Native)
+### Dashboard Navigation (Native — via ☰ hamburger menu)
 
-- [ ] **Dashboard → Entry List** — Tap "Entries" in bottom nav, native EntryListActivity opens, back returns to dashboard
-- [ ] **Dashboard → Explorer** — Tap "Explorer" in bottom nav, native ExplorerActivity opens, back returns to dashboard
-- [ ] **Dashboard → Settings** — Tap "Settings" in bottom nav, native SettingsActivity opens, back returns to dashboard
-- [ ] **Dashboard → Entry Form** — Tap "New Entry" button, native EntryFormActivity launches
-- [ ] **Dashboard → Reports** — Tap "Reports" in bottom nav, native ReportsActivity launches
-- [ ] **Dashboard → Lock** — Tap "Lock" button, returns to LoginActivity, DB closed
+- [ ] **Dashboard → Entry List** — Tap ☰ > Entries, native EntryListActivity opens, back returns to dashboard
+- [ ] **Dashboard → Calendar** — Tap ☰ > Calendar, native CalendarActivity opens, back returns to dashboard
+- [ ] **Dashboard → Reports** — Tap ☰ > Reports, native ReportsActivity launches
+- [ ] **Dashboard → Explorer** — Tap ☰ > Explorer, native ExplorerActivity opens, back returns to dashboard
+- [ ] **Dashboard → Settings** — Tap ☰ > Settings, native SettingsActivity opens, back returns to dashboard
+- [ ] **Dashboard → About** — Tap ☰ > About, native AboutActivity opens
+- [ ] **Dashboard → Entry Form** — Tap "New Entry" (✏️) button, native EntryFormActivity launches
+- [ ] **Dashboard → Lock** — Tap "Lock" (🔒) button, returns to LoginActivity, DB closed
 - [ ] **Dashboard stat cards filter** — Tap "This Week" stat card, EntryListActivity opens with date range filter
 - [ ] **Dashboard ranked panel filter** — Tap a tag/category/place/person, EntryListActivity opens with proper filter
 - [ ] **Dashboard widget click** — Tap widget card, EntryListActivity opens with widget filters applied
@@ -90,14 +105,14 @@ summary: "Feature-by-feature test checklist for the fully native Android app (14
 - [ ] **Dashboard pinned/recent entry click** — Tap entry row, EntryViewerActivity opens showing that entry
 - [ ] **Dashboard search** — Tap search icon, native SearchActivity opens, back returns to dashboard
 
-## Custom Views
+### Custom Views
 
 - [ ] **Create view** — Name, conditions (AND/OR/NOT), group by, sort by, display mode
 - [ ] **Condition types** — All operators: contains, equals, starts/ends with, before/after, between, includes, is empty
 - [ ] **Load view** — Apply saved view to entry list
 - [ ] **Pin to dashboard** — View appears as quick action
 
-## SQL Explorer
+### SQL Explorer
 
 - [ ] **Visual builder** — Field/operator/value conditions with Spinner dropdowns, add/remove rows
 - [ ] **Raw SQL** — Type raw SQL targeting any table
@@ -108,7 +123,7 @@ summary: "Feature-by-feature test checklist for the fully native Android app (14
 - [ ] **Table browser** — Click table chips to see column schema and sample rows
 - [ ] **Clear button** — Resets conditions, SQL input, results
 
-## Reports
+### Reports
 
 - [ ] **HTML report** — Generate with templates, display in output area
 - [ ] **PDF export** — Native PdfDocument API generation, saved to Downloads
@@ -116,7 +131,7 @@ summary: "Feature-by-feature test checklist for the fully native Android app (14
 - [ ] **Template editor** — Create/edit/delete templates
 - [ ] **Filters** — Date range, category, tag filtering
 
-## Settings
+### Settings
 
 - [ ] **Preferences tab** — Auto-open journal, confirm delete, biometric toggle, geocoding provider, viewer font with live preview, date/time format, max pinned, sort order
 - [ ] **Theme picker** — All 12 themes apply correctly (ThemeManager recolors backgrounds, text, status bar)
@@ -134,7 +149,7 @@ summary: "Feature-by-feature test checklist for the fully native Android app (14
 - [ ] **Data export** — Export encrypted, CSV, metadata JSON
 - [ ] **Widgets tab** — Widget list, create/edit/delete with editor, live preview
 
-## Dashboard Widgets
+### Dashboard Widgets
 
 - [x] **Create widget** — Open widget editor, set name, description, icon, background color (verified 2026-04-05)
 - [x] **Widget filters** — Add filter rows, verify entries filtered correctly (verified 2026-04-05)
@@ -146,7 +161,7 @@ summary: "Feature-by-feature test checklist for the fully native Android app (14
 - [x] **Widget edit/delete** — Edit existing widget, delete with confirmation (verified 2026-04-05)
 - [x] **Widget persistence** — Widgets survive app restart (verified 2026-04-05)
 
-## Widget Click-to-Filter
+### Widget Click-to-Filter
 
 - [ ] **Widget card click shows entries** — Click widget card, verify navigates to entry list with filtered entries
 - [ ] **Widget edit button** — Tap pencil button, verify opens widget editor
@@ -155,7 +170,7 @@ summary: "Feature-by-feature test checklist for the fully native Android app (14
 - [ ] **Clear widget filter** — Clear All removes widget filter
 - [ ] **Widget date/text/array filters** — All filter types work correctly
 
-## Backup Folder (Android)
+### Backup Folder (Android)
 
 - [ ] **Select folder** — SAF folder picker opens, selected folder name displays
 - [ ] **Backup all data** — Creates JSON backup file in selected folder
@@ -163,13 +178,13 @@ summary: "Feature-by-feature test checklist for the fully native Android app (14
 - [ ] **Clear folder** — Clears folder selection, releases URI permissions
 - [ ] **Persist across restarts** — Folder URI persisted in SharedPreferences
 
-## iCalendar Export
+### iCalendar Export
 
 - [ ] **Export from Explorer** — iCalendar export button in results bar
 - [ ] **Entry-based only** — Shows alert for non-entry raw SQL results
 - [ ] **Valid .ics** — Valid iCalendar with VEVENT per entry
 
-## Wallpaper
+### Wallpaper
 
 - [ ] **Browse image** — Select image in Settings > Preferences
 - [ ] **Dashboard background** — Wallpaper appears on dashboard
@@ -177,7 +192,7 @@ summary: "Feature-by-feature test checklist for the fully native Android app (14
 - [ ] **Clear wallpaper** — Restores theme defaults
 - [ ] **Persistence** — Survives app restart
 
-## Calendar View
+### Calendar View
 
 - [x] **Monthly view** — Calendar grid, day numbers, entry count badges (verified 2026-04-06)
 - [x] **Navigation** — Prev/next, Today button (verified 2026-04-06)
@@ -185,7 +200,7 @@ summary: "Feature-by-feature test checklist for the fully native Android app (14
 - [x] **Today highlight** — Current day accent border (verified 2026-04-06)
 - [x] **Theme support** — Renders correctly across all 12 themes (verified 2026-04-06)
 
-## Entry Locking
+### Entry Locking
 
 - [x] **Lock entry** — Lock button, confirm, lock icon changes (verified 2026-04-13)
 - [x] **Edit disabled when locked** — Edit button grayed out (verified 2026-04-13)
@@ -193,14 +208,14 @@ summary: "Feature-by-feature test checklist for the fully native Android app (14
 - [x] **Lock persists** — Navigate away and return, still locked (verified 2026-04-13)
 - [x] **Schema migration** — Existing journals load with `locked` defaulting to false (verified 2026-04-13)
 
-## Location Name Field
+### Location Name Field
 
 - [ ] **Add location with name** — GPS/search location, type custom name, stored as `{lat, lng, address, name}`
 - [ ] **Display in viewer** — "Name — Address" for named locations, just address without
 - [ ] **Search locations** — Entry list search matches location name text
 - [ ] **Backwards compat** — Existing entries without name field display correctly
 
-## Native Service Layer
+### Native Service Layer
 
 - [ ] **BootstrapService** — SharedPreferences stores/retrieves values correctly
 - [ ] **CryptoService** — Encrypt/decrypt strings and bytes
@@ -212,13 +227,13 @@ summary: "Feature-by-feature test checklist for the fully native Android app (14
 - [ ] **DB settings** — getSettings/setSettings round-trip correctly
 - [ ] **DB export/stats/raw SQL** — exportJSON, getDBStats, execRawSQL
 
-## Browser-Only Fallback (web/ directory)
+### Browser-Only Fallback (web/ directory)
 
 - [ ] **Web browser** — Full functionality in Chrome/Firefox (localhost or HTTPS)
 - [ ] **File downloads** — PDF, CSV, SQLite, JSON, iCalendar exports
 - [ ] **Theme consistency** — All 12 themes render correctly
 
-## Prior Sessions (pre-UI overhaul, tested OK)
+### Prior Sessions (pre-UI overhaul, tested OK)
 
 - [x] Core CRUD operations
 - [x] Encryption/decryption cycle
@@ -231,3 +246,219 @@ summary: "Feature-by-feature test checklist for the fully native Android app (14
 - [x] Weather tracking
 - [x] Location/geocoding
 - [x] Metadata export/import
+
+## Completed Features
+
+### Core (v0.9.0 – v1.0.0)
+- [x] Multi-journal support with per-journal passwords
+- [x] AES-256-GCM encryption with PBKDF2 key derivation (100k iterations)
+- [x] sql.js (SQLite WASM) database with IndexedDB persistence
+- [x] Journal entries: create, edit, delete, view
+- [x] Rich text editing (Quill.js) with image support
+- [x] Image attachments: gallery picker, camera capture, base64 storage, lightbox viewer
+- [x] Categories (single-select) and tags (multi-select) per entry
+- [x] Location/place name with geocoding (Photon/Nominatim/Google)
+- [x] Weather tracking via Open-Meteo API (GPS-based)
+- [x] Dashboard with stats (total, week, month, year), pinned entries, recent entries
+- [x] Entry list with search, date/category/tag filtering
+- [x] 8 themes (Light, Dark, Ocean, Midnight, Forest, Amethyst, Aurora, Lavender)
+- [x] Data export: encrypted SQLite, plain SQLite, JSON, CSV
+- [x] Data import: SQLite, JSON
+- [x] Settings: preferences, theme picker, category/tag editor
+- [x] Reports: HTML with custom templates, PDF (jsPDF), CSV
+
+### v1.1.0 (2026-03-20)
+- [x] SQL Explorer: visual query builder + raw SQL text input
+- [x] Print PDF from entry viewer
+- [x] 4 new themes: Amethyst, Aurora, Lavender, Frost
+- [x] Navbar icon buttons
+- [x] Entry numbering in lists
+- [x] Column layout toggle in entry list
+
+### v1.2.0 (2026-03-25)
+- [x] Custom Views: saved filter combinations with AND/OR/NOT logic, grouping, sorting
+- [x] 3 new themes: Navy, Sunflower, Meadow (total: 12)
+- [x] Pagination in entry list (10/20/50/100/all)
+- [x] Card and list view toggle
+- [x] Pre-fill templates (auto-fill date, time, title, content, categories, tags)
+- [x] Batch deletion (multi-select mode)
+- [x] CSV import with column mapping and duplicate detection
+- [x] Pin to dashboard for custom views
+
+### v1.3.1 (2026-03-27)
+- [x] Pin/unpin entries, max pinned entries setting
+- [x] Default entry view option
+- [x] Viewer font customization (family + size)
+- [x] Android swipe navigation in entry viewer
+- [x] Collapsible filter fields
+- [x] Date & time display format settings (6 date formats, 12h/24h time)
+- [x] Entry viewer 3D icon buttons (gradient, shadow, hover/press effects)
+- [x] Cleanup tool: find dateless entries + duplicate detection
+- [x] Invalid date bug fix (returns empty string instead of "Invalid Date")
+- [x] Biometric authentication (AndroidX BiometricPrompt)
+
+### Post-v1.3.1 (2026-03-31)
+- [x] People feature: first/last name, description, multi-select per entry
+- [x] Custom icons for tags/categories
+- [x] Dashboard search with live results
+- [x] Settings tabs (Preferences, Templates, Edit Metadata, Data Management)
+- [x] Android navbar redesign: icon-only, two-row layout
+- [x] Separated CSS: style.css (web) + style-android.css (Android-only)
+- [x] Category and tag colors: color picker swatches, "Use colors" toggles
+- [x] Metadata export/import (JSON — categories, tags, people, icons, settings, templates, views)
+- [x] SQL Explorer: CSV export, raw SQL for any table, record detail overlay, custom view loader
+- [x] Delete button tooltip in Explorer results
+
+### v1.4.0 (2026-04-03, UI overhaul + component refactor)
+- [x] Native LoginActivity: journal selector, password, biometric login
+- [x] Native DashboardActivity: stats grid, pinned/recent entries, ranked panels
+- [x] Styled Android drawables: buttons (primary, secondary, accent, delete, biometric), inputs, cards, spinners, search/stat/entry/ranked backgrounds
+- [x] Android layout XMLs: login screen, dashboard, spinner items
+- [x] Web crypto.js: sync hooks for native SharedPreferences
+- [x] Web dashboard.js: getDashboardDataJSON() with streak for native dashboard
+- [x] Web db.js: journal list sync updates
+- [x] Reusable components.js: ResultGrid, RankedPanel, RecordViewer, CollapsiblePanel
+- [x] Dashboard: refactored ranked panels, whole-word search toggle, ResultGrid
+- [x] Explorer: replaced inline results with ResultGrid, RecordViewer
+- [x] Simplified index.html: component container divs
+- [x] Entry list: CollapsiblePanel for filters, ResultGrid, "Clear All" button
+- [x] Entry form: quick-create buttons for Category, Tags, People
+- [x] Dashboard 2x2 navigation grid
+- [x] Removed theme cycle button from navbar
+- [x] Updated app_info.xml: version 1.4.0
+
+### Bug Fixes (2026-04-01)
+- [x] Fix: web login screen showing after native Android login
+- [x] Fix: biometric prompt appearing twice on fingerprint login
+- [x] Fix: CSV import field mapping UI overflow on Android
+
+### v1.4.0+ (2026-04-04, HD icons + UI consolidation)
+- [x] HD icon support: 64x64 (chips/lists) and 128x128 (image buttons)
+- [x] 3-tier icon fallback in RankedPanel card view
+- [x] Data Management: consolidated export/import into dropdown+button rows
+- [x] Fix: metadata import blank screen
+- [x] Dashboard: weather info inset 3D styling, click navigates to Settings
+- [x] Entry viewer: icon-only action buttons
+
+### v1.4.0+ (2026-04-05, widgets + Bootstrap + descriptions)
+- [x] Dashboard Widgets: configurable aggregate cards with filters and functions
+- [x] Widget editor: tabbed UI with live preview, icon upload, color picker
+- [x] Widget storage: new `widgets` DB table
+- [x] Settings > Widgets tab
+- [x] Bootstrap module: IndexedDB-backed key-value store replacing localStorage
+- [x] Category and tag descriptions
+- [x] Entity hints in entry form
+- [x] iCalendar export from SQL Explorer
+- [x] Backup folder (Android): SAF folder picker, backup/restore
+- [x] All localStorage usage migrated to Bootstrap store
+
+### v1.4.0+ (2026-04-05, Calendar View + Wallpaper)
+- [x] Calendar View: monthly/weekly grid, navigation, day selection, badges, theme support
+- [x] Wallpaper: browse, apply, preview, clear, persistence
+
+### v1.5.0 (2026-04-06, hamburger menu + calendar redesign + rename)
+- [x] Hamburger menu: navigation links moved to dropdown
+- [x] New Entry button in navbar
+- [x] Dashboard cleaned up
+- [x] About menu item in hamburger menu
+- [x] App renamed from "JOURNAL" to "My Journal"
+- [x] Calendar View redesigned: Google Calendar-inspired
+- [x] Fixed: new journal creation, nav-menu active state, null reference
+
+### v1.5.0+ (2026-04-13, entry locking)
+- [x] Entry locking: `locked` column, schema version 2
+- [x] Lock/Unlock toggle with confirmation
+- [x] Locked entries: Edit button disabled
+- [x] Database migration: `upgradeSchema()`
+
+### v1.5.0+ (2026-04-16, CSV mapping UI redesign)
+- [x] CSV import mapping: full-screen modal overlay
+- [x] Fixed `build.gradle` versionName/versionCode
+
+### v1.5.0+ (2026-04-17–18, Kotlin migration)
+- [x] Kotlin build support: `kotlin-gradle-plugin:1.9.22`, `kotlin-android` plugin
+- [x] All 5 original activities converted from Java to Kotlin
+- [x] Native CalendarActivity created in Kotlin
+- [x] Entry form: "Copy" button for rich content
+- [x] Zero Java source files remain
+
+### v1.5.0+ (2026-04-25, location name + service layer)
+- [x] Location name field: `{lat, lng, address, name}`
+- [x] BootstrapService.kt — SharedPreferences wrapper
+- [x] CryptoService.kt — AES-256-GCM + PBKDF2
+- [x] WeatherService.kt — Open-Meteo HTTP client
+- [x] DatabaseService.kt — SQLCipher encrypted DB (~35 CRUD methods)
+
+### v1.5.0+ (2026-04-26, native activities)
+- [x] SearchActivity.kt — Native search screen
+- [x] SettingsActivity.kt (~2865 lines) — 5 tabs
+- [x] EntryListActivity.kt (~850 lines) — Full native entry list
+- [x] EntryViewerActivity.kt — Font settings, rich content
+
+### v1.5.0+ (2026-04-27, native Explorer + dashboard wiring)
+- [x] ExplorerActivity.kt — Full native SQL Explorer
+- [x] Widget card click-to-filter
+- [x] Dashboard navigation fully wired
+
+### v1.5.0+ (2026-04-28, all features native + WebView removal)
+- [x] WidgetEditorActivity.kt — Widget editor with 3 tabs, live preview
+- [x] CustomViewEditorActivity.kt — Custom view editor
+- [x] ReportsActivity.kt — Native reports (HTML/PDF/CSV)
+- [x] EntryFormActivity.kt (~1400 lines) — Native entry form
+- [x] CsvMappingActivity.kt — CSV import mapping
+- [x] **Removed MainActivity.kt** (1,267 lines) — WebView eliminated
+- [x] **Removed app/src/main/assets/web/** — Web assets no longer bundled
+- [x] **Created ServiceProvider.kt** — Singleton replacing `MainActivity.instance`
+- [x] **Created DashboardDataBuilder.kt** — Native dashboard data computation
+- [x] 14 activities, 4 services, ServiceProvider, DashboardDataBuilder — fully native
+
+### v1.5.0+ (2026-04-28, UI polish + dashboard settings)
+- [x] Fix: EntryViewer edit button not working
+- [x] Dashboard ranked badges uniform
+- [x] Dashboard search button redesign
+- [x] Dashboard component settings (toggle/reorder 11 components)
+- [x] Settings tab 3D icons
+- [x] Widget icon fix + color picker dialog
+
+### v1.5.0+ (2026-04-29, Today in History + themes + CSV fixes)
+- [x] Fix: EntryFormActivity edit not loading existing data
+- [x] Today in History dashboard component
+- [x] Runtime theme system (ThemeManager.kt, 12 themes)
+- [x] 350 ContextCompat.getColor() calls replaced with ThemeManager.color()
+- [x] Fix: CSV import date/time parsing regex
+- [x] Restored "Use space to separate tags" option
+
+### v1.5.0+ (2026-04-29, UI improvements)
+- [x] EntryFormActivity: "Content" group box with 2 sub-tabs (Content / Rich Content)
+- [x] EntryFormActivity: Rich text editor + formatting toolbar + "Copy Content → Rich Content" button moved to Rich Content sub-tab
+- [x] EntryFormActivity: Content tab enlarged (minLines 10, maxLines 20; Rich Content minLines 8, maxLines 16)
+- [x] EntryFormActivity: All action buttons (Save, Cancel, Delete) moved to top navbar row alongside Back button
+- [x] EntryFormActivity: Bottom action bar removed — more vertical space for content
+- [x] ReportsActivity: HTML output area enlarged (400dp → 600dp)
+- [x] ReportsActivity: HTML button now exports file to Downloads and opens in device browser via ACTION_VIEW intent
+- [x] EntryListActivity: Collapsible "Filter Info" box wrapping search bar, category/tag filter spinners, clear button, select mode, page size spinner
+- [x] EntryListActivity: Alternating row colors (CARD_BG / INPUT_BG) with CARD_BORDER stroke for entry cards
+- [x] EntryListActivity: "Order by" dropdowns (field selector + asc/desc direction) in Filter Info box, persisted to BootstrapService
+- [x] DashboardActivity: Bottom navigation bar removed, replaced with ☰ hamburger PopupMenu in top navbar
+- [x] DashboardActivity: Menu items: Entries, Calendar, Reports, Explorer, Settings, About
+- [x] SettingsActivity: Tab bar changed from horizontal scroll to 2-row grid (3 tabs per row, equal-width)
+- [x] DashboardDataBuilder: Recent entries sorted by date descending with time tiebreaker
+- [x] File cleanup: COMPONENTS.md deleted; KT_TODO.md + TODO.md + TO_TEST.md combined into TO_DO.md
+
+## Kotlin Migration (complete)
+
+All original Java activities were converted to Kotlin (2026-04-17/18). MainActivity was later removed entirely when WebView was eliminated (2026-04-28). The app is now 100% Kotlin with 21 source files: 14 activities + 4 services + ServiceProvider + DashboardDataBuilder + ThemeManager.
+
+### Service Layer
+
+| Service | File | Purpose |
+|---------|------|---------|
+| BootstrapService | BootstrapService.kt | SharedPreferences wrapper |
+| CryptoService | CryptoService.kt | AES-256-GCM + PBKDF2 via javax.crypto |
+| WeatherService | WeatherService.kt | Open-Meteo HTTP client |
+| DatabaseService | DatabaseService.kt | SQLCipher encrypted DB (~35 CRUD methods) |
+
+### Key Dependencies
+- `net.zetetic:sqlcipher-android:4.5.6` + `androidx.sqlite:sqlite:2.4.0`
+- All sources in `java/com/journal/app/` (no separate `kotlin/` source set)
+- Release APK ~25MB (SQLCipher native libraries for multiple ABIs)

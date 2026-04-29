@@ -47,7 +47,10 @@ class EntryListActivity : AppCompatActivity() {
     private lateinit var batchBar: LinearLayout
     private lateinit var selectCountView: TextView
     private lateinit var selectModeBtn: Button
+    private lateinit var filterBody: LinearLayout
+    private lateinit var filterToggle: TextView
 
+    private var filterExpanded = false
     private var allEntries = JSONArray()
     private var filteredEntries = mutableListOf<JSONObject>()
     private var currentPage = 1
@@ -93,6 +96,11 @@ class EntryListActivity : AppCompatActivity() {
         batchBar = findViewById(R.id.el_batch_bar)
         selectCountView = findViewById(R.id.el_select_count)
         selectModeBtn = findViewById(R.id.btn_select_mode)
+        filterBody = findViewById(R.id.el_filter_body)
+        filterToggle = findViewById(R.id.el_filter_toggle)
+
+        findViewById<LinearLayout>(R.id.el_filter_header).setOnClickListener { toggleFilterBox() }
+        filterToggle.setOnClickListener { toggleFilterBox() }
 
         sortField = bs.get("default_entry_sort_field") ?: "dtCreated"
         sortDir = bs.get("default_entry_sort_dir") ?: "desc"
@@ -102,6 +110,12 @@ class EntryListActivity : AppCompatActivity() {
         setupControls()
         loadEntries()
         applyFilters()
+    }
+
+    private fun toggleFilterBox() {
+        filterExpanded = !filterExpanded
+        filterBody.visibility = if (filterExpanded) View.VISIBLE else View.GONE
+        filterToggle.text = if (filterExpanded) "▼ Filter Info" else "▶ Filter Info"
     }
 
     private fun loadFieldSettings() {
@@ -166,11 +180,19 @@ class EntryListActivity : AppCompatActivity() {
             filterTag = ""
             widgetFilters = null
             widgetName = null
+            sortField = "dtCreated"
+            sortDir = "desc"
+            bs.set("default_entry_sort_field", sortField)
+            bs.set("default_entry_sort_dir", sortDir)
             setupCategoryFilter()
             setupTagFilter()
+            setupOrderBySpinners()
             currentPage = 1
             applyFilters()
         }
+
+        // Order by
+        setupOrderBySpinners()
 
         // Select mode
         selectModeBtn.setOnClickListener { toggleSelectMode() }
@@ -247,6 +269,47 @@ class EntryListActivity : AppCompatActivity() {
                 bs.set("entries_page_size", pageSize.toString())
                 currentPage = 1
                 renderPage()
+            }
+            override fun onNothingSelected(p: AdapterView<*>?) {}
+        }
+    }
+
+    private fun setupOrderBySpinners() {
+        val fieldSpinner = findViewById<Spinner>(R.id.el_order_field)
+        val dirSpinner = findViewById<Spinner>(R.id.el_order_dir)
+
+        val fieldLabels = listOf("Date", "Time", "Title", "Created", "Updated", "Categories", "Tags")
+        val fieldValues = listOf("date", "time", "title", "dtCreated", "dtUpdated", "categories", "tags")
+        val dirLabels = listOf("Desc ↓", "Asc ↑")
+        val dirValues = listOf("desc", "asc")
+
+        fieldSpinner.adapter = makeFilterAdapter(fieldLabels)
+        dirSpinner.adapter = makeFilterAdapter(dirLabels)
+
+        val fieldIdx = fieldValues.indexOf(sortField).let { if (it < 0) 3 else it }
+        fieldSpinner.setSelection(fieldIdx)
+        dirSpinner.setSelection(if (sortDir == "asc") 1 else 0)
+
+        var fieldInit = true
+        fieldSpinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
+            override fun onItemSelected(p: AdapterView<*>?, v: View?, pos: Int, id: Long) {
+                if (fieldInit) { fieldInit = false; return }
+                sortField = fieldValues[pos]
+                bs.set("default_entry_sort_field", sortField)
+                currentPage = 1
+                applyFilters()
+            }
+            override fun onNothingSelected(p: AdapterView<*>?) {}
+        }
+
+        var dirInit = true
+        dirSpinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
+            override fun onItemSelected(p: AdapterView<*>?, v: View?, pos: Int, id: Long) {
+                if (dirInit) { dirInit = false; return }
+                sortDir = dirValues[pos]
+                bs.set("default_entry_sort_dir", sortDir)
+                currentPage = 1
+                applyFilters()
             }
             override fun onNothingSelected(p: AdapterView<*>?) {}
         }
@@ -452,11 +515,12 @@ class EntryListActivity : AppCompatActivity() {
 
         for (i in start until end) {
             val entry = filteredEntries[i]
-            entriesContainer.addView(buildEntryCard(entry, i + 1))
+            val displayIdx = i - start
+            entriesContainer.addView(buildEntryCard(entry, i + 1, displayIdx))
         }
     }
 
-    private fun buildEntryCard(entry: JSONObject, rowNum: Int): View {
+    private fun buildEntryCard(entry: JSONObject, rowNum: Int, displayIdx: Int): View {
         val id = entry.optString("id", "")
         val date = entry.optString("date", "")
         val time = entry.optString("time", "")
@@ -470,14 +534,22 @@ class EntryListActivity : AppCompatActivity() {
         val pinned = entry.optBoolean("pinned", false)
         val locked = entry.optBoolean("locked", false)
 
+        val isEvenRow = displayIdx % 2 == 0
+        val rowBgColor = if (isEvenRow) ThemeManager.color(C.CARD_BG) else ThemeManager.color(C.INPUT_BG)
+
         val card = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
             setPadding(dp(10), dp(10), dp(10), dp(10))
-            background = ContextCompat.getDrawable(this@EntryListActivity, R.drawable.entry_row_bg)
+            val bg = android.graphics.drawable.GradientDrawable().apply {
+                cornerRadius = dp(6).toFloat()
+                setColor(rowBgColor)
+                setStroke(dp(1), ThemeManager.color(C.CARD_BORDER))
+            }
+            background = bg
             layoutParams = LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT,
                 LinearLayout.LayoutParams.WRAP_CONTENT
-            ).apply { bottomMargin = dp(6) }
+            ).apply { bottomMargin = dp(4) }
             isClickable = true
             isFocusable = true
         }

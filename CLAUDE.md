@@ -1,6 +1,6 @@
 ---
 tags: [architecture, project-structure, tech-stack, database-schema, build, conventions, themes, encryption]
-related_files: [REQUIREMENT.md, TODO.md, README.md]
+related_files: [REQUIREMENT.md, TO_DO.md, README.md]
 summary: "Project architecture reference — directory structure, tech stack, database schema, ServiceProvider pattern, build instructions, and coding conventions."
 ---
 
@@ -22,16 +22,16 @@ MYJOURNAL/
 │   │   ├── AndroidManifest.xml     # 14 activities, permissions (internet, location, camera, biometric)
 │   │   ├── java/com/journal/app/    # All Kotlin sources (21 files)
 │   │   │   ├── LoginActivity.kt         # Entry point: journal select, password, biometric login
-│   │   │   ├── DashboardActivity.kt     # Native dashboard (stats, ranked lists, pinned/recent, widgets)
+│   │   │   ├── DashboardActivity.kt     # Native dashboard (stats, ranked lists, pinned/recent, widgets, hamburger menu)
 │   │   │   ├── CalendarActivity.kt      # Native calendar view
 │   │   │   ├── AboutActivity.kt         # App info screen
 │   │   │   ├── SearchActivity.kt        # Native full-text search screen
 │   │   │   ├── EntryViewerActivity.kt   # Native entry viewer with font settings
-│   │   │   ├── EntryListActivity.kt     # Native entry list (search, filter, sort, paginate, batch delete)
+│   │   │   ├── EntryListActivity.kt     # Native entry list (collapsible filters, order-by dropdowns, alternating rows, search, sort, paginate, batch delete)
 │   │   │   ├── ExplorerActivity.kt      # Native SQL Explorer (table browser, query builder, raw SQL, CSV/iCal export)
-│   │   │   ├── SettingsActivity.kt      # Native settings (6 tabs: Prefs, Templates, Metadata, Data, Widgets, Dashboard)
-│   │   │   ├── EntryFormActivity.kt     # Native entry form (rich text, images, categories, tags, people, locations, weather)
-│   │   │   ├── ReportsActivity.kt       # Native reports (HTML/PDF/CSV, filters, templates)
+│   │   │   ├── SettingsActivity.kt      # Native settings (6 tabs in 2-row grid: Prefs, Templates, Metadata, Data, Widgets, Dashboard)
+│   │   │   ├── EntryFormActivity.kt     # Native entry form (Content group box with sub-tabs, rich text, images, categories, tags, people, locations, weather)
+│   │   │   ├── ReportsActivity.kt       # Native reports (HTML export+browser open, PDF/CSV, filters, templates)
 │   │   │   ├── WidgetEditorActivity.kt  # Native widget editor (header/filters/functions tabs, preview)
 │   │   │   ├── CustomViewEditorActivity.kt # Native custom view editor (conditions, groupBy, orderBy, display)
 │   │   │   ├── CsvMappingActivity.kt    # Native CSV import mapping screen
@@ -154,6 +154,10 @@ Light, Dark, Ocean, Midnight, Forest, Amethyst, Aurora, Lavender, Frost, Navy, S
 - **Bootstrap store** — all key-value storage uses BootstrapService (SharedPreferences wrapper)
 - **Large data to activities** — SearchActivity, CalendarActivity use static `companion object` holders for entry data (avoids TransactionTooLargeException)
 - **Dashboard component settings** — Settings > Dashboard tab allows toggling/reordering 11 components; stored in BootstrapService as `dashboard_components` JSON
-- **DashboardActivity navigation** — launches other activities directly via `startActivity()`, stays in back stack
+- **DashboardActivity navigation** — hamburger menu (☰) in top navbar with PopupMenu (Entries, Calendar, Reports, Explorer, Settings, About); no bottom nav bar
 - **Rich content rendering** — `Html.fromHtml()` + `TextView` (no WebView)
 - **File exports** — `ServiceProvider.saveFileToDownloads()` via MediaStore scoped storage (API 29+)
+- **Entry form layout** — Content/Rich Content in a tabbed group box; all action buttons (Save/Cancel/Delete) in top navbar, no bottom bar
+- **Entry list** — Collapsible "Filter Info" box with search/filter controls and Order by dropdowns (field + asc/desc); alternating row colors (`CARD_BG`/`INPUT_BG`) with `CARD_BORDER` stroke
+- **Settings tabs** — 2-row grid layout (3 tabs per row), equal-width buttons, no horizontal scrolling
+- **HTML reports** — Exported to Downloads and opened in browser via `ACTION_VIEW` intent

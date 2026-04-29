@@ -1,6 +1,6 @@
 ---
 tags: [requirements, features, authentication, biometric, entries, dashboard, views, explorer, reports, settings, weather, Android, downloads]
-related_files: [CLAUDE.md, TODO.md]
+related_files: [CLAUDE.md, TO_DO.md]
 summary: "Complete functional requirements for all feature areas — authentication, storage, entries, dashboard, views, explorer, reports, settings, weather, Android platform, downloads."
 ---
 
@@ -68,11 +68,14 @@ summary: "Complete functional requirements for all feature areas — authenticat
 
 ## 3. Journal Entries
 
-### Entry Form (EntryFormActivity.kt, ~1400 lines)
+### Entry Form (EntryFormActivity.kt, ~1550 lines)
 - 2 tabs: Main and Misc
+- Top navbar: Back (←), title, Save, Cancel, Delete (edit only) — no bottom action bar
 - Date: `DatePickerDialog`; Time: `TimePickerDialog`
 - Title: `EditText`
-- Content: `EditText` with rich text formatting toolbar (Bold/Italic/Underline/Strikethrough via `Spannable` — `StyleSpan`, `UnderlineSpan`, `StrikethroughSpan`); `Html.fromHtml()`/`Html.toHtml()` for persistence
+- Content group box with 2 sub-tabs:
+  - **Content tab**: large plain text editor (minLines 10, maxLines 20)
+  - **Rich Content tab**: formatting toolbar (B/I/U/S via `Spannable` — `StyleSpan`, `UnderlineSpan`, `StrikethroughSpan`), rich text editor (minLines 8, maxLines 16), "Copy Content → Rich Content" button; `Html.fromHtml()`/`Html.toHtml()` for persistence
 - Categories: checkboxes from managed list + quick-add inline
 - Tags: `AutoCompleteTextView` with chip display + quick-add inline
 - People: checkboxes from managed list + quick-add inline (first/last name + description)
@@ -84,10 +87,12 @@ summary: "Complete functional requirements for all feature areas — authenticat
 
 ### Entry List (EntryListActivity.kt)
 - Card view: entry cards with date, title, category badge, tag chips, content preview
+- Alternating row colors: even rows use `CARD_BG`, odd rows use `INPUT_BG`, with `CARD_BORDER` stroke
+- Collapsible "Filter Info" box: search bar, category/tag spinners, clear button, select mode, page size — collapsed by default, toggle via header tap
 - Search: across title, content, tags, categories, people, place
 - Filters: category and tag filter spinners
 - Pagination: 10, 20, 50, 100 entries per page
-- Sort: configurable field and direction from bootstrap settings
+- Sort: "Order by" dropdowns in Filter Info box — field selector (Date, Time, Title, Created, Updated, Categories, Tags) and direction (Desc/Asc), persisted to BootstrapService
 - Multi-select mode: checkbox per entry, batch delete with confirmation
 - Widget filter support: `matchesWidgetFilters()` with date/text/array operators
 
@@ -147,7 +152,9 @@ summary: "Complete functional requirements for all feature areas — authenticat
 - Pencil edit button opens WidgetEditorActivity
 
 ### Navigation
-- Bottom nav launches native activities directly (Entry List, Explorer, Settings, Reports, Entry Form)
+- Top navbar: Search (🔍), journal name, New Entry (✏️), Lock (🔒), Menu (☰)
+- Hamburger menu (☰) opens `PopupMenu` with: Entries, Calendar, Reports, Explorer, Settings, About
+- No bottom navigation bar — all navigation via top navbar and hamburger menu
 - DashboardActivity stays in back stack for proper back navigation
 - Lock returns to LoginActivity (closes DB via ServiceProvider.clear())
 
@@ -181,7 +188,7 @@ summary: "Complete functional requirements for all feature areas — authenticat
 ## 7. Reports (ReportsActivity.kt)
 
 ### Formats
-- **HTML**: rendered in output area with template substitution
+- **HTML**: exported to Downloads as `.html` file and opened in device browser via `ACTION_VIEW` intent; also rendered inline in scrollable output area (600dp)
 - **PDF**: native `PdfDocument` API, page breaks between entries, saved to Downloads
 - **CSV**: all fields as columns, double-quoted values
 
@@ -194,8 +201,9 @@ summary: "Complete functional requirements for all feature areas — authenticat
 
 ## 8. Settings (SettingsActivity.kt, ~3000+ lines)
 
-### Tabs (6 total, with emoji icons + 3D styling)
-- ⚙️ Preferences | 📝 Templates | 🏷️ Metadata | 💾 Data | 🧩 Widgets | 📊 Dashboard
+### Tabs (6 total, in 2-row grid with emoji icons + 3D styling)
+- Row 1: ⚙️ Prefs | 📝 Templates | 🏷️ Metadata
+- Row 2: 💾 Data | 🧩 Widgets | 📊 Dashboard
 
 ### Preferences
 - Auto-open last journal, confirm before delete, biometric toggle

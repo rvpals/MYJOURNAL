@@ -14,6 +14,7 @@ import android.view.View
 import android.widget.Button
 import android.widget.ImageView
 import android.widget.LinearLayout
+import android.widget.PopupMenu
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
@@ -53,7 +54,7 @@ class DashboardActivity : AppCompatActivity() {
         }
 
         setupNavbar()
-        setupBottomNav()
+        setupMenuButton()
         setupSearchButton()
         populateWeatherStreak()
         populateStats()
@@ -144,25 +145,47 @@ class DashboardActivity : AppCompatActivity() {
         findViewById<View>(R.id.btn_lock).setOnClickListener { returnToLogin() }
     }
 
-    private fun setupBottomNav() {
-        findViewById<View>(R.id.nav_entries).setOnClickListener { openFilteredEntryList(null, null) }
-        findViewById<View>(R.id.nav_reports).setOnClickListener {
-            ReportsActivity.databaseService = ServiceProvider.databaseService
-            ReportsActivity.bootstrapService = ServiceProvider.bootstrapService
-            startActivity(Intent(this, ReportsActivity::class.java))
-        }
-        findViewById<View>(R.id.nav_explorer).setOnClickListener {
-            ExplorerActivity.databaseService = ServiceProvider.databaseService
-            ExplorerActivity.bootstrapService = ServiceProvider.bootstrapService
-            startActivity(Intent(this, ExplorerActivity::class.java))
-        }
-        findViewById<View>(R.id.nav_settings).setOnClickListener {
-            SettingsActivity.databaseService = ServiceProvider.databaseService
-            SettingsActivity.bootstrapService = ServiceProvider.bootstrapService
-            SettingsActivity.cryptoService = ServiceProvider.cryptoService
-            SettingsActivity.weatherService = ServiceProvider.weatherService
-            SettingsActivity.currentJournalId = ServiceProvider.bootstrapService?.get("last_journal_id")
-            startActivity(Intent(this, SettingsActivity::class.java))
+    private fun setupMenuButton() {
+        findViewById<View>(R.id.btn_menu).setOnClickListener { anchor ->
+            val popup = PopupMenu(this, anchor)
+            popup.menu.add(0, 1, 0, "📋  Entries")
+            popup.menu.add(0, 2, 1, "📅  Calendar")
+            popup.menu.add(0, 3, 2, "📊  Reports")
+            popup.menu.add(0, 4, 3, "🔍  Explorer")
+            popup.menu.add(0, 5, 4, "⚙️  Settings")
+            popup.menu.add(0, 6, 5, "ℹ️  About")
+            popup.setOnMenuItemClickListener { item ->
+                when (item.itemId) {
+                    1 -> openFilteredEntryList(null, null)
+                    2 -> {
+                        val db = ServiceProvider.databaseService ?: return@setOnMenuItemClickListener true
+                        val entriesJson = db.getEntries()
+                        CalendarActivity.pendingData = entriesJson
+                        startActivity(Intent(this, CalendarActivity::class.java))
+                    }
+                    3 -> {
+                        ReportsActivity.databaseService = ServiceProvider.databaseService
+                        ReportsActivity.bootstrapService = ServiceProvider.bootstrapService
+                        startActivity(Intent(this, ReportsActivity::class.java))
+                    }
+                    4 -> {
+                        ExplorerActivity.databaseService = ServiceProvider.databaseService
+                        ExplorerActivity.bootstrapService = ServiceProvider.bootstrapService
+                        startActivity(Intent(this, ExplorerActivity::class.java))
+                    }
+                    5 -> {
+                        SettingsActivity.databaseService = ServiceProvider.databaseService
+                        SettingsActivity.bootstrapService = ServiceProvider.bootstrapService
+                        SettingsActivity.cryptoService = ServiceProvider.cryptoService
+                        SettingsActivity.weatherService = ServiceProvider.weatherService
+                        SettingsActivity.currentJournalId = ServiceProvider.bootstrapService?.get("last_journal_id")
+                        startActivity(Intent(this, SettingsActivity::class.java))
+                    }
+                    6 -> startActivity(Intent(this, AboutActivity::class.java))
+                }
+                true
+            }
+            popup.show()
         }
     }
 

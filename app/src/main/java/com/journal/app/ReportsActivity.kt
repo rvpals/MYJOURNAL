@@ -1,6 +1,8 @@
 package com.journal.app
 
 import android.content.ContentValues
+import android.content.Intent
+import android.net.Uri
 import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Paint
@@ -291,7 +293,12 @@ class ReportsActivity : AppCompatActivity() {
 
         sb.append("</tbody></table></body></html>")
 
-        showHtmlInOutput(sb.toString())
+        val html = sb.toString()
+        val uri = saveHtmlToDownloads("journal_report.html", html.toByteArray(Charsets.UTF_8))
+        if (uri != null) {
+            openHtmlInBrowser(uri)
+        }
+        showHtmlInOutput(html)
     }
 
     private fun showHtmlInOutput(html: String) {
@@ -299,7 +306,7 @@ class ReportsActivity : AppCompatActivity() {
 
         val scrollView = HorizontalScrollView(this).apply {
             layoutParams = linParams().apply {
-                height = dp(400)
+                height = dp(600)
             }
         }
         val textView = TextView(this).apply {
@@ -320,6 +327,39 @@ class ReportsActivity : AppCompatActivity() {
         }
         scrollView.addView(textView)
         contentContainer.addView(scrollView)
+    }
+
+    private fun saveHtmlToDownloads(filename: String, data: ByteArray): Uri? {
+        try {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                val values = ContentValues().apply {
+                    put(MediaStore.Downloads.DISPLAY_NAME, filename)
+                    put(MediaStore.Downloads.MIME_TYPE, "text/html")
+                    put(MediaStore.Downloads.RELATIVE_PATH, Environment.DIRECTORY_DOWNLOADS)
+                }
+                val uri = contentResolver.insert(MediaStore.Downloads.EXTERNAL_CONTENT_URI, values)
+                if (uri != null) {
+                    contentResolver.openOutputStream(uri)?.use { it.write(data) }
+                    Toast.makeText(this, "Saved: $filename", Toast.LENGTH_SHORT).show()
+                    return uri
+                }
+            }
+        } catch (e: Exception) {
+            Toast.makeText(this, "Error saving file: ${e.message}", Toast.LENGTH_LONG).show()
+        }
+        return null
+    }
+
+    private fun openHtmlInBrowser(uri: Uri) {
+        try {
+            val intent = Intent(Intent.ACTION_VIEW).apply {
+                setDataAndType(uri, "text/html")
+                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+            }
+            startActivity(intent)
+        } catch (_: Exception) {
+            Toast.makeText(this, "No app found to open HTML file.", Toast.LENGTH_SHORT).show()
+        }
     }
 
     // ========== CSV Export ==========

@@ -1,6 +1,6 @@
 # Database Table Structure
 
-**Engine:** sql.js (SQLite WASM) | **Schema Version:** 2 | **Storage:** AES-256-GCM encrypted bytes in IndexedDB
+**Engine:** SQLCipher 4.5.6 (encrypted SQLite via `net.zetetic:sqlcipher-android`) | **Schema Version:** 2
 
 ---
 
@@ -17,17 +17,17 @@ Primary table storing all journal entries.
 | time | TEXT | | Entry time (HH:MM) |
 | title | TEXT | | Entry title |
 | content | TEXT | | Plain text content |
-| richContent | TEXT | | Rich text content (Quill.js HTML) |
+| richContent | TEXT | | Rich text content (HTML via Spannable + Html.toHtml()) |
 | categories | TEXT | | JSON array of category names, e.g. `["Work","Travel"]` |
 | tags | TEXT | | JSON array of tag names, e.g. `["daily","personal"]` |
+| people | TEXT | | JSON array of `{firstName, lastName}` objects |
 | placeName | TEXT | | Free-text place name, e.g. "NYC Trip" |
-| locations | TEXT | | JSON array of `{lat, lng, address}` objects |
+| locations | TEXT | | JSON array of `{lat, lng, address, name?}` objects |
 | weather | TEXT | | JSON object `{temp, unit, description, code}` or null |
 | pinned | INTEGER | DEFAULT 0 | 1 = pinned to dashboard, 0 = not pinned |
 | locked | INTEGER | DEFAULT 0 | 1 = locked (editing disabled), 0 = unlocked |
 | dtCreated | TEXT | | ISO 8601 creation timestamp |
 | dtUpdated | TEXT | | ISO 8601 last-updated timestamp |
-| people | TEXT | | JSON array of `{firstName, lastName}` objects |
 
 **Indexes:**
 - `idx_entries_date` on `date`
@@ -42,7 +42,7 @@ Stores image attachments for journal entries.
 | Column | Type | Constraints | Description |
 |--------|------|-------------|-------------|
 | id | TEXT | PRIMARY KEY | Unique image identifier |
-| entryId | TEXT | NOT NULL, FK → entries(id) ON DELETE CASCADE | Parent entry |
+| entryId | TEXT | NOT NULL, FK -> entries(id) ON DELETE CASCADE | Parent entry |
 | name | TEXT | | Original filename |
 | data | TEXT | | Full image as base64 data URL |
 | thumb | TEXT | | Thumbnail as base64 data URL |
@@ -50,9 +50,6 @@ Stores image attachments for journal entries.
 
 **Indexes:**
 - `idx_images_entry` on `entryId`
-
-**Relations:**
-- `entryId` → `entries.id` (many-to-one, cascade delete)
 
 ---
 
@@ -65,22 +62,16 @@ Managed list of available categories.
 | name | TEXT | PRIMARY KEY | Category name |
 | description | TEXT | DEFAULT '' | Optional description (shown as hint in entry form) |
 
-**Relations:**
-- Referenced by `entries.categories` JSON array (logical, not FK-enforced)
-
 ---
 
 ### tags
 
-Managed list of tag descriptions. Tags themselves are created inline in entries; this table stores optional metadata.
+Managed list of tag descriptions. Tags can also be created inline in entries.
 
 | Column | Type | Constraints | Description |
 |--------|------|-------------|-------------|
 | name | TEXT | PRIMARY KEY | Tag name |
 | description | TEXT | DEFAULT '' | Optional description (shown in autocomplete and hints) |
-
-**Relations:**
-- Referenced by `entries.tags` JSON array (logical, not FK-enforced)
 
 ---
 
@@ -94,10 +85,6 @@ Custom icons for categories, tags, and people. Supports standard (64x64) and HD 
 | name | TEXT | NOT NULL, PK (composite) | Name of the category/tag/person |
 | data | TEXT | | PNG image as data URL |
 
-**Relations:**
-- `(type, name)` logically references `categories.name`, `tags.name`, or `people(firstName + ' ' + lastName)`
-- HD variants use `_hd` suffix on type (e.g. `category_hd`)
-
 ---
 
 ### people
@@ -109,9 +96,6 @@ Managed list of people that can be associated with entries.
 | firstName | TEXT | NOT NULL, PK (composite) | First name |
 | lastName | TEXT | NOT NULL, PK (composite) | Last name |
 | description | TEXT | DEFAULT '' | Optional description |
-
-**Relations:**
-- Referenced by `entries.people` JSON array as `{firstName, lastName}` objects (logical, not FK-enforced)
 
 ---
 
@@ -144,7 +128,7 @@ Key-value store for all application settings.
 | key | TEXT | PRIMARY KEY | Setting key name |
 | value | TEXT | | JSON-encoded value |
 
-**Common keys:** `theme`, `wallpaper`, `weatherLat`, `weatherLng`, `weatherCity`, `tempUnit`, `viewerFontFamily`, `viewerFontSize`, `dateFormat`, `timeFormat`, custom view definitions, pre-fill templates, report templates.
+**Common keys:** `theme`, `wallpaper`, `reportTemplates`, `entryTemplates`, `customViews`, `entryListFields`
 
 ---
 
@@ -161,21 +145,21 @@ Tracks the database schema version for migrations.
 ## Relationship Diagram
 
 ```
-entries (1) ──────< images (many)
-   │                   FK: images.entryId → entries.id (CASCADE DELETE)
-   │
-   ├── .categories[]  ···> categories.name     (logical, JSON array)
-   ├── .tags[]        ···> tags.name           (logical, JSON array)
-   ├── .people[]      ···> people(firstName,   (logical, JSON array of objects)
-   │                              lastName)
-   │
-icons(type, name) ···> categories.name         (logical, type='category'/'category_hd')
-                  ···> tags.name               (logical, type='tag'/'tag_hd')
-                  ···> people full name        (logical, type='person'/'person_hd')
+entries (1) ------< images (many)
+   |                   FK: images.entryId -> entries.id (CASCADE DELETE)
+   |
+   |-- .categories[]  ...> categories.name     (logical, JSON array)
+   |-- .tags[]        ...> tags.name           (logical, JSON array)
+   |-- .people[]      ...> people(firstName,   (logical, JSON array of objects)
+   |                              lastName)
+   |
+icons(type, name) ...> categories.name         (logical, type='category'/'category_hd')
+                  ...> tags.name               (logical, type='tag'/'tag_hd')
+                  ...> people full name        (logical, type='person'/'person_hd')
 
 widgets                (standalone, references entries via filter criteria at runtime)
 settings               (standalone key-value store)
 schema_version         (standalone, single row)
 ```
 
-**Legend:** `──────<` = foreign key (enforced) | `···>` = logical reference (JSON field, not FK-enforced)
+**Legend:** `------<` = foreign key (enforced) | `...>` = logical reference (JSON field, not FK-enforced)

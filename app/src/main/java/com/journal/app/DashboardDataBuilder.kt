@@ -31,7 +31,8 @@ object DashboardDataBuilder {
             .map { summarizeEntry(it) }
 
         val recent = entryList
-            .sortedByDescending { it.optString("date", "") }
+            .sortedWith(compareByDescending<JSONObject> { it.optString("date", "") }
+                .thenByDescending { it.optString("time", "") })
             .take(5)
             .map { summarizeEntry(it) }
 

@@ -36,21 +36,15 @@
             android:letterSpacing="0.06" />
     </LinearLayout>
 
-    <!-- Tab Bar -->
-    <HorizontalScrollView
+    <!-- Tab Bar (2 rows) -->
+    <LinearLayout
+        android:id="@+id/settings_tabs"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:scrollbars="none"
-        android:background="@color/login_card_bg">
-
-        <LinearLayout
-            android:id="@+id/settings_tabs"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:paddingHorizontal="8dp"
-            android:paddingBottom="6dp" />
-    </HorizontalScrollView>
+        android:orientation="vertical"
+        android:paddingHorizontal="8dp"
+        android:paddingBottom="6dp"
+        android:background="@color/login_card_bg" />
 
     <!-- Content -->
     <ScrollView

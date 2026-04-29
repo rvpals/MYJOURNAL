@@ -94,23 +94,47 @@ class SettingsActivity : AppCompatActivity() {
         val tabBar = findViewById<LinearLayout>(R.id.settings_tabs)
         tabBar.removeAllViews()
 
-        for ((id, icon, label) in tabDefs) {
-            val btn = Button(this).apply {
-                text = "$icon\n$label"
-                textSize = 11f
-                isAllCaps = false
-                gravity = Gravity.CENTER
-                setPadding(dp(10), dp(8), dp(10), dp(6))
-                stateListAnimator = null
-                elevation = dp(3).toFloat()
+        val tabsPerRow = 3
+        val rows = tabDefs.chunked(tabsPerRow)
+
+        for ((rowIdx, rowTabs) in rows.withIndex()) {
+            val row = LinearLayout(this).apply {
+                orientation = LinearLayout.HORIZONTAL
                 layoutParams = LinearLayout.LayoutParams(
-                    LinearLayout.LayoutParams.WRAP_CONTENT,
+                    LinearLayout.LayoutParams.MATCH_PARENT,
                     LinearLayout.LayoutParams.WRAP_CONTENT
-                ).apply { marginEnd = dp(6) }
-                setOnClickListener { showTab(id) }
+                ).apply { if (rowIdx > 0) topMargin = dp(4) }
             }
-            tabButtons[id] = btn
-            tabBar.addView(btn)
+
+            for ((id, icon, label) in rowTabs) {
+                val btn = Button(this).apply {
+                    text = "$icon\n$label"
+                    textSize = 11f
+                    isAllCaps = false
+                    gravity = Gravity.CENTER
+                    setPadding(dp(10), dp(8), dp(10), dp(6))
+                    stateListAnimator = null
+                    elevation = dp(3).toFloat()
+                    layoutParams = LinearLayout.LayoutParams(
+                        0,
+                        LinearLayout.LayoutParams.WRAP_CONTENT,
+                        1f
+                    ).apply { marginEnd = dp(4) }
+                    setOnClickListener { showTab(id) }
+                }
+                tabButtons[id] = btn
+                row.addView(btn)
+            }
+
+            // Fill remaining slots so buttons stay equal width
+            val remaining = tabsPerRow - rowTabs.size
+            for (i in 0 until remaining) {
+                row.addView(View(this).apply {
+                    layoutParams = LinearLayout.LayoutParams(0, 0, 1f).apply { marginEnd = dp(4) }
+                })
+            }
+
+            tabBar.addView(row)
         }
     }
 

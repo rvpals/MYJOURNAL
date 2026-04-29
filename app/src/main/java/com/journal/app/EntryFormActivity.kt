@@ -101,6 +101,9 @@ class EntryFormActivity : AppCompatActivity() {
     private var isUnderline = false
     private var isStrikethrough = false
 
+    private var activeContentTab = "content"
+    private var contentSubTabContainer: LinearLayout? = null
+
     private val imagePicker = registerForActivityResult(ActivityResultContracts.GetMultipleContents()) { uris ->
         for (uri in uris) processImageUri(uri)
         if (activeTab == "main") showTab("main")
@@ -288,7 +291,11 @@ class EntryFormActivity : AppCompatActivity() {
         // Save current values before rebuilding
         if (::titleInput.isInitialized) {
             titleValue = titleInput.text.toString()
+        }
+        if (::contentInput.isInitialized && activeContentTab == "content") {
             contentValue = contentInput.text.toString()
+        }
+        if (::richContentInput.isInitialized && activeContentTab == "rich") {
             richContentHtml = Html.toHtml(richContentInput.text as Spannable, Html.TO_HTML_PARAGRAPH_LINES_CONSECUTIVE)
         }
 
@@ -350,33 +357,145 @@ class EntryFormActivity : AppCompatActivity() {
         titleInput = makeInput("Entry title", titleValue)
         contentContainer.addView(titleInput)
 
-        // Content
-        addLabel("Content")
+        // Content group box
+        buildContentGroupBox()
+
+        // Images
+        addSectionHeader("Images")
+        buildImageSection()
+    }
+
+    private fun buildContentGroupBox() {
+        // Save current content values from inputs before rebuilding
+        if (::contentInput.isInitialized && activeContentTab == "content") {
+            contentValue = contentInput.text.toString()
+        }
+        if (::richContentInput.isInitialized && activeContentTab == "rich") {
+            richContentHtml = Html.toHtml(richContentInput.text as Spannable, Html.TO_HTML_PARAGRAPH_LINES_CONSECUTIVE)
+        }
+
+        val groupBox = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            val bg = GradientDrawable().apply {
+                cornerRadius = dp(8).toFloat()
+                setStroke(dp(1), ThemeManager.color(C.CARD_BORDER))
+                setColor(ThemeManager.color(C.CARD_BG))
+            }
+            background = bg
+            setPadding(dp(10), dp(8), dp(10), dp(10))
+            layoutParams = linParams().apply { bottomMargin = dp(12) }
+        }
+
+        // Group box header
+        groupBox.addView(TextView(this).apply {
+            text = "Content"
+            setTextColor(ThemeManager.color(C.ACCENT))
+            textSize = 14f
+            setTypeface(null, Typeface.BOLD)
+            setPadding(dp(2), 0, 0, dp(6))
+        })
+
+        // Sub-tab bar
+        val tabBar = LinearLayout(this).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = Gravity.CENTER_VERTICAL
+            layoutParams = linParams().apply { bottomMargin = dp(8) }
+        }
+
+        val contentTabBtn = Button(this).apply {
+            text = "Content"
+            textSize = 12f
+            isAllCaps = false
+            layoutParams = LinearLayout.LayoutParams(0, dp(34), 1f).apply { marginEnd = dp(4) }
+            setPadding(dp(8), 0, dp(8), 0)
+        }
+        val richTabBtn = Button(this).apply {
+            text = "Rich Content"
+            textSize = 12f
+            isAllCaps = false
+            layoutParams = LinearLayout.LayoutParams(0, dp(34), 1f)
+            setPadding(dp(8), 0, dp(8), 0)
+        }
+
+        fun styleContentTabs() {
+            if (activeContentTab == "content") {
+                contentTabBtn.background = ContextCompat.getDrawable(this, R.drawable.btn_accent)
+                contentTabBtn.setTextColor(ThemeManager.color(C.CARD_BG))
+                richTabBtn.background = ContextCompat.getDrawable(this, R.drawable.btn_secondary)
+                richTabBtn.setTextColor(ThemeManager.color(C.TEXT))
+            } else {
+                richTabBtn.background = ContextCompat.getDrawable(this, R.drawable.btn_accent)
+                richTabBtn.setTextColor(ThemeManager.color(C.CARD_BG))
+                contentTabBtn.background = ContextCompat.getDrawable(this, R.drawable.btn_secondary)
+                contentTabBtn.setTextColor(ThemeManager.color(C.TEXT))
+            }
+        }
+
+        val subContainer = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            layoutParams = linParams()
+        }
+        contentSubTabContainer = subContainer
+
+        fun showContentSubTab(tab: String) {
+            if (::contentInput.isInitialized && activeContentTab == "content") {
+                contentValue = contentInput.text.toString()
+            }
+            if (::richContentInput.isInitialized && activeContentTab == "rich") {
+                richContentHtml = Html.toHtml(richContentInput.text as Spannable, Html.TO_HTML_PARAGRAPH_LINES_CONSECUTIVE)
+            }
+            activeContentTab = tab
+            styleContentTabs()
+            subContainer.removeAllViews()
+            when (tab) {
+                "content" -> buildContentSubTab(subContainer)
+                "rich" -> buildRichContentSubTab(subContainer)
+            }
+        }
+
+        contentTabBtn.setOnClickListener { showContentSubTab("content") }
+        richTabBtn.setOnClickListener { showContentSubTab("rich") }
+
+        tabBar.addView(contentTabBtn)
+        tabBar.addView(richTabBtn)
+        groupBox.addView(tabBar)
+        groupBox.addView(subContainer)
+
+        styleContentTabs()
+        when (activeContentTab) {
+            "content" -> buildContentSubTab(subContainer)
+            "rich" -> buildRichContentSubTab(subContainer)
+        }
+
+        contentContainer.addView(groupBox)
+    }
+
+    private fun buildContentSubTab(container: LinearLayout) {
         contentInput = EditText(this).apply {
             hint = "Write your journal entry..."
             setText(contentValue)
             textSize = 14f
-            minLines = 5
-            maxLines = 12
+            minLines = 10
+            maxLines = 20
             setTextColor(ThemeManager.color(C.TEXT))
             setHintTextColor(ThemeManager.color(C.TEXT_SECONDARY))
             background = ContextCompat.getDrawable(this@EntryFormActivity, R.drawable.input_bg)
             setPadding(dp(12), dp(10), dp(12), dp(10))
-            layoutParams = linParams().apply { bottomMargin = dp(8) }
+            layoutParams = linParams()
             inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_FLAG_MULTI_LINE
             gravity = Gravity.TOP
         }
-        contentContainer.addView(contentInput)
+        container.addView(contentInput)
+    }
 
-        // Rich Content with formatting toolbar
-        addLabel("Rich Content (optional)")
-        buildRichTextToolbar()
+    private fun buildRichContentSubTab(container: LinearLayout) {
+        buildRichTextToolbar(container)
 
         richContentInput = EditText(this).apply {
             hint = "Type or paste rich content here..."
             textSize = 14f
-            minLines = 4
-            maxLines = 10
+            minLines = 8
+            maxLines = 16
             setTextColor(ThemeManager.color(C.TEXT))
             setHintTextColor(ThemeManager.color(C.TEXT_SECONDARY))
             background = ContextCompat.getDrawable(this@EntryFormActivity, R.drawable.input_bg)
@@ -391,24 +510,19 @@ class EntryFormActivity : AppCompatActivity() {
             richContentInput.setText(Html.fromHtml(originalRichContent, Html.FROM_HTML_MODE_COMPACT))
             originalRichContent = ""
         }
-        contentContainer.addView(richContentInput)
+        container.addView(richContentInput)
 
-        // Copy content button
-        contentContainer.addView(makeSecondaryButton("Copy Content → Rich Content") {
-            val text = contentInput.text.toString()
+        container.addView(makeSecondaryButton("Copy Content → Rich Content") {
+            val text = if (::contentInput.isInitialized) contentInput.text.toString() else contentValue
             if (text.isNotEmpty()) {
                 richContentInput.setText(text)
             }
         }.apply {
-            layoutParams = linParams().apply { bottomMargin = dp(12) }
+            layoutParams = linParams()
         })
-
-        // Images
-        addSectionHeader("Images")
-        buildImageSection()
     }
 
-    private fun buildRichTextToolbar() {
+    private fun buildRichTextToolbar(container: LinearLayout) {
         val toolbar = LinearLayout(this).apply {
             orientation = LinearLayout.HORIZONTAL
             gravity = Gravity.CENTER_VERTICAL
@@ -439,7 +553,7 @@ class EntryFormActivity : AppCompatActivity() {
         toolbar.addView(fmtBtn("U") { toggleFormat("underline") })
         toolbar.addView(fmtBtn("S") { toggleFormat("strike") })
 
-        contentContainer.addView(toolbar)
+        container.addView(toolbar)
     }
 
     private fun toggleFormat(format: String) {
@@ -1327,11 +1441,15 @@ class EntryFormActivity : AppCompatActivity() {
         syncFormData()
 
         // Read main tab values
-        if (::titleInput.isInitialized) {
+        if (::dateInput.isInitialized) {
             dateValue = dateInput.text.toString().trim()
             timeValue = timeInput.text.toString().trim()
             titleValue = titleInput.text.toString().trim()
+        }
+        if (::contentInput.isInitialized && activeContentTab == "content") {
             contentValue = contentInput.text.toString()
+        }
+        if (::richContentInput.isInitialized && activeContentTab == "rich") {
             richContentHtml = Html.toHtml(richContentInput.text as Spannable, Html.TO_HTML_PARAGRAPH_LINES_CONSECUTIVE)
         }
 
