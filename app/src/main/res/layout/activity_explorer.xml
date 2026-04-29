@@ -1,0 +1,278 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="@color/login_bg">
+
+    <!-- Top Navbar -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:paddingHorizontal="12dp"
+        android:paddingVertical="8dp"
+        android:background="@color/login_card_bg"
+        android:elevation="4dp">
+
+        <Button
+            android:id="@+id/btn_back"
+            android:layout_width="42dp"
+            android:layout_height="42dp"
+            android:text="←"
+            android:textSize="18sp"
+            android:background="@drawable/btn_secondary"
+            android:layout_marginEnd="8dp" />
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="SQL Explorer"
+            android:textColor="@color/login_accent"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            android:letterSpacing="0.06" />
+    </LinearLayout>
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1">
+
+        <LinearLayout
+            android:id="@+id/explorer_content"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="12dp">
+
+            <!-- Tables Section -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Tables"
+                android:textColor="@color/login_accent"
+                android:textSize="12sp"
+                android:textStyle="bold"
+                android:letterSpacing="0.08"
+                android:layout_marginBottom="4dp" />
+
+            <LinearLayout
+                android:id="@+id/explorer_table_chips"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:layout_marginBottom="6dp" />
+
+            <LinearLayout
+                android:id="@+id/explorer_table_detail"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:visibility="gone"
+                android:layout_marginBottom="8dp" />
+
+            <!-- SQL Input -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="SQL"
+                android:textColor="@color/login_accent"
+                android:textSize="12sp"
+                android:textStyle="bold"
+                android:letterSpacing="0.08"
+                android:layout_marginBottom="4dp" />
+
+            <EditText
+                android:id="@+id/explorer_sql_input"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:minLines="3"
+                android:maxLines="6"
+                android:hint="SELECT * FROM entries WHERE title CONTAINS 'trip' AND date > '2025-01-01'"
+                android:textColor="@color/login_text"
+                android:textColorHint="@color/login_text_secondary"
+                android:textSize="12sp"
+                android:fontFamily="monospace"
+                android:background="@drawable/input_bg"
+                android:inputType="textMultiLine"
+                android:gravity="top"
+                android:padding="10dp"
+                android:layout_marginBottom="4dp" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Fields: date, time, title, content, categories, tags, placeName, locations, weather — Ops: CONTAINS, EQUALS, STARTS WITH, ENDS WITH, BEFORE, AFTER, BETWEEN...AND, INCLUDES, NOT INCLUDES, IS EMPTY, IS NOT EMPTY, HAS DATA, NO DATA"
+                android:textColor="@color/login_text_secondary"
+                android:textSize="9sp"
+                android:layout_marginBottom="8dp" />
+
+            <!-- Divider -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:layout_marginBottom="8dp">
+
+                <View
+                    android:layout_width="0dp"
+                    android:layout_height="1dp"
+                    android:layout_weight="1"
+                    android:background="@color/login_text_secondary"
+                    android:alpha="0.3" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="  or use the builder  "
+                    android:textColor="@color/login_text_secondary"
+                    android:textSize="11sp" />
+
+                <View
+                    android:layout_width="0dp"
+                    android:layout_height="1dp"
+                    android:layout_weight="1"
+                    android:background="@color/login_text_secondary"
+                    android:alpha="0.3" />
+            </LinearLayout>
+
+            <!-- Field Chips -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Fields"
+                android:textColor="@color/login_accent"
+                android:textSize="12sp"
+                android:textStyle="bold"
+                android:letterSpacing="0.08"
+                android:layout_marginBottom="4dp" />
+
+            <LinearLayout
+                android:id="@+id/explorer_field_chips"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:layout_marginBottom="8dp" />
+
+            <!-- Conditions -->
+            <LinearLayout
+                android:id="@+id/explorer_conditions"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:layout_marginBottom="4dp" />
+
+            <Button
+                android:id="@+id/btn_add_condition"
+                android:layout_width="wrap_content"
+                android:layout_height="32dp"
+                android:text="+ Add Condition"
+                android:textSize="12sp"
+                android:textAllCaps="false"
+                android:textColor="@color/login_text"
+                android:background="@drawable/btn_secondary"
+                android:paddingHorizontal="12dp"
+                android:layout_marginBottom="8dp" />
+
+            <!-- Action Row -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:layout_marginBottom="8dp">
+
+                <Button
+                    android:id="@+id/btn_run_query"
+                    android:layout_width="wrap_content"
+                    android:layout_height="38dp"
+                    android:text="Run Query"
+                    android:textSize="13sp"
+                    android:textAllCaps="false"
+                    android:background="@drawable/btn_accent"
+                    android:paddingHorizontal="16dp"
+                    android:layout_marginEnd="6dp" />
+
+                <Button
+                    android:id="@+id/btn_clear"
+                    android:layout_width="wrap_content"
+                    android:layout_height="38dp"
+                    android:text="Clear"
+                    android:textSize="13sp"
+                    android:textAllCaps="false"
+                    android:textColor="@color/login_text"
+                    android:background="@drawable/btn_secondary"
+                    android:paddingHorizontal="14dp"
+                    android:layout_marginEnd="6dp" />
+
+                <TextView
+                    android:id="@+id/explorer_result_count"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:textColor="@color/login_accent"
+                    android:textSize="13sp"
+                    android:textStyle="bold"
+                    android:gravity="end" />
+            </LinearLayout>
+
+            <!-- Results Section -->
+            <LinearLayout
+                android:id="@+id/explorer_results"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:visibility="gone">
+
+                <!-- Export bar -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:layout_marginBottom="6dp">
+
+                    <Button
+                        android:id="@+id/btn_export_csv"
+                        android:layout_width="wrap_content"
+                        android:layout_height="32dp"
+                        android:text="Export CSV"
+                        android:textSize="11sp"
+                        android:textAllCaps="false"
+                        android:textColor="@color/login_text"
+                        android:background="@drawable/btn_secondary"
+                        android:paddingHorizontal="10dp"
+                        android:layout_marginEnd="6dp" />
+
+                    <Button
+                        android:id="@+id/btn_export_ical"
+                        android:layout_width="wrap_content"
+                        android:layout_height="32dp"
+                        android:text="Export iCalendar"
+                        android:textSize="11sp"
+                        android:textAllCaps="false"
+                        android:textColor="@color/login_text"
+                        android:background="@drawable/btn_secondary"
+                        android:paddingHorizontal="10dp" />
+                </LinearLayout>
+
+                <!-- Results table -->
+                <HorizontalScrollView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content">
+
+                    <LinearLayout
+                        android:id="@+id/explorer_results_table"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical" />
+                </HorizontalScrollView>
+            </LinearLayout>
+
+        </LinearLayout>
+    </ScrollView>
+
+</LinearLayout>

@@ -30,6 +30,14 @@ function onSearchInput() {
 
 // ========== Save Entry ==========
 
+function copyContentToRichContent() {
+    const content = document.getElementById('entry-content').value;
+    if (!content) return;
+    if (quillEditor) {
+        quillEditor.setText(content);
+    }
+}
+
 async function saveEntry(event) {
     event.preventDefault();
 
@@ -218,6 +226,11 @@ function filterEntries() {
 
     let entries = DB.getEntries();
 
+    // Apply widget filter if active
+    if (typeof _widgetFilterActive !== 'undefined' && _widgetFilterActive) {
+        entries = widgetFilterEntries(entries, _widgetFilterActive.filters);
+    }
+
     // Apply active custom view (filter + sort)
     let activeView = null;
     if (activeViewId) {
@@ -231,7 +244,7 @@ function filterEntries() {
             (e.content || '').toLowerCase().includes(search) ||
             (e.tags || []).some(t => t.toLowerCase().includes(search)) ||
             (e.placeName || '').toLowerCase().includes(search) ||
-            (e.locations || []).some(l => (l.address || '').toLowerCase().includes(search)) ||
+            (e.locations || []).some(l => (l.name || '').toLowerCase().includes(search) || (l.address || '').toLowerCase().includes(search)) ||
             (e.people || []).some(p => (p.firstName + ' ' + p.lastName).toLowerCase().includes(search))
         );
     }
@@ -287,6 +300,9 @@ function updateFilterCriteriaBox(count, filters) {
     const box = document.getElementById('filter-criteria-box');
     const chips = [];
 
+    if (typeof _widgetFilterActive !== 'undefined' && _widgetFilterActive) {
+        chips.push(`<span class="fc-chip fc-chip-widget">Widget: ${escapeHtml(_widgetFilterActive.name)}</span>`);
+    }
     if (activeViewId) {
         const view = getCustomViews().find(v => v.id === activeViewId);
         if (view) chips.push(`<span class="fc-chip fc-chip-view">View: ${escapeHtml(view.name)}</span>`);
@@ -310,7 +326,9 @@ function updateEntriesPageTitle(pageCount, totalCount) {
     const el = document.getElementById('entries-page-title');
     if (!el) return;
     let viewLabel = '';
-    if (activeViewId) {
+    if (typeof _widgetFilterActive !== 'undefined' && _widgetFilterActive) {
+        viewLabel = ` \u2014 ${_widgetFilterActive.name}`;
+    } else if (activeViewId) {
         const view = getCustomViews().find(v => v.id === activeViewId);
         if (view) viewLabel = ` \u2014 ${view.name}`;
     }
@@ -617,6 +635,10 @@ async function deleteEntryFromList(id) {
 }
 
 function viewEntry(id) {
+    if (window.AndroidBridge && typeof AndroidBridge.openEntryViewer === 'function') {
+        AndroidBridge.openEntryViewer(id, JSON.stringify(viewEntryList || []));
+        return;
+    }
     // Clear search highlight unless called from dashboard search
     if (typeof _dashboardSearchTerm !== 'undefined' && !_viewEntryFromSearch) {
         _dashboardSearchTerm = '';
@@ -718,13 +740,16 @@ function showEntryView(entry, skipNav) {
     if (locs.length > 0) {
         const locsHtml = locs.map(loc => {
             const hasCoords = loc.lat != null && loc.lng != null;
+            const nameHtml = loc.name ? `<strong>${escapeHtml(loc.name)}</strong>` : '';
+            const addrHtml = loc.address ? escapeHtml(loc.address) : '';
+            const labelHtml = nameHtml && addrHtml ? `${nameHtml} &mdash; ${addrHtml}` : (nameHtml || addrHtml);
             const coordsText = hasCoords ? `<span class="ev-coords">${loc.lat.toFixed(6)}, ${loc.lng.toFixed(6)}</span>` : '';
             const mapLink = hasCoords
                 ? `<a href="https://www.google.com/maps?q=${loc.lat},${loc.lng}" target="_blank" class="btn-small btn-map-link">&#128205; Map</a>`
                 : (loc.address
                     ? `<a href="https://www.google.com/maps/search/${encodeURIComponent(loc.address)}" target="_blank" class="btn-small btn-map-link">&#128205; Map</a>`
                     : '');
-            return `<div class="ev-location-item"><div>${escapeHtml(loc.address)}${coordsText}</div>${mapLink}</div>`;
+            return `<div class="ev-location-item"><div>${labelHtml}${coordsText}</div>${mapLink}</div>`;
         }).join('');
         miscHtml += `<div class="ev-row ev-row-block"><span class="ev-label">Locations</span><div class="ev-value">${locsHtml}</div></div>`;
     }
@@ -1079,6 +1104,10 @@ function editViewedEntry() {
 }
 
 function editEntry(id) {
+    if (typeof AndroidBridge !== 'undefined' && typeof AndroidBridge.openEntryForm === 'function') {
+        AndroidBridge.openEntryForm(id);
+        return;
+    }
     const entry = DB.getEntries().find(e => e.id === id);
     if (!entry) return;
     DB.loadEntryImages(entry);
@@ -1099,6 +1128,7 @@ function filterByCategory(event, category) {
 }
 
 function clearFilters() {
+    if (typeof _widgetFilterActive !== 'undefined') _widgetFilterActive = null;
     document.getElementById('search-input').value = '';
     document.getElementById('filter-category').value = '';
     document.getElementById('filter-tag').value = '';

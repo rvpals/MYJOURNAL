@@ -1,0 +1,130 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="@color/login_bg">
+
+    <!-- Top Navbar -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:paddingHorizontal="12dp"
+        android:paddingVertical="8dp"
+        android:background="@color/login_card_bg"
+        android:elevation="4dp">
+
+        <Button
+            android:id="@+id/btn_back"
+            android:layout_width="42dp"
+            android:layout_height="42dp"
+            android:text="←"
+            android:textSize="18sp"
+            android:background="@drawable/btn_secondary"
+            android:layout_marginEnd="8dp" />
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Search Entries"
+            android:textColor="@color/login_accent"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            android:letterSpacing="0.06" />
+    </LinearLayout>
+
+    <!-- Search Bar -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:paddingHorizontal="12dp"
+        android:paddingTop="10dp"
+        android:paddingBottom="4dp">
+
+        <EditText
+            android:id="@+id/search_input"
+            android:layout_width="0dp"
+            android:layout_height="42dp"
+            android:layout_weight="1"
+            android:hint="Search entries..."
+            android:textColor="@color/login_text"
+            android:textColorHint="@color/login_text_secondary"
+            android:textSize="14sp"
+            android:background="@drawable/search_bg"
+            android:inputType="text"
+            android:imeOptions="actionSearch"
+            android:singleLine="true"
+            android:layout_marginEnd="8dp" />
+
+        <Button
+            android:id="@+id/btn_search"
+            android:layout_width="42dp"
+            android:layout_height="42dp"
+            android:text="🔍"
+            android:textSize="16sp"
+            android:background="@drawable/btn_accent"
+            android:layout_marginEnd="6dp" />
+
+        <Button
+            android:id="@+id/btn_clear"
+            android:layout_width="42dp"
+            android:layout_height="42dp"
+            android:text="✕"
+            android:textSize="14sp"
+            android:textColor="@color/login_text_secondary"
+            android:background="@drawable/btn_secondary"
+            android:visibility="gone" />
+    </LinearLayout>
+
+    <!-- Whole word checkbox -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:paddingHorizontal="16dp"
+        android:paddingTop="4dp"
+        android:paddingBottom="8dp">
+
+        <CheckBox
+            android:id="@+id/cb_whole_word"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Whole word"
+            android:textColor="@color/login_text_secondary"
+            android:textSize="13sp"
+            android:buttonTint="@color/login_accent" />
+    </LinearLayout>
+
+    <!-- Status -->
+    <TextView
+        android:id="@+id/search_status"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingHorizontal="16dp"
+        android:paddingBottom="8dp"
+        android:textColor="@color/login_text_secondary"
+        android:textSize="13sp"
+        android:textStyle="bold"
+        android:visibility="gone" />
+
+    <!-- Results List -->
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1">
+
+        <LinearLayout
+            android:id="@+id/search_results_list"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="12dp" />
+    </ScrollView>
+
+</LinearLayout>

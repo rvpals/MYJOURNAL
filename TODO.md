@@ -1,7 +1,7 @@
 ---
 tags: [todo, backlog, changelog, version-history, completed-features, planned-features]
 related_files: [REQUIREMENT.md, ISSUES.md, TO_TEST.md]
-summary: "Version-by-version feature completion history (v0.9–v1.4) and remaining backlog items."
+summary: "Version-by-version feature completion history (v0.9–v1.5) and remaining backlog items."
 ---
 
 # TODO — MYJOURNAL
@@ -73,7 +73,6 @@ summary: "Version-by-version feature completion history (v0.9–v1.4) and remain
 - [x] Native DashboardActivity: stats grid, pinned/recent entries, ranked panels
 - [x] Styled Android drawables: buttons (primary, secondary, accent, delete, biometric), inputs, cards, spinners, search/stat/entry/ranked backgrounds
 - [x] Android layout XMLs: login screen, dashboard, spinner items
-- [x] MainActivity expansion: AndroidBridge, file chooser, auto-login, metadata sync
 - [x] Web crypto.js: sync hooks for native SharedPreferences
 - [x] Web dashboard.js: getDashboardDataJSON() with streak for native dashboard
 - [x] Web db.js: journal list sync updates
@@ -130,11 +129,7 @@ summary: "Version-by-version feature completion history (v0.9–v1.4) and remain
 - [x] iCalendar export: SQL Explorer results exportable as .ics files (VEVENT per entry with date/time/title/location)
 - [x] Backup folder (Android): SAF folder picker for selecting persistent backup/restore directory
 - [x] Backup/Restore: full data backup to JSON file in selected folder, restore from backup files
-- [x] AndroidBridge: new backup folder methods (selectBackupFolder, hasBackupFolder, clearBackupFolder, saveFileToBackupFolder, listBackupFolderFiles, readBackupFolderFile)
-- [x] MainActivity: WebConsole logging for WebView JavaScript debug output
-- [x] Removed gdrive.js from assets (Google Drive placeholder removed)
 - [x] All localStorage usage migrated to Bootstrap store (crypto.js, app.js, db.js, settings.js, components.js)
-- [x] Native auto-login updated to use Bootstrap store instead of localStorage
 - [x] Metadata export/import updated: includes category descriptions, tag descriptions, and widgets
 
 ### v1.4.0+ (2026-04-05, Calendar View + Wallpaper)
@@ -187,10 +182,88 @@ summary: "Version-by-version feature completion history (v0.9–v1.4) and remain
 - [x] HTML moved from inline settings fieldset to `<body>`-level `#csv-import-modal` div
 - [x] Fixed `build.gradle` versionName "1.0a" → "1.5.0", versionCode 1 → 6
 
+### v1.5.0+ (2026-04-17, Kotlin migration + Copy Content + native calendar)
+- [x] Kotlin build support: added `kotlin-gradle-plugin:1.9.22`, `kotlin-android` plugin, `kotlinOptions`, `kotlin-stdlib` dependency
+- [x] AboutActivity converted from Java to Kotlin (idiomatic `apply` scoping, string templates, property access)
+- [x] Native CalendarActivity (Kotlin): monthly grid view with day cells, entry count dots, today/selected highlighting, day selection with entry listing
+- [x] CalendarActivity layout: navbar (back/today), month navigation (prev/next), weekday header, calendar grid, results panel with entry rows
+- [x] Calendar drawables: `cal_day_bg.xml`, `cal_today_bg.xml`, `cal_selected_bg.xml`
+- [x] Entry form: "Copy" button next to Rich Content label copies plain text Content into Quill rich text editor
+- [x] CSS: `.btn-copy-content` styled as small inline button matching theme variables
+- [x] DashboardActivity converted from Java to Kotlin (idiomatic `apply` scoping, named params, `lateinit`, string templates)
+
+### v1.5.0+ (2026-04-18, full Kotlin migration)
+- [x] LoginActivity converted from Java to Kotlin: `lateinit var` bindings, `data class JournalInfo`, `mutableListOf`, string templates, lambda listeners, idiomatic null handling
+- [x] MainActivity converted from Java to Kotlin: `inner class AndroidBridge` with all 20+ `@JavascriptInterface` methods, `buildString` for JS injection, raw string literals for JS blocks, `when` expressions, `.use {}` for stream auto-close
+- [x] All 5 activities now 100% Kotlin — zero Java source files remain
+- [x] Old `.java` files removed from repository
+
+### v1.5.0+ (2026-04-25, location name + service layer migration)
+- [x] Location name field: locations now store `{lat, lng, address, name}` — user can type a custom name for each location
+- [x] Location name displayed in entry viewer as "Name — Address", search includes location names
+- [x] Location name included in Explorer display/filter, Reports exports, CSV import
+- [x] Backwards-compatible: existing locations without `name` field continue to work via `migrateLocations()`
+- [x] **BootstrapService.kt** — SharedPreferences wrapper replacing IndexedDB bootstrap store on Android
+- [x] **CryptoService.kt** — Standalone AES-256-GCM + PBKDF2 service (extracted from LoginActivity)
+- [x] **WeatherService.kt** — HTTP calls to Open-Meteo API via `java.net.HttpURLConnection`
+- [x] **DatabaseService.kt** — Full SQLCipher encrypted SQLite database service (~35 CRUD methods)
+
+### v1.5.0+ (2026-04-26, native SearchActivity + Settings + Entry List + Entry Viewer)
+- [x] Dashboard search moved from inline fieldset to separate screen: search icon button opens search
+- [x] **SearchActivity.kt** — Native Kotlin search screen with text input, whole-word checkbox, search/clear buttons, scrollable results
+- [x] **SettingsActivity.kt** (~2865 lines) — Full native settings with 5 tabs
+- [x] **EntryListActivity.kt** (~850 lines) — Full native entry list with search, filter, sort, paginate, batch delete
+- [x] **EntryViewerActivity.kt** — Font settings applied, rich content via Html.fromHtml() + TextView
+
+### v1.5.0+ (2026-04-27, native Explorer + widgets + dashboard wiring)
+- [x] **ExplorerActivity.kt** — Full native SQL Explorer (table browser, query builder, raw SQL, results, CSV/iCal export)
+- [x] Widget card click shows filtered entries (not widget editor); pencil edit button for editor access
+- [x] Native DashboardActivity wired up with all navigation (stats, ranked panels, widgets, entries)
+- [x] Dashboard stat cards and ranked panel clicks open EntryListActivity with proper filters
+
+### v1.5.0+ (2026-04-28, all features native + widget/view editors + reports + entry form)
+- [x] **WidgetEditorActivity.kt** — Full native widget editor with 3 tabs, live preview
+- [x] **CustomViewEditorActivity.kt** — Full native custom view editor with conditions, groupBy, orderBy
+- [x] **ReportsActivity.kt** — Native reports with HTML/PDF/CSV, filters, templates
+- [x] **EntryFormActivity.kt** (~1400 lines) — Native entry form with rich text (Spannable), images, categories, tags, people, locations, weather
+- [x] **CsvMappingActivity.kt** — Native CSV import column mapping screen
+- [x] All 15 activities fully native Kotlin (at this point, still with WebView/MainActivity)
+
+### v1.5.0+ (2026-04-28, WebView removal — fully native architecture)
+- [x] **Removed MainActivity.kt** (1,267 lines) — WebView container + AndroidBridge JS interface eliminated
+- [x] **Removed app/src/main/assets/web/** — Web SPA assets no longer bundled in APK
+- [x] **Removed activity_main.xml** — WebView layout deleted
+- [x] **Created ServiceProvider.kt** — Singleton service holder replacing `MainActivity.instance`
+- [x] **Created DashboardDataBuilder.kt** — Computes dashboard JSON natively from DatabaseService (stats, streaks, ranked lists, widgets, pinned/recent)
+- [x] **LoginActivity.kt** — Now initializes ServiceProvider, opens DB, computes dashboard data, launches DashboardActivity directly (no WebView intermediary)
+- [x] **DashboardActivity.kt** — All `MainActivity.instance?.xxxService` replaced with `ServiceProvider.xxxService`; lock returns to LoginActivity directly
+- [x] **SearchActivity.kt** — Queries DatabaseService directly via ServiceProvider (no more pendingData from WebView)
+- [x] **EntryViewerActivity.kt** — Rich content via Html.fromHtml() + TextView (no WebView)
+- [x] **ReportsActivity.kt** — HTML output via HorizontalScrollView + TextView (no WebView)
+- [x] **build.gradle** — Removed `copyWebAssets` task and `androidx.webkit:webkit:1.9.0` dependency
+- [x] **AndroidManifest.xml** — 14 activities (removed MainActivity entry)
+- [x] 20 Kotlin source files: 14 activities + 4 services + ServiceProvider + DashboardDataBuilder
+
+### v1.5.0+ (2026-04-28, UI polish + dashboard settings)
+- [x] **Fix: EntryViewer edit button not working** — `bootstrapService` was null when passed to EntryFormActivity (nulled in `onCreate`); now uses `ServiceProvider.bootstrapService`
+- [x] **Dashboard ranked badges uniform** — all ranks now get accent background (not just top 3), alternating row backgrounds for readability
+- [x] **Dashboard search button redesign** — moved from standalone full-width bar below navbar to compact 3D icon button (🔍) in the navbar row, left of journal name
+- [x] **Dashboard Top Tags/Categories captions** — center-aligned text
+- [x] **Dashboard component settings** — new "Dashboard" tab in Settings to toggle components on/off and reorder via ▲/▼ arrows; config stored in BootstrapService as `dashboard_components` JSON
+- [x] **Dashboard respects component settings** — `applyDashboardComponentSettings()` reads saved order/visibility, removes and re-adds panels accordingly
+- [x] **Stats grid wrapper** — wrapped 2x2 stats rows in `stats_container` LinearLayout for reordering as a unit
+- [x] **Settings tab 3D icons** — emoji icons (⚙️📝🏷️💾🧩📊) stacked above labels, 3D active/inactive drawables with raised look and shadow
+- [x] **Dashboard ranked badges 3D** — rank badge uses vertical gradient (cyan→accent→dark teal) with rounded corners + elevation shadow; count badge uses dark gradient with rounded corners + shadow
+- [x] **New drawables** — `btn_search_3d.xml`, `tab_active_3d.xml`, `tab_inactive_3d.xml`
+
+### v1.5.0+ (2026-04-28, widget icon fix + color picker)
+- [x] **Fix: Widget icon not showing on dashboard** — `DashboardActivity.createWidgetCard()` never read the widget `icon` field; added `ImageView` with `loadBase64Image()` to render 40x40 icon in widget card header
+- [x] **Widget editor color picker dialog** — Tapping the color swatch or hex input in widget editor now opens a color picker dialog with 24 preset color grid, hex input field, and live preview swatch
+
 ## Remaining / TODO
 
-- [ ] Re-test all features after widget/Bootstrap changes (web + Android)
-- [ ] Web app: HTTPS requirement for Web Crypto API (currently file:// only works with base64 WASM fallback)
+- [ ] Re-test all features after WebView removal (all native screens)
+- [ ] Web app: HTTPS requirement for Web Crypto API (browser-only fallback)
 - [ ] Entry image thumbnails could be optimized (currently full base64 stored)
 - [ ] Consider lazy loading for large journal databases (1000+ entries)
 - [ ] Password strength indicator on journal creation

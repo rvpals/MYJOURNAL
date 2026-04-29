@@ -1162,7 +1162,7 @@ async function executeCsvImport() {
         entry.placeName = csvPlaceName;
         // Build location if address or coords were mapped
         if (csvPlaceAddress || csvPlaceCoords) {
-            const loc = { address: csvPlaceAddress, lat: null, lng: null };
+            const loc = { name: '', address: csvPlaceAddress, lat: null, lng: null };
             if (csvPlaceCoords) {
                 const match = csvPlaceCoords.match(/(-?\d+\.?\d*)\s*,\s*(-?\d+\.?\d*)/);
                 if (match) {

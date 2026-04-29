@@ -16,6 +16,17 @@
         android:background="@color/login_card_bg"
         android:elevation="4dp">
 
+        <Button
+            android:id="@+id/btn_open_search"
+            android:layout_width="42dp"
+            android:layout_height="42dp"
+            android:text="🔍"
+            android:textSize="16sp"
+            android:background="@drawable/btn_search_3d"
+            android:layout_marginEnd="8dp"
+            android:elevation="4dp"
+            android:stateListAnimator="@null" />
+
         <TextView
             android:id="@+id/nav_title"
             android:layout_width="0dp"
@@ -43,40 +54,6 @@
             android:text="🔒"
             android:textSize="16sp"
             android:background="@drawable/btn_secondary" />
-    </LinearLayout>
-
-    <!-- Search Bar -->
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:gravity="center_vertical"
-        android:paddingHorizontal="12dp"
-        android:paddingTop="10dp"
-        android:paddingBottom="4dp">
-
-        <EditText
-            android:id="@+id/search_input"
-            android:layout_width="0dp"
-            android:layout_height="42dp"
-            android:layout_weight="1"
-            android:hint="Search entries..."
-            android:textColor="@color/login_text"
-            android:textColorHint="@color/login_text_secondary"
-            android:textSize="14sp"
-            android:background="@drawable/search_bg"
-            android:inputType="text"
-            android:imeOptions="actionSearch"
-            android:singleLine="true"
-            android:layout_marginEnd="8dp" />
-
-        <Button
-            android:id="@+id/btn_search"
-            android:layout_width="42dp"
-            android:layout_height="42dp"
-            android:text="🔍"
-            android:textSize="16sp"
-            android:background="@drawable/btn_accent" />
     </LinearLayout>
 
     <!-- Main Scrollable Content -->
@@ -123,79 +100,85 @@
 
             <!-- Stats Grid (2x2) -->
             <LinearLayout
+                android:id="@+id/stats_container"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:layout_marginBottom="6dp">
+                android:orientation="vertical">
 
-                <LinearLayout
-                    android:id="@+id/stat_total"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:orientation="vertical"
-                    android:gravity="center"
-                    android:background="@drawable/stat_card_bg"
-                    android:padding="16dp"
-                    android:layout_marginEnd="5dp"
-                    android:clickable="true"
-                    android:focusable="true">
+              <LinearLayout
+                  android:layout_width="match_parent"
+                  android:layout_height="wrap_content"
+                  android:orientation="horizontal"
+                  android:layout_marginBottom="6dp">
 
-                    <TextView
-                        android:id="@+id/stat_total_value"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="0"
-                        android:textColor="@color/login_accent"
-                        android:textSize="30sp"
-                        android:textStyle="bold" />
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Total"
-                        android:textColor="@color/login_text_secondary"
-                        android:textSize="11sp"
-                        android:textAllCaps="true"
-                        android:letterSpacing="0.05" />
-                </LinearLayout>
+                  <LinearLayout
+                      android:id="@+id/stat_total"
+                      android:layout_width="0dp"
+                      android:layout_height="wrap_content"
+                      android:layout_weight="1"
+                      android:orientation="vertical"
+                      android:gravity="center"
+                      android:background="@drawable/stat_card_bg"
+                      android:padding="16dp"
+                      android:layout_marginEnd="5dp"
+                      android:clickable="true"
+                      android:focusable="true">
 
-                <LinearLayout
-                    android:id="@+id/stat_week"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:orientation="vertical"
-                    android:gravity="center"
-                    android:background="@drawable/stat_card_bg"
-                    android:padding="16dp"
-                    android:layout_marginStart="5dp"
-                    android:clickable="true"
-                    android:focusable="true">
+                      <TextView
+                          android:id="@+id/stat_total_value"
+                          android:layout_width="wrap_content"
+                          android:layout_height="wrap_content"
+                          android:text="0"
+                          android:textColor="@color/login_accent"
+                          android:textSize="30sp"
+                          android:textStyle="bold" />
+                      <TextView
+                          android:layout_width="wrap_content"
+                          android:layout_height="wrap_content"
+                          android:text="Total"
+                          android:textColor="@color/login_text_secondary"
+                          android:textSize="11sp"
+                          android:textAllCaps="true"
+                          android:letterSpacing="0.05" />
+                  </LinearLayout>
 
-                    <TextView
-                        android:id="@+id/stat_week_value"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="0"
-                        android:textColor="@color/login_accent"
-                        android:textSize="30sp"
-                        android:textStyle="bold" />
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="This Week"
-                        android:textColor="@color/login_text_secondary"
-                        android:textSize="11sp"
-                        android:textAllCaps="true"
-                        android:letterSpacing="0.05" />
-                </LinearLayout>
-            </LinearLayout>
+                  <LinearLayout
+                      android:id="@+id/stat_week"
+                      android:layout_width="0dp"
+                      android:layout_height="wrap_content"
+                      android:layout_weight="1"
+                      android:orientation="vertical"
+                      android:gravity="center"
+                      android:background="@drawable/stat_card_bg"
+                      android:padding="16dp"
+                      android:layout_marginStart="5dp"
+                      android:clickable="true"
+                      android:focusable="true">
 
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:layout_marginBottom="12dp">
+                      <TextView
+                          android:id="@+id/stat_week_value"
+                          android:layout_width="wrap_content"
+                          android:layout_height="wrap_content"
+                          android:text="0"
+                          android:textColor="@color/login_accent"
+                          android:textSize="30sp"
+                          android:textStyle="bold" />
+                      <TextView
+                          android:layout_width="wrap_content"
+                          android:layout_height="wrap_content"
+                          android:text="This Week"
+                          android:textColor="@color/login_text_secondary"
+                          android:textSize="11sp"
+                          android:textAllCaps="true"
+                          android:letterSpacing="0.05" />
+                  </LinearLayout>
+              </LinearLayout>
+
+              <LinearLayout
+                  android:layout_width="match_parent"
+                  android:layout_height="wrap_content"
+                  android:orientation="horizontal"
+                  android:layout_marginBottom="12dp">
 
                 <LinearLayout
                     android:id="@+id/stat_month"
@@ -258,6 +241,7 @@
                         android:textAllCaps="true"
                         android:letterSpacing="0.05" />
                 </LinearLayout>
+              </LinearLayout>
             </LinearLayout>
 
             <!-- Quick Actions (Pinned Views) -->
@@ -270,46 +254,26 @@
                 android:visibility="gone"
                 android:layout_marginBottom="12dp" />
 
-            <!-- Search Results (hidden by default) -->
+            <!-- Widgets Panel -->
             <LinearLayout
-                android:id="@+id/search_results_panel"
+                android:id="@+id/panel_widgets"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
-                android:background="@drawable/login_card_bg"
-                android:padding="14dp"
                 android:layout_marginBottom="12dp"
                 android:visibility="gone">
 
-                <LinearLayout
-                    android:layout_width="match_parent"
+                <TextView
+                    android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:orientation="horizontal"
-                    android:gravity="center_vertical"
-                    android:layout_marginBottom="8dp">
-
-                    <TextView
-                        android:id="@+id/search_results_title"
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:text="Search Results"
-                        android:textColor="@color/login_text"
-                        android:textSize="15sp"
-                        android:textStyle="bold" />
-
-                    <Button
-                        android:id="@+id/btn_clear_search"
-                        android:layout_width="32dp"
-                        android:layout_height="32dp"
-                        android:text="✕"
-                        android:textSize="14sp"
-                        android:textColor="@color/login_text_secondary"
-                        android:background="@drawable/btn_secondary" />
-                </LinearLayout>
+                    android:text="Widgets"
+                    android:textColor="@color/login_text"
+                    android:textSize="15sp"
+                    android:textStyle="bold"
+                    android:layout_marginBottom="8dp" />
 
                 <LinearLayout
-                    android:id="@+id/search_results_list"
+                    android:id="@+id/widgets_list"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="vertical" />
@@ -379,12 +343,13 @@
                 android:layout_marginBottom="12dp">
 
                 <TextView
-                    android:layout_width="wrap_content"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:text="🏷️ Top Tags"
                     android:textColor="@color/login_text"
                     android:textSize="15sp"
                     android:textStyle="bold"
+                    android:textAlignment="center"
                     android:layout_marginBottom="8dp" />
 
                 <LinearLayout
@@ -405,12 +370,13 @@
                 android:layout_marginBottom="12dp">
 
                 <TextView
-                    android:layout_width="wrap_content"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:text="📁 Top Categories"
                     android:textColor="@color/login_text"
                     android:textSize="15sp"
                     android:textStyle="bold"
+                    android:textAlignment="center"
                     android:layout_marginBottom="8dp" />
 
                 <LinearLayout

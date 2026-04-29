@@ -1,36 +1,34 @@
 /**
- * Bootstrap module: IndexedDB-backed key-value store with synchronous in-memory cache.
- * Replaces all localStorage usage in the app.
+ * Bootstrap module: key-value store with synchronous in-memory cache.
+ * On Android, delegates to native SharedPreferences via AndroidBridge.
+ * In browser, uses IndexedDB as backing store.
  *
  * Usage:
- *   await Bootstrap.init();          // call once at startup (migrates from localStorage)
+ *   await Bootstrap.init();          // call once at startup
  *   Bootstrap.get('key');            // synchronous read from cache
- *   Bootstrap.set('key', 'value');   // synchronous cache update + async IndexedDB write
- *   Bootstrap.remove('key');         // synchronous remove + async IndexedDB delete
+ *   Bootstrap.set('key', 'value');   // synchronous cache update + persistent write
+ *   Bootstrap.remove('key');         // synchronous remove + persistent delete
  */
 
 const Bootstrap = (() => {
     const IDB_NAME = 'JournalDB';
     const STORE_NAME = 'bootstrap';
-    const IDB_VERSION = 2; // bumped from 1 to add bootstrap store
+    const IDB_VERSION = 2;
 
-    let _cache = {};       // in-memory cache: { key: value }
+    let _cache = {};
     let _ready = false;
-    let _db = null;        // IDB database handle
+    let _db = null;
+    let _useNative = false;
 
     // ========== Known localStorage keys to migrate ==========
 
     const MIGRATE_KEYS = [
-        // Crypto
         /^journal_salt_/,
         /^journal_verify_/,
-        // Journal list
         'journal_list',
-        // Login / session
         'auto_open_last_journal',
         'last_journal_id',
         'auto_biometric',
-        // UI prefs
         'settingsTab',
         'entry_view_mode',
         'entries_page_size',
@@ -48,11 +46,8 @@ const Bootstrap = (() => {
         'geocoding_provider',
         'geocoding_api_key',
         'journal_warn_delete',
-        // Column toggles (col_*)
         /^col_/,
-        // RankedPanel view modes (rp_view_*)
         /^rp_view_/,
-        // CollapsiblePanel pins
         /^cp_pins_/,
     ];
 
@@ -67,18 +62,24 @@ const Bootstrap = (() => {
         return false;
     }
 
-    // ========== IndexedDB ==========
+    // ========== Native Bridge ==========
+
+    function _hasNativeBridge() {
+        return typeof window !== 'undefined' &&
+            window.AndroidBridge &&
+            typeof AndroidBridge.bootstrapGet === 'function';
+    }
+
+    // ========== IndexedDB (browser fallback) ==========
 
     function _openIDB() {
         return new Promise((resolve, reject) => {
             const request = indexedDB.open(IDB_NAME, IDB_VERSION);
             request.onupgradeneeded = (e) => {
                 const db = e.target.result;
-                // Existing store from DB module
                 if (!db.objectStoreNames.contains('encrypted_data')) {
                     db.createObjectStore('encrypted_data');
                 }
-                // New bootstrap store
                 if (!db.objectStoreNames.contains(STORE_NAME)) {
                     db.createObjectStore(STORE_NAME);
                 }
@@ -137,14 +138,17 @@ const Bootstrap = (() => {
                 const val = localStorage.getItem(key);
                 if (val !== null && _cache[key] === undefined) {
                     _cache[key] = val;
-                    _idbPut(key, val);
+                    if (_useNative) {
+                        AndroidBridge.bootstrapSet(key, val);
+                    } else {
+                        _idbPut(key, val);
+                    }
                     migrated++;
                 }
             }
         }
         if (migrated > 0) {
             console.log(`Bootstrap: migrated ${migrated} keys from localStorage`);
-            // Clear migrated keys from localStorage
             for (let i = localStorage.length - 1; i >= 0; i--) {
                 const key = localStorage.key(i);
                 if (key && _keyMatches(key)) {
@@ -154,22 +158,63 @@ const Bootstrap = (() => {
         }
     }
 
+    async function _migrateIdbToNative() {
+        if (!AndroidBridge.bootstrapIsEmpty()) return;
+        try {
+            const tmpDb = await _openIDB();
+            const idbData = await new Promise((resolve, reject) => {
+                const tx = tmpDb.transaction(STORE_NAME, 'readonly');
+                const store = tx.objectStore(STORE_NAME);
+                const keys = store.getAllKeys();
+                const values = store.getAll();
+                tx.oncomplete = () => {
+                    const result = {};
+                    for (let i = 0; i < keys.result.length; i++) {
+                        result[keys.result[i]] = values.result[i];
+                    }
+                    resolve(result);
+                };
+                tx.onerror = (e) => reject(e.target.error);
+            });
+            tmpDb.close();
+
+            if (Object.keys(idbData).length > 0) {
+                AndroidBridge.bootstrapSetAll(JSON.stringify(idbData));
+                console.log('Bootstrap: migrated ' + Object.keys(idbData).length + ' keys from IDB to native');
+            }
+        } catch (e) {
+            console.error('Bootstrap: IDB-to-native migration failed', e);
+        }
+    }
+
     // ========== Public API ==========
 
     async function init() {
         if (_ready) return;
-        _db = await _openIDB();
 
-        // Load all existing bootstrap data into cache
-        _cache = await _idbGetAll();
+        _useNative = _hasNativeBridge();
 
-        // Migrate any remaining localStorage data
+        if (_useNative) {
+            await _migrateIdbToNative();
+            const allJson = AndroidBridge.bootstrapGetAll();
+            _cache = JSON.parse(allJson || '{}');
+        } else {
+            _db = await _openIDB();
+            _cache = await _idbGetAll();
+        }
+
         _migrateFromLocalStorage();
-
         _ready = true;
     }
 
     function get(key) {
+        if (_useNative) {
+            const val = AndroidBridge.bootstrapGet(key);
+            if (val !== null && val !== undefined) {
+                _cache[key] = val;
+            }
+            return val !== undefined ? val : null;
+        }
         return _cache[key] !== undefined ? _cache[key] : null;
     }
 
@@ -178,20 +223,33 @@ const Bootstrap = (() => {
             return remove(key);
         }
         _cache[key] = value;
-        _idbPut(key, value);
+        if (_useNative) {
+            AndroidBridge.bootstrapSet(key, value);
+        } else {
+            _idbPut(key, value);
+        }
     }
 
     function remove(key) {
         delete _cache[key];
-        _idbDelete(key);
+        if (_useNative) {
+            AndroidBridge.bootstrapRemove(key);
+        } else {
+            _idbDelete(key);
+        }
     }
 
     function has(key) {
+        if (_useNative) {
+            return AndroidBridge.bootstrapHas(key);
+        }
         return _cache[key] !== undefined;
     }
 
-    // Convenience: get parsed int with default
     function getInt(key, defaultVal) {
+        if (_useNative) {
+            return AndroidBridge.bootstrapGetInt(key, defaultVal);
+        }
         const v = _cache[key];
         if (v === undefined || v === null) return defaultVal;
         const n = parseInt(v);

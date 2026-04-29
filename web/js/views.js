@@ -543,6 +543,10 @@ function refreshCustomViewsPage() {
 }
 
 function cvNewView() {
+    if (typeof AndroidBridge !== 'undefined' && typeof AndroidBridge.openCustomViewEditor === 'function') {
+        AndroidBridge.openCustomViewEditor('');
+        return;
+    }
     cvEditingId = null;
     document.getElementById('cv-editor-title').textContent = 'New View';
     document.getElementById('cv-name').value = '';
@@ -561,6 +565,10 @@ function cvNewView() {
 }
 
 function cvEditView(id) {
+    if (typeof AndroidBridge !== 'undefined' && typeof AndroidBridge.openCustomViewEditor === 'function') {
+        AndroidBridge.openCustomViewEditor(id || '');
+        return;
+    }
     const view = getCustomViews().find(v => v.id === id);
     if (!view) return;
 

@@ -1,18 +1,40 @@
 ---
-tags: [bugs, issues, limitations, fixed-bugs, WebView-crash, blob-URL, WASM, encryption, known-problems]
+tags: [bugs, issues, limitations, fixed-bugs, encryption, known-problems]
 related_files: [TO_TEST.md, TODO.md, CLAUDE.md]
-summary: "Known bugs, platform limitations, fixed issues with dates, and architectural constraints."
+summary: "Known bugs, platform limitations, fixed issues, and architectural notes for the fully native Android app."
 ---
 
 # ISSUES — MYJOURNAL
 
 ## Known Issues
 
-- **Web Crypto API requires HTTPS or localhost** — plain HTTP won't work; file:// protocol uses base64 WASM fallback which is slower
-- **Blob URL downloads crash Android WebView** — all file downloads must use `downloadFile()` which routes through `AndroidBridge.saveFile()` on Android
-- **Large journals may be slow** — entire SQLite DB is loaded into memory via sql.js; no lazy loading for 1000+ entries
+- **Large journals may be slow** — entire SQLite DB operations are synchronous; no lazy loading for 1000+ entries
 - **Image storage is inefficient** — full base64 images stored in SQLite; no server-side or file-system storage option
-- **Bootstrap IDB version bump** — IndexedDB version bumped from 1 to 2 (adds `bootstrap` object store); existing users will trigger onupgradeneeded on first load after update
+
+## Fixed (2026-04-28, session 3)
+
+- ~~Widget icon not showing on dashboard badge~~ **FIXED** — `DashboardActivity.createWidgetCard()` never read the `icon` field from widget JSON. Added `ImageView` with `loadBase64Image()` to display 40x40 icon in widget card header, matching the preview layout in `WidgetEditorActivity`.
+- ~~No color picker in widget editor~~ **FIXED** — Background color field only had a text input and static swatch with no picker. Added `showColorPickerDialog()` with 24 preset colors, hex input, and live preview. Swatch and hex input both open the picker on tap.
+
+## Fixed (2026-04-28, session 2)
+
+- ~~EntryViewer Edit button does nothing~~ **FIXED** — `editEntry()` passed null `bootstrapService` to EntryFormActivity (companion field was nulled in `onCreate`). EntryFormActivity received null and immediately called `finish()`. Fix: use `ServiceProvider.bootstrapService` instead.
+
+## Fixed (2026-04-28)
+
+- ~~Dashboard ranked panels (Top Tags/Categories/Places/People) don't filter entry list on Android~~ **FIXED** — `navigateToFilteredList()` called `navigateTo('entry-list')` which on Android intercepted to `AndroidBridge.openEntryList()` (no filters). Now constructs widget-format filter JSON and calls `openEntryListWithWidgetFilter()` directly.
+- ~~Dashboard stat cards (This Week/Month/Year) don't filter entry list on Android~~ **FIXED** — `statNavigate()` had the same interception problem. Now constructs date `between` filter and calls `openEntryListWithWidgetFilter()`.
+- ~~Native DashboardActivity ranked panel rows open entry list without filters~~ **FIXED** — `createRankedRow()` now constructs proper filter JSON per field type and launches EntryListActivity with filters via `openFilteredEntryList()`.
+- ~~Native DashboardActivity not wired up~~ **FIXED** — `onDashboardReady()` bridge method was empty. Now launches DashboardActivity via ActivityResultLauncher with `pendingData` pattern.
+
+## Fixed (2026-04-26)
+
+- ~~SearchActivity crashes on launch (TransactionTooLargeException)~~ **FIXED** — `openSearch()` passed full entries JSON via `Intent.putExtra()`, exceeding Android's ~1MB Binder transaction limit. Replaced with static `companion object` data holder.
+
+## Fixed (2026-04-16)
+
+- ~~CSV import mapping UI unusable — columns cut off with no scrollbar~~ **FIXED** — moved CSV mapping to full-screen modal overlay
+- ~~build.gradle versionName stuck at "1.0a"~~ **FIXED** — updated to "1.5.0", versionCode to 6
 
 ## Fixed (2026-04-06)
 
@@ -23,11 +45,6 @@ summary: "Known bugs, platform limitations, fixed issues with dates, and archite
 
 - ~~Metadata import shows blank screen after "app will refresh" message~~ **FIXED** — `window.location.reload()` fails in WebView file:// protocol; replaced with in-place `refreshSettings()` + theme reapply + `navigateTo('settings')`
 
-## Fixed (2026-04-16)
-
-- ~~CSV import mapping UI unusable — columns cut off with no scrollbar, impossible to see or set mappings~~ **FIXED** — moved CSV mapping to a full-screen modal overlay (outside settings container hierarchy), bypassing `overflow: hidden` from collapse animation; uses standard `form-group` pattern with full-width dropdowns
-- ~~build.gradle versionName stuck at "1.0a"~~ **FIXED** — updated to "1.5.0", versionCode to 6
-
 ## Fixed (2026-04-01)
 
 - ~~Web login screen showing after native Android login~~ **FIXED** — crypto keys (salt/verify) passed via Intent extras and synced to localStorage in performAutoLogin()
@@ -36,52 +53,68 @@ summary: "Known bugs, platform limitations, fixed issues with dates, and archite
 
 ## Fixed (2026-03-31)
 
-- ~~Settings Tags card cut off with no scrollbar~~ **FIXED** — increased `.settings-section-body` max-height from 2000px to 5000px
-- ~~Android viewer pin button on third row~~ **FIXED** — restructured header into row1 (date, time, pin) and title below
+- ~~Settings Tags card cut off with no scrollbar~~ **FIXED**
+- ~~Android viewer pin button on third row~~ **FIXED**
 - ~~SQL Explorer CSV export crashes Android app~~ **FIXED** — replaced blob URL download with `downloadFile()` which uses AndroidBridge on Android
 
 ## Fixed (2026-03-27)
 
-- ~~formatDate() returns "Invalid Date" for bad values~~ **FIXED** — returns empty string; added `isValidDate()` helper for strict validation
-- ~~Web app WASM loading fails on file:// protocol (CORS blocks XHR)~~ **FIXED** — added inline base64 WASM fallback for file:// protocol
-- ~~New journal creation silently fails on web~~ **FIXED** — was caused by WASM CORS issue; added try-catch with error display and loading indicator
+- ~~formatDate() returns "Invalid Date" for bad values~~ **FIXED** — returns empty string
+- ~~Web app WASM loading fails on file:// protocol (CORS blocks XHR)~~ **FIXED** — added inline base64 WASM fallback
+- ~~New journal creation silently fails on web~~ **FIXED** — WASM CORS issue
 
 ## Notes
 
-- Dashboard ranked panels, Explorer results, and Entry list table view now use shared components (ResultGrid, RankedPanel, RecordViewer, CollapsiblePanel) from components.js — any rendering bugs in these areas should be checked against the component code, not the old inline implementations (which have been removed).
-- Old filter-toggle-header / filter-fields-body CSS removed from both style.css and style-android.css — entry list filters now use CollapsiblePanel.
-- Navbar no longer has Entry List, Report, or SQL Explorer links — navigation moved to dashboard button grid.
-- Dashboard nav grid removed — navigation moved to hamburger dropdown menu. New Entry button (📝) is in the navbar.
-- Theme cycle button removed from navbar — theme selection is in Settings > Display & Appearance > Theme.
-- App renamed from "JOURNAL" to "My Journal" in v1.5.0 — affects Android app label, login screen, dashboard header, navbar brand, and page title.
-- About button removed from Settings page header — now accessible via hamburger menu.
-- Navbar journal button uses `flex: 1` to fill available width; long journal names truncate with ellipsis.
-- HD icons use `type_hd` suffix in the same `icons` table (e.g., `tag_hd`). No schema change. Upload generates both 64x64 and 128x128 if source image >=96px. RankedPanel card view checks HD first, then standard icon, then text fallback.
-- Data Management now uses dropdown selects instead of individual buttons. Export/Import Metadata moved from Edit Metadata tab to Data Management dropdowns.
-- `cleanupDatelessEntries()` function removed — Cleanup Dateless button no longer exists.
-- Entry viewer buttons (Edit, Print, Delete, Back) are icon-only; text labels removed.
-- All localStorage usage has been replaced by Bootstrap module (IndexedDB-backed with in-memory cache). Bootstrap auto-migrates existing localStorage keys on first init.
-- `gdrive.js` removed from assets — Google Drive placeholder no longer included.
-- Dashboard widgets are stored in the `widgets` DB table with filters/functions as JSON. Widget editor is a separate page (`page-widget-editor`).
-- Categories table now has a `description` column. A new `tags` table stores tag descriptions (separate from entry tag arrays).
-- SQL Explorer now supports iCalendar (.ics) export alongside CSV.
-- Android backup folder uses SAF (Storage Access Framework) with persistent URI permissions; folder URI stored in SharedPreferences (`backup_prefs`).
+### Dashboard Component Settings (2026-04-28)
 
-- Wallpaper image stored as base64 JPEG in the encrypted DB `settings` table. Large images are resized to max 1920px width and JPEG-compressed at 85% quality. Very large wallpapers may increase DB size noticeably.
-- Wallpaper uses a `::before` pseudo-element overlay at 55% opacity for text readability — works with all 12 themes.
+- Dashboard components (weather/streak, stats, quick actions, widgets, pinned, recent, tags, categories, places, people) are configurable via Settings > Dashboard tab.
+- Visibility and order stored in BootstrapService as `dashboard_components` JSON array of `{id, enabled}` objects.
+- `DashboardActivity.applyDashboardComponentSettings()` removes all component views from `content_container` and re-adds only enabled ones in saved order.
+- Stats grid wrapped in `stats_container` (id: `R.id.stats_container`) so both stat rows move as one unit.
 
-## Notes (2026-04-13)
+### Architecture (2026-04-28, WebView removal)
 
-- Entry locking feature adds `locked` column to entries table. Schema version bumped from 1 to 2. `upgradeSchema()` handles migration for existing databases via `ALTER TABLE entries ADD COLUMN locked INTEGER DEFAULT 0`.
-- Locked entries can still be viewed, pinned, and deleted — only editing is prevented (Edit button disabled + guard in `editViewedEntry()`).
-- Lock/Unlock button appears in the entry viewer bottom bar before the Edit button, with a confirmation prompt.
+- **Fully native Android app**: All 14 screens are Kotlin activities. No WebView, no AndroidBridge, no web assets in APK.
+- **ServiceProvider singleton**: Replaces old `MainActivity.instance` pattern. Holds CryptoService, BootstrapService, WeatherService, DatabaseService. Initialized in LoginActivity, accessed by all activities via `ServiceProvider.xxxService`.
+- **DashboardDataBuilder**: Computes dashboard JSON natively from DatabaseService — stats, streaks, ranked lists, widgets, pinned/recent entries. Replaces the old JS `getDashboardDataJSON()`.
+- **Login flow**: LoginActivity → ServiceProvider.init() → DatabaseService.open() → DashboardDataBuilder.build() → DashboardActivity (no WebView intermediary).
+- **Rich content rendering**: `Html.fromHtml()` + `TextView` replaces WebView for rich content in EntryViewerActivity and ReportsActivity.
+- **SearchActivity**: Queries DatabaseService directly via ServiceProvider (no longer receives all entries as JSON from WebView bridge).
+- **File exports**: `ServiceProvider.saveFileToDownloads()` handles MediaStore scoped storage downloads.
+- **20 Kotlin source files**: 14 activities + 4 services + ServiceProvider + DashboardDataBuilder.
+- **Web SPA preserved**: `/web/` directory still exists as standalone browser-only fallback but is NOT bundled in the Android APK.
+
+### Widgets (2026-04-27)
+
+- Widget click behavior: clicking a widget card shows filtered entries (was: opened widget editor). Pencil (✎) edit button provides editor access.
+- `_widgetFilterActive` state in browser: set in `showWidgetEntries()`, consumed in entries.js `filterEntries()`, cleared on navigation away.
+- Native widget filter engine: `EntryListActivity.matchesWidgetFilters()` replicates full JS widget filter logic including people JSONObject support.
+- `getDashboardDataJSON()` (browser) includes pre-computed widget results for native dashboard.
+- DashboardActivity widget rendering uses `GradientDrawable` for colored backgrounds with `getContrastColor()` luminance formula.
+
+### Entry Locking (2026-04-13)
+
+- `locked` column added to entries table. Schema version bumped from 1 to 2.
+- Locked entries can still be viewed, pinned, and deleted — only editing is prevented.
+- Lock/Unlock button in entry viewer bottom bar with confirmation prompt.
+
+### Service Layer (2026-04-25)
+
+- **SQLCipher dependency**: `net.zetetic:sqlcipher-android:4.5.6`. Import: `net.zetetic.database.sqlcipher.SQLiteDatabase`.
+- **SQLCipher API**: `System.loadLibrary("sqlcipher")`. `openOrCreateDatabase` takes 5 params, `openDatabase` takes 6 params.
+- **Location name field**: Locations store optional `name` field alongside `lat`, `lng`, `address`. Backwards-compatible.
+
+### Browser-Only Notes
+
+- Web Crypto API requires HTTPS or localhost (file:// uses base64 WASM fallback which is slower)
+- Bootstrap IDB version bump from 1 to 2 (adds `bootstrap` object store)
+- Dashboard nav grid and hamburger menu used for browser navigation
+- Quill.js 1.3.7 used for rich text editing in browser
+- jsPDF 2.5.1 used for PDF export in browser
 
 ## Limitations
 
-- Web Crypto API requires HTTPS or localhost (no plain HTTP)
 - No cloud sync — all data is local-only
-- Android WebView cannot handle blob: URLs for downloads
-- sql.js loads entire database into memory (not suitable for very large datasets)
-- Quill.js editor is v1.3.7 (legacy; v2 has breaking changes)
-- No undo/redo in entry form beyond browser default
+- sql.js (browser) loads entire database into memory
 - Camera capture stores full-resolution images (no automatic compression setting)
+- No undo/redo in native entry form beyond OS default

@@ -1,5 +1,6 @@
 plugins {
     id 'com.android.application'
+    id 'org.jetbrains.kotlin.android'
 }
 
 android {
@@ -41,6 +42,10 @@ android {
         targetCompatibility JavaVersion.VERSION_1_8
     }
 
+    kotlinOptions {
+        jvmTarget = '1.8'
+    }
+
     applicationVariants.all { variant ->
         variant.outputs.all {
             outputFileName = "MyJournal-v${variant.versionName}-${variant.buildType.name}.apk"
@@ -48,17 +53,11 @@ android {
     }
 }
 
-// Copy web assets from ../web/ into app assets before build
-task copyWebAssets(type: Copy) {
-    from "${project.rootDir}/web"
-    into "${projectDir}/src/main/assets/web"
-}
-
-preBuild.dependsOn copyWebAssets
-
 dependencies {
+    implementation 'org.jetbrains.kotlin:kotlin-stdlib:1.9.22'
     implementation 'androidx.appcompat:appcompat:1.6.1'
-    implementation 'androidx.webkit:webkit:1.9.0'
     implementation 'androidx.biometric:biometric:1.1.0'
     implementation 'androidx.documentfile:documentfile:1.0.1'
+    implementation 'net.zetetic:sqlcipher-android:4.5.6'
+    implementation 'androidx.sqlite:sqlite:2.4.0'
 }

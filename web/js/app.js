@@ -244,6 +244,10 @@ function navigateTo(pageId) {
         }
     }
 
+    if (currentPage === 'entry-list' && pageId !== 'entry-list') {
+        if (typeof _widgetFilterActive !== 'undefined') _widgetFilterActive = null;
+    }
+
     if (currentPage !== pageId) {
         previousPage = currentPage;
     }
@@ -284,13 +288,49 @@ function navigateTo(pageId) {
         return false;
     }
 
-    if (pageId === 'dashboard') { refreshDashboard(); if (typeof applyWallpaper === 'function') applyWallpaper(); }
-    if (pageId === 'entry-list') refreshEntryList();
-    if (pageId === 'entry-form') prepareEntryForm();
-    if (pageId === 'reports') prepareReports();
-    if (pageId === 'explorer') initExplorer();
+    if (pageId === 'dashboard') {
+        if (typeof AndroidBridge !== 'undefined' && typeof AndroidBridge.onDashboardReady === 'function') {
+            AndroidBridge.onDashboardReady(getDashboardDataJSON());
+            return false;
+        }
+        refreshDashboard(); if (typeof applyWallpaper === 'function') applyWallpaper();
+    }
+    if (pageId === 'entry-list') {
+        if (typeof AndroidBridge !== 'undefined' && typeof AndroidBridge.openEntryList === 'function') {
+            AndroidBridge.openEntryList();
+            return false;
+        }
+        refreshEntryList();
+    }
+    if (pageId === 'entry-form') {
+        if (typeof AndroidBridge !== 'undefined' && typeof AndroidBridge.openEntryForm === 'function') {
+            AndroidBridge.openEntryForm('');
+            return false;
+        }
+        prepareEntryForm();
+    }
+    if (pageId === 'reports') {
+        if (typeof AndroidBridge !== 'undefined' && typeof AndroidBridge.openReports === 'function') {
+            AndroidBridge.openReports();
+            return false;
+        }
+        prepareReports();
+    }
+    if (pageId === 'explorer') {
+        if (typeof AndroidBridge !== 'undefined' && typeof AndroidBridge.openExplorer === 'function') {
+            AndroidBridge.openExplorer();
+            return false;
+        }
+        initExplorer();
+    }
     if (pageId === 'calendar') initCalendar();
-    if (pageId === 'settings') { refreshSettings(); initCollapsibleSettings(); }
+    if (pageId === 'settings') {
+        if (typeof AndroidBridge !== 'undefined' && typeof AndroidBridge.openSettings === 'function') {
+            AndroidBridge.openSettings();
+            return false;
+        }
+        refreshSettings(); initCollapsibleSettings();
+    }
 
     return false;
 }
@@ -843,13 +883,17 @@ async function quickAddPerson() {
 // ========== Locations ==========
 
 function migrateLocations(entry) {
-    // If entry already has new-format locations, use them
     if (entry.locations && entry.locations.length > 0) {
-        return [...entry.locations];
+        return entry.locations.map(loc => ({
+            name: loc.name || '',
+            address: loc.address || '',
+            lat: loc.lat != null ? loc.lat : null,
+            lng: loc.lng != null ? loc.lng : null
+        }));
     }
-    // Migrate old places format to new locations format
     if (entry.places && entry.places.length > 0) {
         return entry.places.map(p => ({
+            name: '',
             address: p.address || p.name || '',
             lat: p.coords ? p.coords.lat : null,
             lng: p.coords ? p.coords.lng : null
@@ -862,6 +906,8 @@ function renderLocations() {
     const list = document.getElementById('locations-list');
     list.innerHTML = currentEntryLocations.map((loc, i) => {
         const hasCoords = loc.lat != null && loc.lng != null;
+        const nameVal = loc.name ? escapeHtml(loc.name) : '';
+        const addressHtml = loc.address ? `<div class="location-address">${escapeHtml(loc.address)}</div>` : '';
         const coordsText = hasCoords ? `<div class="location-coords">${loc.lat.toFixed(6)}, ${loc.lng.toFixed(6)}</div>` : '';
         const mapBtn = hasCoords
             ? `<a href="https://www.google.com/maps?q=${loc.lat},${loc.lng}" target="_blank" class="btn-small btn-map-link" title="Open in Google Maps">&#128205; Map</a>`
@@ -871,7 +917,8 @@ function renderLocations() {
         return `
         <div class="location-item">
             <div class="location-details">
-                <div class="location-address">${escapeHtml(loc.address)}</div>
+                <input type="text" class="location-name-input" value="${nameVal}" placeholder="Name (optional)" onchange="updateLocationName(${i}, this.value)">
+                ${addressHtml}
                 ${coordsText}
             </div>
             <div class="location-actions">
@@ -887,10 +934,33 @@ function removeLocation(index) {
     renderLocations();
 }
 
+function updateLocationName(index, name) {
+    if (currentEntryLocations[index]) {
+        currentEntryLocations[index].name = name.trim();
+    }
+}
+
 function addLocationFromResult(address, lat, lng) {
-    currentEntryLocations.push({ address, lat, lng });
+    currentEntryLocations.push({ name: '', address, lat, lng });
     renderLocations();
     document.getElementById('location-search-input').value = '';
+    hideLocationSearchResults();
+}
+
+function addLocationManual() {
+    const input = document.getElementById('location-search-input');
+    const val = input.value.trim();
+    if (!val) return;
+    const coordMatch = val.match(/^(-?\d+\.?\d*)\s*,\s*(-?\d+\.?\d*)$/);
+    if (coordMatch) {
+        const lat = parseFloat(parseFloat(coordMatch[1]).toFixed(6));
+        const lng = parseFloat(parseFloat(coordMatch[2]).toFixed(6));
+        currentEntryLocations.push({ name: '', address: '', lat, lng });
+    } else {
+        currentEntryLocations.push({ name: val, address: '', lat: null, lng: null });
+    }
+    renderLocations();
+    input.value = '';
     hideLocationSearchResults();
 }
 

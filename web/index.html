@@ -75,27 +75,14 @@
         <!-- DASHBOARD PAGE -->
         <div id="page-dashboard" class="page active">
             <div class="page-header page-header-row">
-                <h2>Dashboard</h2>
+                <div class="page-header-title-row">
+                    <h2>Dashboard</h2>
+                    <button class="btn-dashboard-search-3d" onclick="openDashboardSearch()" title="Search entries">&#x1F50D;</button>
+                </div>
                 <div id="dashboard-weather" class="dashboard-weather-compact" style="display:none"></div>
                 <div class="col-toggle" data-target="dashboard-panels" id="col-toggle-dashboard"></div>
             </div>
             <div id="dashboard-quick-actions" class="dashboard-quick-actions"></div>
-            <fieldset class="dashboard-search-group" id="dashboard-search-group">
-                <legend class="dashboard-search-legend" onclick="toggleDashboardSearch()">&#x1F50D; Search for text <span id="dashboard-search-arrow" class="collapse-arrow">&#9654;</span></legend>
-                <div id="dashboard-search-body" class="dashboard-search-body" style="display:none">
-                    <div class="dashboard-search-row">
-                        <input type="text" id="dashboard-search-input" class="dashboard-search-input" placeholder="Search entries..." onkeydown="if(event.key==='Enter')dashboardSearch()">
-                        <button class="btn-small" onclick="dashboardSearch()" title="Search">&#x1F50D;</button>
-                        <button class="btn-small" onclick="clearDashboardSearch()" id="dashboard-search-clear" style="display:none" title="Clear">&times;</button>
-                    </div>
-                    <div class="dashboard-search-options">
-                        <label class="dashboard-search-checkbox"><input type="checkbox" id="dashboard-search-wholeword"> Whole word</label>
-                    </div>
-                    <div id="dashboard-search-status" class="dashboard-search-status" style="display:none"></div>
-                    <div id="dashboard-search-results" class="dashboard-search-results" style="display:none"></div>
-                </div>
-            </fieldset>
-            <hr style="border:none; border-top:1px solid transparent; margin:0.75rem 0">
             <div class="stats-grid">
                 <div class="stat-card stat-card-clickable" onclick="statNavigate('week')">
                     <span class="stat-value" id="stat-week">0</span>
@@ -224,7 +211,7 @@
                     </div>
 
                     <div class="form-group">
-                        <label>Rich Content (optional)</label>
+                        <label>Rich Content (optional) <button type="button" class="btn-copy-content" onclick="copyContentToRichContent()" title="Copy from Content above">Copy</button></label>
                         <div id="rich-content-editor"></div>
                     </div>
 
@@ -308,7 +295,8 @@
                         <label>Locations</label>
                         <div id="locations-list" class="locations-list"></div>
                         <div class="location-search-row">
-                            <input type="text" id="location-search-input" placeholder="Search address or place..." autocomplete="off" onkeydown="if(event.key==='Enter'){event.preventDefault();searchLocation();}">
+                            <input type="text" id="location-search-input" placeholder="Name, address, or coordinates..." autocomplete="off" onkeydown="if(event.key==='Enter'){event.preventDefault();searchLocation();}">
+                            <button type="button" class="btn-small" onclick="addLocationManual()" title="Add as typed (name or coordinates)">Add</button>
                             <button type="button" class="btn-small" onclick="searchLocation()">Search</button>
                             <button type="button" class="btn-small" onclick="getCurrentLocationNew()">GPS</button>
                         </div>
@@ -614,11 +602,26 @@
             </div>
 
             <div class="settings-tabs">
-                <button class="settings-tab active" onclick="switchSettingsTab('prefs')" id="stab-prefs">&#x2699;&#xFE0F; Preferences</button>
-                <button class="settings-tab" onclick="switchSettingsTab('templates')" id="stab-templates">&#x1F4DD; Templates</button>
-                <button class="settings-tab" onclick="switchSettingsTab('cattags')" id="stab-cattags">&#x1F3F7;&#xFE0F; Edit Metadata</button>
-                <button class="settings-tab" onclick="switchSettingsTab('data')" id="stab-data">&#x1F4BE; Data</button>
-                <button class="settings-tab" onclick="switchSettingsTab('widgets')" id="stab-widgets">&#x1F4CA; Widgets</button>
+                <button class="settings-tab active" onclick="switchSettingsTab('prefs')" id="stab-prefs">
+                    <span class="tab-icon"><svg viewBox="0 0 24 24" fill="none"><defs><linearGradient id="gi1" x1="4" y1="4" x2="20" y2="20" gradientUnits="userSpaceOnUse"><stop stop-color="var(--accent)"/><stop offset="1" stop-color="var(--accent)" stop-opacity=".55"/></linearGradient></defs><path d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z" fill="url(#gi1)" opacity=".3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1Z" stroke="url(#gi1)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><circle cx="12" cy="12" r="3" stroke="url(#gi1)" stroke-width="2"/></svg></span>
+                    Preferences
+                </button>
+                <button class="settings-tab" onclick="switchSettingsTab('templates')" id="stab-templates">
+                    <span class="tab-icon"><svg viewBox="0 0 24 24" fill="none"><defs><linearGradient id="gi2" x1="4" y1="2" x2="20" y2="22" gradientUnits="userSpaceOnUse"><stop stop-color="var(--accent)"/><stop offset="1" stop-color="var(--accent)" stop-opacity=".55"/></linearGradient></defs><rect x="5" y="2" width="14" height="20" rx="2" fill="url(#gi2)" opacity=".15"/><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z" stroke="url(#gi2)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M14 2v6h6M8 13h8M8 17h5" stroke="url(#gi2)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+                    Templates
+                </button>
+                <button class="settings-tab" onclick="switchSettingsTab('cattags')" id="stab-cattags">
+                    <span class="tab-icon"><svg viewBox="0 0 24 24" fill="none"><defs><linearGradient id="gi3" x1="2" y1="2" x2="22" y2="22" gradientUnits="userSpaceOnUse"><stop stop-color="var(--accent)"/><stop offset="1" stop-color="var(--accent)" stop-opacity=".55"/></linearGradient></defs><path d="M2 4.5l9.2-.7a2 2 0 0 1 1.4.5L21 12l-8.5 8.5L4 12l-.3-.3A2 2 0 0 1 3 10.3V6.5A2 2 0 0 1 5 4.5" fill="url(#gi3)" opacity=".15"/><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82Z" stroke="url(#gi3)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><circle cx="7" cy="7" r="1.5" fill="url(#gi3)"/></svg></span>
+                    Metadata
+                </button>
+                <button class="settings-tab" onclick="switchSettingsTab('data')" id="stab-data">
+                    <span class="tab-icon"><svg viewBox="0 0 24 24" fill="none"><defs><linearGradient id="gi4" x1="4" y1="2" x2="20" y2="22" gradientUnits="userSpaceOnUse"><stop stop-color="var(--accent)"/><stop offset="1" stop-color="var(--accent)" stop-opacity=".55"/></linearGradient></defs><ellipse cx="12" cy="5" rx="8" ry="3" fill="url(#gi4)" opacity=".2"/><ellipse cx="12" cy="5" rx="8" ry="3" stroke="url(#gi4)" stroke-width="2"/><path d="M20 5v7c0 1.66-3.58 3-8 3s-8-1.34-8-3V5" stroke="url(#gi4)" stroke-width="2"/><path d="M20 12v7c0 1.66-3.58 3-8 3s-8-1.34-8-3v-7" stroke="url(#gi4)" stroke-width="2"/></svg></span>
+                    Data
+                </button>
+                <button class="settings-tab" onclick="switchSettingsTab('widgets')" id="stab-widgets">
+                    <span class="tab-icon"><svg viewBox="0 0 24 24" fill="none"><defs><linearGradient id="gi5" x1="3" y1="3" x2="21" y2="21" gradientUnits="userSpaceOnUse"><stop stop-color="var(--accent)"/><stop offset="1" stop-color="var(--accent)" stop-opacity=".55"/></linearGradient></defs><rect x="3" y="3" width="8" height="8" rx="2" fill="url(#gi5)" opacity=".2"/><rect x="3" y="3" width="8" height="8" rx="2" stroke="url(#gi5)" stroke-width="2"/><rect x="13" y="3" width="8" height="4" rx="1.5" stroke="url(#gi5)" stroke-width="2"/><rect x="13" y="10" width="8" height="11" rx="2" fill="url(#gi5)" opacity=".15" stroke="url(#gi5)" stroke-width="2"/><rect x="3" y="14" width="8" height="7" rx="2" stroke="url(#gi5)" stroke-width="2"/></svg></span>
+                    Widgets
+                </button>
             </div>
 
             <!-- TAB 1: Preferences -->
@@ -1216,6 +1219,26 @@
                 <button class="btn-primary" onclick="printEntryPdf()">Generate PDF</button>
                 <button class="btn-secondary" onclick="closePrintModal()">Cancel</button>
             </div>
+        </div>
+    </div>
+
+    <!-- Dashboard Search Modal -->
+    <div id="dashboard-search-modal" class="dashboard-search-modal" style="display:none">
+        <div class="dashboard-search-modal-content">
+            <div class="dashboard-search-modal-header">
+                <h3>Search Entries</h3>
+                <span class="dashboard-search-modal-close" onclick="closeDashboardSearch()">&times;</span>
+            </div>
+            <div class="dashboard-search-row">
+                <input type="text" id="dashboard-search-input" class="dashboard-search-input" placeholder="Search entries..." onkeydown="if(event.key==='Enter')dashboardSearch()">
+                <button class="btn-small" onclick="dashboardSearch()" title="Search">&#x1F50D;</button>
+                <button class="btn-small" onclick="clearDashboardSearch()" id="dashboard-search-clear" style="display:none" title="Clear">&times;</button>
+            </div>
+            <div class="dashboard-search-options">
+                <label class="dashboard-search-checkbox"><input type="checkbox" id="dashboard-search-wholeword"> Whole word</label>
+            </div>
+            <div id="dashboard-search-status" class="dashboard-search-status" style="display:none"></div>
+            <div id="dashboard-search-results" class="dashboard-search-results" style="display:none"></div>
         </div>
     </div>
 

@@ -1,45 +1,27 @@
 /**
- * Weather module using Open-Meteo API (free, no API key needed).
- * Geocoding for city search, current weather fetch.
+ * Weather module using Open-Meteo API.
+ * On Android, delegates HTTP calls to native WeatherService via AndroidBridge.
+ * In browser, uses fetch API directly.
  */
 
 const Weather = (() => {
     const GEO_URL = 'https://geocoding-api.open-meteo.com/v1/search';
     const WEATHER_URL = 'https://api.open-meteo.com/v1/forecast';
 
-    // WMO Weather interpretation codes -> descriptions
     const WMO_CODES = {
-        0: 'Clear sky',
-        1: 'Mainly clear',
-        2: 'Partly cloudy',
-        3: 'Overcast',
-        45: 'Foggy',
-        48: 'Depositing rime fog',
-        51: 'Light drizzle',
-        53: 'Moderate drizzle',
-        55: 'Dense drizzle',
-        56: 'Light freezing drizzle',
-        57: 'Dense freezing drizzle',
-        61: 'Slight rain',
-        63: 'Moderate rain',
-        65: 'Heavy rain',
-        66: 'Light freezing rain',
-        67: 'Heavy freezing rain',
-        71: 'Slight snowfall',
-        73: 'Moderate snowfall',
-        75: 'Heavy snowfall',
+        0: 'Clear sky', 1: 'Mainly clear', 2: 'Partly cloudy', 3: 'Overcast',
+        45: 'Foggy', 48: 'Depositing rime fog',
+        51: 'Light drizzle', 53: 'Moderate drizzle', 55: 'Dense drizzle',
+        56: 'Light freezing drizzle', 57: 'Dense freezing drizzle',
+        61: 'Slight rain', 63: 'Moderate rain', 65: 'Heavy rain',
+        66: 'Light freezing rain', 67: 'Heavy freezing rain',
+        71: 'Slight snowfall', 73: 'Moderate snowfall', 75: 'Heavy snowfall',
         77: 'Snow grains',
-        80: 'Slight rain showers',
-        81: 'Moderate rain showers',
-        82: 'Violent rain showers',
-        85: 'Slight snow showers',
-        86: 'Heavy snow showers',
-        95: 'Thunderstorm',
-        96: 'Thunderstorm with slight hail',
-        99: 'Thunderstorm with heavy hail'
+        80: 'Slight rain showers', 81: 'Moderate rain showers', 82: 'Violent rain showers',
+        85: 'Slight snow showers', 86: 'Heavy snow showers',
+        95: 'Thunderstorm', 96: 'Thunderstorm with slight hail', 99: 'Thunderstorm with heavy hail'
     };
 
-    // WMO code -> emoji-like icon text
     const WMO_ICONS = {
         0: 'sunny', 1: 'mostly_sunny', 2: 'partly_cloudy', 3: 'cloudy',
         45: 'fog', 48: 'fog',
@@ -53,11 +35,19 @@ const Weather = (() => {
         95: 'thunderstorm', 96: 'thunderstorm', 99: 'thunderstorm'
     };
 
-    /**
-     * Search for cities by name. Returns array of { name, country, admin1, lat, lng }.
-     */
+    function _hasNativeBridge() {
+        return typeof window !== 'undefined' &&
+            window.AndroidBridge &&
+            typeof AndroidBridge.weatherSearchCity === 'function';
+    }
+
     async function searchCity(query) {
         if (!query || query.trim().length < 2) return [];
+
+        if (_hasNativeBridge()) {
+            return JSON.parse(AndroidBridge.weatherSearchCity(query));
+        }
+
         const url = `${GEO_URL}?name=${encodeURIComponent(query.trim())}&count=5&language=en&format=json`;
         const resp = await fetch(url);
         if (!resp.ok) throw new Error('Geocoding request failed');
@@ -72,11 +62,11 @@ const Weather = (() => {
         }));
     }
 
-    /**
-     * Fetch current weather for given lat/lng.
-     * Returns { temp, feelsLike, humidity, windSpeed, description, icon, code }.
-     */
     async function fetchCurrent(lat, lng, tempUnit) {
+        if (_hasNativeBridge()) {
+            return JSON.parse(AndroidBridge.weatherFetchCurrent(lat, lng, tempUnit || 'celsius'));
+        }
+
         const unit = tempUnit === 'fahrenheit' ? 'fahrenheit' : 'celsius';
         const url = `${WEATHER_URL}?latitude=${lat}&longitude=${lng}` +
             `&current=temperature_2m,relative_humidity_2m,apparent_temperature,weather_code,wind_speed_10m` +
@@ -98,39 +88,24 @@ const Weather = (() => {
         };
     }
 
-    /**
-     * Get saved weather location from settings. Returns { name, lat, lng } or null.
-     */
     function getLocation() {
         const settings = DB.getSettings();
         return settings.weatherLocation || null;
     }
 
-    /**
-     * Save weather location to settings.
-     */
     function setLocation(location) {
         DB.setSettings({ weatherLocation: location });
     }
 
-    /**
-     * Get saved temperature unit preference. Returns 'celsius' or 'fahrenheit'.
-     */
     function getTempUnit() {
         const settings = DB.getSettings();
         return settings.weatherTempUnit || 'fahrenheit';
     }
 
-    /**
-     * Save temperature unit preference.
-     */
     function setTempUnit(unit) {
         DB.setSettings({ weatherTempUnit: unit });
     }
 
-    /**
-     * Format weather data for display.
-     */
     function formatWeather(w) {
         if (!w) return '';
         return `${w.description}, ${w.temp}°${w.unit} (feels ${w.feelsLike}°${w.unit}), ` +

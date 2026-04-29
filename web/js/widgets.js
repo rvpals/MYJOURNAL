@@ -178,7 +178,7 @@ function renderDashboardWidgets(entries) {
             ? `<img src="${escapeHtml(widget.icon)}" class="widget-card-icon" alt="">`
             : '';
 
-        html += `<div class="widget-card" style="${bgStyle}${textColor}" onclick="openWidgetEditor('${escapeHtml(widget.id)}')">`;
+        html += `<div class="widget-card" style="${bgStyle}${textColor}" onclick="showWidgetEntries('${escapeHtml(widget.id)}')">`;
         html += `<div class="widget-card-header">`;
         html += iconHtml;
         html += `<div class="widget-card-titles">`;
@@ -186,7 +186,9 @@ function renderDashboardWidgets(entries) {
         if (widget.description) {
             html += `<div class="widget-card-desc">${escapeHtml(widget.description)}</div>`;
         }
-        html += `</div></div>`;
+        html += `</div>`;
+        html += `<button class="widget-card-edit-btn" onclick="event.stopPropagation();openWidgetEditor('${escapeHtml(widget.id)}')" title="Edit widget">&#x270E;</button>`;
+        html += `</div>`;
 
         if (results.length > 0) {
             html += `<div class="widget-card-results">`;
@@ -203,6 +205,27 @@ function renderDashboardWidgets(entries) {
         html += `</div>`;
     }
     container.innerHTML = html;
+}
+
+let _widgetFilterActive = null;
+
+function showWidgetEntries(widgetId) {
+    const widget = DB.getWidgetById(widgetId);
+    if (!widget) return;
+    if (typeof AndroidBridge !== 'undefined' && typeof AndroidBridge.openEntryListWithWidgetFilter === 'function') {
+        AndroidBridge.openEntryListWithWidgetFilter(
+            JSON.stringify(widget.filters || []),
+            widget.name || 'Widget'
+        );
+        return;
+    }
+    _widgetFilterActive = widget;
+    navigateTo('entry-list');
+}
+
+function clearWidgetFilter() {
+    _widgetFilterActive = null;
+    filterEntries();
 }
 
 function getContrastColor(hex) {
@@ -250,6 +273,10 @@ function deleteWidgetConfirm(id, name) {
 // ========== Widget Editor ==========
 
 function openWidgetEditor(id) {
+    if (typeof AndroidBridge !== 'undefined' && typeof AndroidBridge.openWidgetEditor === 'function') {
+        AndroidBridge.openWidgetEditor(id || '');
+        return;
+    }
     if (id) {
         const widget = DB.getWidgetById(id);
         if (!widget) { alert('Widget not found.'); return; }

@@ -314,7 +314,7 @@ function matchExplorerCondition(entry, cond) {
         }
         case 'locations': {
             const locs = entry.locations || [];
-            if (cond.op === 'contains') return locs.some(l => (l.address || '').toLowerCase().includes(val));
+            if (cond.op === 'contains') return locs.some(l => (l.name || '').toLowerCase().includes(val) || (l.address || '').toLowerCase().includes(val));
             if (cond.op === 'is empty') return locs.length === 0;
             if (cond.op === 'is not empty') return locs.length > 0;
             return true;
@@ -563,7 +563,7 @@ function getExplorerCellValue(entry, key) {
         case 'tags': return (entry.tags || []).join(', ');
         case 'placeName': return entry.placeName || '';
         case 'locations':
-            return (entry.locations || []).map(l => l.address || '').join('; ');
+            return (entry.locations || []).map(l => [l.name, l.address].filter(Boolean).join(' — ')).join('; ');
         case 'weather':
             return entry.weather ? Weather.formatWeather(entry.weather) : '';
         default: return '';
@@ -630,9 +630,10 @@ function getExplorerCellValueFull(entry, key) {
         case 'locations':
             return (entry.locations || []).map(l => {
                 const parts = [];
+                if (l.name) parts.push(l.name);
                 if (l.address) parts.push(l.address);
                 if (l.lat != null && l.lng != null) parts.push(`(${l.lat}, ${l.lng})`);
-                return parts.join(' ');
+                return parts.join(' — ');
             }).join('; ');
         case 'weather':
             return entry.weather ? Weather.formatWeather(entry.weather) : '';

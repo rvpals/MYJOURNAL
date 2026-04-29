@@ -189,6 +189,17 @@ function countPeopleAll(entries) {
 
 
 function statNavigate(period) {
+    if (typeof AndroidBridge !== 'undefined' && typeof AndroidBridge.openEntryListWithWidgetFilter === 'function') {
+        if (period === 'total') {
+            AndroidBridge.openEntryList();
+        } else {
+            const range = getDateRange(period);
+            const filters = [{ field: 'date', op: 'between', value: range.from, value2: range.to }];
+            const label = period.charAt(0).toUpperCase() + period.slice(1);
+            AndroidBridge.openEntryListWithWidgetFilter(JSON.stringify(filters), 'This ' + label);
+        }
+        return;
+    }
     navigateTo('entry-list');
     document.getElementById('search-input').value = '';
     document.getElementById('filter-category').value = '';
@@ -208,8 +219,27 @@ function statNavigate(period) {
 }
 
 function navigateToFilteredList(type, value) {
+    if (typeof AndroidBridge !== 'undefined' && typeof AndroidBridge.openEntryListWithWidgetFilter === 'function') {
+        let filters, label;
+        if (type === 'tag') {
+            filters = [{ field: 'tags', op: 'includes', value: value, value2: '' }];
+            label = value;
+        } else if (type === 'category') {
+            filters = [{ field: 'categories', op: 'includes', value: value, value2: '' }];
+            label = value;
+        } else if (type === 'place') {
+            filters = [{ field: 'placeName', op: 'contains', value: value, value2: '' }];
+            label = value;
+        } else if (type === 'person') {
+            filters = [{ field: 'people', op: 'includes', value: value, value2: '' }];
+            label = value;
+        }
+        if (filters) {
+            AndroidBridge.openEntryListWithWidgetFilter(JSON.stringify(filters), label);
+            return;
+        }
+    }
     navigateTo('entry-list');
-    // Clear existing filters first
     document.getElementById('search-input').value = '';
     document.getElementById('filter-category').value = '';
     document.getElementById('filter-tag').value = '';
@@ -304,15 +334,18 @@ let _dashboardSearchResultIds = [];
 let _dashboardSearchMatches = [];
 let _dashboardSearchTerm = '';
 
-function toggleDashboardSearch() {
-    const body = document.getElementById('dashboard-search-body');
-    const arrow = document.getElementById('dashboard-search-arrow');
-    const collapsed = body.style.display !== 'none';
-    body.style.display = collapsed ? 'none' : '';
-    arrow.innerHTML = collapsed ? '&#9654;' : '&#9660;';
-    if (!collapsed) {
-        document.getElementById('dashboard-search-input').focus();
+function openDashboardSearch() {
+    if (window.AndroidBridge && typeof AndroidBridge.openSearch === 'function') {
+        const entries = DB.getEntries();
+        AndroidBridge.openSearch(JSON.stringify(entries));
+        return;
     }
+    document.getElementById('dashboard-search-modal').style.display = 'flex';
+    document.getElementById('dashboard-search-input').focus();
+}
+
+function closeDashboardSearch() {
+    document.getElementById('dashboard-search-modal').style.display = 'none';
 }
 
 function viewEntryFromSearch(id) {
@@ -536,6 +569,26 @@ function getDashboardDataJSON() {
     // Streak
     const streak = calculateStreak(entries);
 
+    // Widgets with pre-computed results
+    const dashboardWidgets = (typeof DB !== 'undefined' && typeof DB.getWidgets === 'function')
+        ? DB.getWidgets().filter(w => w.enabledInDashboard).map(w => {
+            const results = typeof computeWidget === 'function' ? computeWidget(w, entries) : [];
+            return {
+                id: w.id,
+                name: w.name || '',
+                description: w.description || '',
+                bgColor: w.bgColor || '',
+                icon: w.icon || '',
+                filters: w.filters || [],
+                results: results.map(r => ({
+                    prefix: r.prefix || '',
+                    postfix: r.postfix || '',
+                    result: String(r.result != null ? r.result : 0)
+                }))
+            };
+        })
+        : [];
+
     return JSON.stringify({
         totalEntries: entries.length,
         thisWeek: entries.filter(e => e.date >= week.from && e.date <= week.to).length,
@@ -549,6 +602,7 @@ function getDashboardDataJSON() {
         pinnedEntries: pinned,
         recentEntries: recent,
         pinnedViews: pinnedViews,
+        widgets: dashboardWidgets,
         journalName: journalName,
         theme: theme
     });

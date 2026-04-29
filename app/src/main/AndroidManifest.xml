@@ -36,13 +36,6 @@
         </activity>
 
         <activity
-            android:name=".MainActivity"
-            android:configChanges="orientation|screenSize|keyboard|keyboardHidden"
-            android:exported="false"
-            android:screenOrientation="unspecified"
-            android:windowSoftInputMode="adjustResize" />
-
-        <activity
             android:name=".DashboardActivity"
             android:exported="false"
             android:screenOrientation="unspecified"
@@ -51,6 +44,81 @@
         <activity
             android:name=".AboutActivity"
             android:exported="false"
+            android:theme="@style/AppTheme" />
+
+        <activity
+            android:name=".CalendarActivity"
+            android:exported="false"
+            android:screenOrientation="unspecified"
+            android:theme="@style/AppTheme" />
+
+        <activity
+            android:name=".SearchActivity"
+            android:exported="false"
+            android:screenOrientation="unspecified"
+            android:windowSoftInputMode="adjustResize"
+            android:theme="@style/AppTheme" />
+
+        <activity
+            android:name=".EntryViewerActivity"
+            android:exported="false"
+            android:screenOrientation="unspecified"
+            android:theme="@style/AppTheme" />
+
+        <activity
+            android:name=".SettingsActivity"
+            android:exported="false"
+            android:screenOrientation="unspecified"
+            android:windowSoftInputMode="adjustResize"
+            android:theme="@style/AppTheme" />
+
+        <activity
+            android:name=".EntryListActivity"
+            android:exported="false"
+            android:screenOrientation="unspecified"
+            android:windowSoftInputMode="adjustResize"
+            android:theme="@style/AppTheme" />
+
+        <activity
+            android:name=".ExplorerActivity"
+            android:exported="false"
+            android:screenOrientation="unspecified"
+            android:windowSoftInputMode="adjustResize"
+            android:theme="@style/AppTheme" />
+
+        <activity
+            android:name=".CustomViewEditorActivity"
+            android:exported="false"
+            android:screenOrientation="unspecified"
+            android:windowSoftInputMode="adjustResize"
+            android:theme="@style/AppTheme" />
+
+        <activity
+            android:name=".WidgetEditorActivity"
+            android:exported="false"
+            android:screenOrientation="unspecified"
+            android:windowSoftInputMode="adjustResize"
+            android:theme="@style/AppTheme" />
+
+        <activity
+            android:name=".CsvMappingActivity"
+            android:exported="false"
+            android:screenOrientation="unspecified"
+            android:windowSoftInputMode="adjustResize"
+            android:theme="@style/AppTheme" />
+
+        <activity
+            android:name=".ReportsActivity"
+            android:exported="false"
+            android:screenOrientation="unspecified"
+            android:windowSoftInputMode="adjustResize"
+            android:theme="@style/AppTheme" />
+
+        <activity
+            android:name=".EntryFormActivity"
+            android:exported="false"
+            android:screenOrientation="unspecified"
+            android:windowSoftInputMode="adjustResize"
             android:theme="@style/AppTheme" />
 
         <provider

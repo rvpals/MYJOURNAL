@@ -1,0 +1,342 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="@color/login_bg">
+
+    <!-- Top Navbar -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:paddingHorizontal="12dp"
+        android:paddingVertical="8dp"
+        android:background="@color/login_card_bg"
+        android:elevation="4dp">
+
+        <Button
+            android:id="@+id/btn_back"
+            android:layout_width="42dp"
+            android:layout_height="42dp"
+            android:text="←"
+            android:textSize="18sp"
+            android:background="@drawable/btn_secondary"
+            android:layout_marginEnd="8dp" />
+
+        <TextView
+            android:id="@+id/nav_title"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Entry Viewer"
+            android:textColor="@color/login_accent"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            android:letterSpacing="0.06"
+            android:maxLines="1"
+            android:ellipsize="end" />
+    </LinearLayout>
+
+    <!-- Scrollable Content -->
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:fillViewport="true">
+
+        <LinearLayout
+            android:id="@+id/content_container"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="12dp">
+
+            <!-- Header: Date, Time, Pin, Lock -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:layout_marginBottom="6dp">
+
+                <TextView
+                    android:id="@+id/ev_date"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textColor="@color/login_accent"
+                    android:textSize="13sp"
+                    android:textStyle="bold"
+                    android:background="@drawable/stat_card_bg"
+                    android:paddingHorizontal="10dp"
+                    android:paddingVertical="5dp"
+                    android:layout_marginEnd="6dp" />
+
+                <TextView
+                    android:id="@+id/ev_time"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textColor="@color/login_accent"
+                    android:textSize="13sp"
+                    android:textStyle="bold"
+                    android:background="@drawable/stat_card_bg"
+                    android:paddingHorizontal="10dp"
+                    android:paddingVertical="5dp"
+                    android:layout_marginEnd="6dp" />
+
+                <View
+                    android:layout_width="0dp"
+                    android:layout_height="0dp"
+                    android:layout_weight="1" />
+
+                <Button
+                    android:id="@+id/ev_btn_pin"
+                    android:layout_width="36dp"
+                    android:layout_height="36dp"
+                    android:text="📌"
+                    android:textSize="16sp"
+                    android:background="@drawable/btn_secondary"
+                    android:layout_marginEnd="4dp" />
+
+                <Button
+                    android:id="@+id/ev_btn_lock"
+                    android:layout_width="36dp"
+                    android:layout_height="36dp"
+                    android:text="🔓"
+                    android:textSize="16sp"
+                    android:background="@drawable/btn_secondary" />
+            </LinearLayout>
+
+            <!-- Title -->
+            <TextView
+                android:id="@+id/ev_title"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textColor="@color/login_text"
+                android:textSize="20sp"
+                android:textStyle="bold"
+                android:layout_marginBottom="10dp" />
+
+            <!-- Main Content Card -->
+            <LinearLayout
+                android:id="@+id/ev_card"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:background="@drawable/login_card_bg"
+                android:padding="14dp"
+                android:layout_marginBottom="10dp">
+
+                <!-- Content (plain text) -->
+                <TextView
+                    android:id="@+id/ev_content_label"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="CONTENT"
+                    android:textColor="@color/login_accent"
+                    android:textSize="11sp"
+                    android:textStyle="bold"
+                    android:letterSpacing="0.08"
+                    android:layout_marginBottom="4dp"
+                    android:visibility="gone" />
+
+                <TextView
+                    android:id="@+id/ev_content"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:textColor="@color/login_text"
+                    android:textSize="14sp"
+                    android:lineSpacingMultiplier="1.5"
+                    android:layout_marginBottom="10dp"
+                    android:visibility="gone" />
+
+                <!-- Rich Content (HTML rendered in WebView) -->
+                <TextView
+                    android:id="@+id/ev_rich_label"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="RICH CONTENT"
+                    android:textColor="@color/login_accent"
+                    android:textSize="11sp"
+                    android:textStyle="bold"
+                    android:letterSpacing="0.08"
+                    android:layout_marginBottom="4dp"
+                    android:visibility="gone" />
+
+                <TextView
+                    android:id="@+id/ev_rich_content"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:textColor="@color/login_text"
+                    android:textSize="14sp"
+                    android:lineSpacingMultiplier="1.5"
+                    android:layout_marginBottom="10dp"
+                    android:visibility="gone" />
+
+                <!-- Image Thumbnails -->
+                <TextView
+                    android:id="@+id/ev_images_label"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="IMAGES"
+                    android:textColor="@color/login_accent"
+                    android:textSize="11sp"
+                    android:textStyle="bold"
+                    android:letterSpacing="0.08"
+                    android:layout_marginBottom="4dp"
+                    android:visibility="gone" />
+
+                <LinearLayout
+                    android:id="@+id/ev_images_grid"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:layout_marginBottom="10dp"
+                    android:visibility="gone" />
+            </LinearLayout>
+
+            <!-- Misc Info Card (collapsible) -->
+            <LinearLayout
+                android:id="@+id/ev_misc_card"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:background="@drawable/login_card_bg"
+                android:layout_marginBottom="10dp"
+                android:visibility="gone">
+
+                <!-- Misc Header (clickable to toggle) -->
+                <LinearLayout
+                    android:id="@+id/ev_misc_header"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:padding="12dp"
+                    android:clickable="true"
+                    android:focusable="true">
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="📋 Misc Info"
+                        android:textColor="@color/login_accent"
+                        android:textSize="13sp"
+                        android:textStyle="bold"
+                        android:letterSpacing="0.04" />
+
+                    <TextView
+                        android:id="@+id/ev_misc_arrow"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="▼"
+                        android:textColor="@color/login_accent"
+                        android:textSize="13sp" />
+                </LinearLayout>
+
+                <!-- Misc Body (shown/hidden) -->
+                <LinearLayout
+                    android:id="@+id/ev_misc_body"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:paddingHorizontal="12dp"
+                    android:paddingBottom="12dp" />
+            </LinearLayout>
+
+        </LinearLayout>
+    </ScrollView>
+
+    <!-- Bottom Bar: Navigation + Actions -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:background="@color/login_card_bg"
+        android:elevation="8dp"
+        android:paddingHorizontal="12dp"
+        android:paddingVertical="8dp">
+
+        <!-- Prev / Counter / Next -->
+        <LinearLayout
+            android:id="@+id/ev_nav_row"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:layout_marginBottom="6dp"
+            android:visibility="gone">
+
+            <Button
+                android:id="@+id/ev_btn_prev"
+                android:layout_width="wrap_content"
+                android:layout_height="36dp"
+                android:text="⏪ Prev"
+                android:textSize="12sp"
+                android:textColor="@color/login_text"
+                android:background="@drawable/btn_secondary"
+                android:paddingHorizontal="12dp"
+                android:textAllCaps="false" />
+
+            <TextView
+                android:id="@+id/ev_nav_counter"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:gravity="center"
+                android:textColor="@color/login_text_secondary"
+                android:textSize="13sp" />
+
+            <Button
+                android:id="@+id/ev_btn_next"
+                android:layout_width="wrap_content"
+                android:layout_height="36dp"
+                android:text="Next ⏩"
+                android:textSize="12sp"
+                android:textColor="@color/login_text"
+                android:background="@drawable/btn_secondary"
+                android:paddingHorizontal="12dp"
+                android:textAllCaps="false" />
+        </LinearLayout>
+
+        <!-- Action Buttons Row -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center">
+
+            <Button
+                android:id="@+id/ev_btn_edit"
+                android:layout_width="0dp"
+                android:layout_height="44dp"
+                android:layout_weight="1"
+                android:text="✏️"
+                android:textSize="18sp"
+                android:background="@drawable/btn_accent"
+                android:layout_marginEnd="4dp" />
+
+            <Button
+                android:id="@+id/ev_btn_delete"
+                android:layout_width="0dp"
+                android:layout_height="44dp"
+                android:layout_weight="1"
+                android:text="🗑️"
+                android:textSize="18sp"
+                android:background="@drawable/btn_delete"
+                android:layout_marginEnd="4dp" />
+
+            <Button
+                android:id="@+id/ev_btn_back_bottom"
+                android:layout_width="0dp"
+                android:layout_height="44dp"
+                android:layout_weight="1"
+                android:text="⬅️"
+                android:textSize="18sp"
+                android:background="@drawable/btn_secondary" />
+        </LinearLayout>
+    </LinearLayout>
+
+</LinearLayout>

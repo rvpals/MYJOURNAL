@@ -1,7 +1,7 @@
 ---
-tags: [requirements, features, authentication, biometric, entries, dashboard, views, explorer, reports, settings, weather, Android, components, downloads]
-related_files: [CLAUDE.md, COMPONENTS.md, TODO.md]
-summary: "Complete functional requirements for all 12 feature areas — authentication, storage, entries, dashboard, views, explorer, reports, settings, weather, Android platform, components, downloads."
+tags: [requirements, features, authentication, biometric, entries, dashboard, views, explorer, reports, settings, weather, Android, downloads]
+related_files: [CLAUDE.md, TODO.md]
+summary: "Complete functional requirements for all feature areas — authentication, storage, entries, dashboard, views, explorer, reports, settings, weather, Android platform, downloads."
 ---
 
 # REQUIREMENTS — MYJOURNAL
@@ -31,19 +31,18 @@ summary: "Complete functional requirements for all 12 feature areas — authenti
 - Existing journal: single password field
 - Auto-open last journal option (skip login screen)
 - Delete journal: removes DB data, crypto keys, biometric credential
-- Passes credentials to MainActivity for WebView auto-login via JS injection
+- On login: initializes ServiceProvider, opens DB, computes dashboard data, launches DashboardActivity directly
 
 ## 2. Data Storage
 
-### Database (sql.js / SQLite WASM)
-- SQLite compiled to WebAssembly, runs entirely in browser/WebView
-- Base64 WASM fallback for file:// protocol (avoids CORS issues)
-- Encrypted database bytes stored in IndexedDB (DB: 'JournalDB', Store: 'encrypted_data')
-- Per-journal storage keys in IndexedDB
-- Full database loaded into memory on login, saved back on every write operation
+### Database
+- **SQLCipher encrypted SQLite** via `DatabaseService.kt` (`net.zetetic:sqlcipher-android:4.5.6`)
+- Each journal stored as `journal_<id>.db` in app's database directory
+- Auto-persists — no manual save needed
+- ~35 CRUD methods for all tables
 
 ### Schema
-- **entries**: id, date (YYYY-MM-DD), time (HH:MM), title, content (plain text), richContent (HTML), categories (JSON array), tags (JSON array), people (JSON array), placeName, locations (JSON array of {lat, lng, address}), weather (JSON {temp, unit, description, code}), pinned (0/1), locked (0/1), dtCreated, dtUpdated
+- **entries**: id, date (YYYY-MM-DD), time (HH:MM), title, content (plain text), richContent (HTML), categories (JSON array), tags (JSON array), people (JSON array), placeName, locations (JSON array of {lat, lng, address, name?}), weather (JSON {temp, unit, description, code}), pinned (0/1), locked (0/1), dtCreated, dtUpdated
 - **images**: id, entryId (FK), name, data (base64), thumb (base64), sortOrder
 - **categories**: name (PK), description
 - **tags**: name (PK), description
@@ -54,261 +53,221 @@ summary: "Complete functional requirements for all 12 feature areas — authenti
 - **schema_version**: version (INT)
 - Indices: idx_entries_date, idx_entries_pinned, idx_images_entry
 
-### Bootstrap Store (replaces localStorage)
-- All client-side key-value storage uses the Bootstrap module (IndexedDB-backed with in-memory cache)
-- `Bootstrap.init()` called once at startup; auto-migrates existing localStorage keys
-- `Bootstrap.get(key)`, `Bootstrap.set(key, value)`, `Bootstrap.remove(key)` — synchronous cache reads, async IDB writes
-- Keys migrated: crypto salts/verify tokens, journal list, UI preferences, column toggles, panel pins, view modes
+### Bootstrap Store
+- `BootstrapService.kt` wraps `SharedPreferences` (`bootstrap_prefs`)
+- All operations synchronous
+- `Bootstrap.get(key)`, `Bootstrap.set(key, value)`, `Bootstrap.remove(key)`
+- Keys stored: crypto salts/verify tokens, journal list, UI preferences, column toggles, panel pins, view modes
 
-### Sync (Android ↔ Web)
-- Journal list synced between web Bootstrap store and native SharedPreferences
-- Crypto salt and verify token synced via AndroidBridge.syncCryptoKey()
-- Journal list synced via AndroidBridge.syncJournalList()
-- Native auto-login injects Bootstrap.set() calls (not localStorage) for crypto key sync
+### Crypto
+- `CryptoService.kt` uses `javax.crypto` (AES/GCM/NoPadding, PBKDF2WithHmacSHA256)
+- LoginActivity delegates to CryptoService
+
+### Weather
+- `WeatherService.kt` uses `java.net.HttpURLConnection` for Open-Meteo API calls
 
 ## 3. Journal Entries
 
-### Entry Form
-- Date: text input, strict YYYY-MM-DD validation
-- Time: text input, HH:MM format
-- Title: text input
-- Content: dual-mode — Quill.js rich text editor OR plain textarea toggle
-- Categories: single-select dropdown from managed list, "+ New" quick-create panel to add inline; description hints shown below selector when category has a description
-- Tags: multi-select with auto-complete from managed list, "+ New" quick-create panel to add inline; descriptions shown in autocomplete dropdown and as hints below tag list
-- People: multi-select with auto-complete from managed list, "+ New" quick-create panel (first/last name + description) to add inline; descriptions shown as hints below selector
-- Place name: text input with geocoding search
-- Locations: array of {lat, lng, address} from geocoding results
-- Weather: fetch current weather button (Open-Meteo API), displays temp + condition
-- Images: file picker (gallery) or camera capture, base64 encoded, thumbnail generated
-- Save validates required fields and persists to encrypted DB
+### Entry Form (EntryFormActivity.kt, ~1400 lines)
+- 2 tabs: Main and Misc
+- Date: `DatePickerDialog`; Time: `TimePickerDialog`
+- Title: `EditText`
+- Content: `EditText` with rich text formatting toolbar (Bold/Italic/Underline/Strikethrough via `Spannable` — `StyleSpan`, `UnderlineSpan`, `StrikethroughSpan`); `Html.fromHtml()`/`Html.toHtml()` for persistence
+- Categories: checkboxes from managed list + quick-add inline
+- Tags: `AutoCompleteTextView` with chip display + quick-add inline
+- People: checkboxes from managed list + quick-add inline (first/last name + description)
+- Place name: `EditText`
+- Locations: geocoding search (Photon/Nominatim) via background thread, GPS via `LocationManager.requestSingleUpdate()`, manual lat/lng entry; results shown in `AlertDialog` picker
+- Weather: `WeatherService.fetchCurrent()` on background thread
+- Images: `GetMultipleContents()` for gallery, `TakePicturePreview()` for camera; `resizeBitmap()` creates full (1920px) and thumb (150px) as JPEG base64
+- Save: constructs `JSONObject` with all fields, calls `db.addEntry()` or `db.updateEntry()`
 
-### Entry List
+### Entry List (EntryListActivity.kt)
 - Card view: entry cards with date, title, category badge, tag chips, content preview
-- List/table view: ResultGrid component with dynamic columns, search highlighting, click-to-view
-- Search: debounced (300ms), searches title, content, tags, categories, highlights matches in list view
-- Filters: date range picker, category dropdown, tag dropdown — wrapped in CollapsiblePanel with pin support; "Clear All" button in criteria bar
-- Pagination: 10, 20, 50, 100, or all entries per page
-- Sort: by date (asc/desc), title, created date, updated date
+- Search: across title, content, tags, categories, people, place
+- Filters: category and tag filter spinners
+- Pagination: 10, 20, 50, 100 entries per page
+- Sort: configurable field and direction from bootstrap settings
 - Multi-select mode: checkbox per entry, batch delete with confirmation
-- Entry numbering in both views
+- Widget filter support: `matchesWidgetFilters()` with date/text/array operators
 
-### Entry Viewer
+### Entry Viewer (EntryViewerActivity.kt)
 - Read-only display of all entry fields
-- Rich content rendered as HTML
-- Image gallery with lightbox (full-screen, prev/next navigation)
-- Action buttons: Lock/Unlock, Pin/Unpin, Edit, Print (PDF), Delete, Back — icon-only with title tooltips
-- Lock/Unlock toggle: confirmation prompt ("Are you sure you want to lock/unlock this entry?"), locked entries disable the Edit button (grayed out, non-clickable)
-- Prev/Next navigation between entries (swipe on Android)
-- 3D styled buttons with gradient backgrounds, shadows, hover/press effects
-- Date/Time displayed using user's configured format
-- Viewer font customizable (family + size) in settings
+- Rich content rendered via `Html.fromHtml()` + `TextView`
+- Image thumbnails displayed
+- Action buttons: Lock/Unlock, Pin/Unpin, Edit, Delete, Back
+- Lock/Unlock toggle with confirmation prompt; locked entries disable Edit button
+- Prev/Next navigation between entries
+- Font settings: reads `ev_font_family` and `ev_font_size` from BootstrapService
 
-## 4. Dashboard
+## 4. Dashboard (DashboardActivity.kt)
 
-### Navigation
-- Navigation links (Entry List, Report, SQL Explorer, Calendar, Settings) in hamburger dropdown menu
-- About modal accessible from hamburger menu (between Settings and Lock)
-- New Entry button (📝) in navbar for quick access
-- Lock button in hamburger menu
-- Active page highlighted in dropdown menu
-- Menu closes on outside click
+### Data
+- `DashboardDataBuilder.build(db, bs)` computes all dashboard data natively:
+  - Total entries, this week/month/year counts
+  - Streak (consecutive days with entries)
+  - Top tags, categories, places, people (ranked by count, top 20)
+  - Pinned entries (up to 20), recent entries (5)
+  - Widget results (filtered + aggregated)
+  - Journal name, theme
 
 ### Stats
 - Total entries count
 - Entries this week / this month / this year
-- Clickable stats (navigate to filtered entry list)
+- Clickable stats open EntryListActivity with date range filter
+- Stats grid wrapped in `stats_container` for reordering as a unit
 
 ### Ranked Panels
 - Top tags, categories, places, people — ranked by entry count
-- Show top 10 by default, "Show All" toggle
-- Color-coded ranking badges
-- Clickable items navigate to filtered entry list
-
-### Pinned Entries
-- List of pinned entries with date and title
-- Max pinned entries configurable in settings
-- Click to view entry
-
-### Recent Entries
-- Most recent entries sorted by date DESC
-- Content preview (plain text, truncated)
-- Click to view entry
+- Clickable items open EntryListActivity with field-specific filter
+- 3D rank badges: vertical gradient (cyan→accent→dark teal), rounded corners (8dp), elevation shadow
+- 3D count badges: dark gradient, rounded corners (6dp), elevation shadow
+- Alternating row backgrounds for readability
+- Center-aligned panel captions (Top Tags, Top Categories)
 
 ### Dashboard Search
-- Live search across all entries
-- Results displayed inline with date, title, content preview
+- 3D icon button (🔍) in navbar row, left of journal name
+- Opens SearchActivity on tap
+
+### Pinned & Recent Entries
+- Pinned entries and recent entries displayed as rows
+- Click opens EntryViewerActivity directly
 
 ### Dashboard Widgets
-- Configurable aggregate cards displayed on the dashboard
-- Each widget has: name, description, optional icon (64x64), optional background color, enabled/disabled toggle
-- Widget filters: entry criteria using field/operator/value triplets (AND logic)
-  - Supported fields: date, time, title, content, categories, tags, people, placeName
-  - Operators vary by type: date (after, before, equals, between), text (contains, equals, starts/ends with, is empty/not empty), array (includes, not includes, is empty/not empty)
-- Widget functions: aggregate computations on filtered entries
-  - Functions: Count, Sum, Max, Min, Average
-  - Target fields: entries (row count), tags, categories, people, placeName, title
-  - Each function has optional prefix label and postfix text
-- Widget editor: separate page with 3 tabs (Header Info, Filter, Functions), live preview
-- Widget storage: `widgets` DB table, included in metadata export/import
-- Widget rendering: cards with auto-contrast text color, icon, results rows
+- Configurable aggregate cards with filters and functions
+- Widget icon displayed as 40x40 ImageView in card header (base64 data URL decoded via loadBase64Image)
+- Widget click opens EntryListActivity with widget filters
+- Pencil edit button opens WidgetEditorActivity
 
-### Quick Actions
-- Custom views pinned to dashboard appear as action buttons
+### Navigation
+- Bottom nav launches native activities directly (Entry List, Explorer, Settings, Reports, Entry Form)
+- DashboardActivity stays in back stack for proper back navigation
+- Lock returns to LoginActivity (closes DB via ServiceProvider.clear())
 
-### Native Dashboard (Android)
-- DashboardActivity receives JSON data from WebView via getDashboardDataJSON()
-- 2x2 stats grid, pinned entries, recent entries, ranked panels
-- Clickable rows return navigation intent to MainActivity
-- Color-coded ranking badges
+## 4b. Calendar View (CalendarActivity.kt)
 
-## 4b. Calendar View
+- Monthly grid view: 7-column (Mon-Sun) with day numbers, entry count dots
+- Today highlighted with accent border, selected day with accent background
+- Month navigation: prev/next buttons, "Today" button
+- Day selection: tapping a day shows entries for that date in results panel
+- Entry rows: title, time, content preview — tapping opens EntryViewerActivity
 
-- Accessible from "Calendar" item in hamburger menu
-- Two view modes: Monthly (default) and Weekly, toggled via buttons
-- **Monthly view**: 7-column grid (Monday to Sunday) showing all days of the current month
-  - Each day cell shows the day number and a color-coded entry count badge (green=1, blue=2-3, red=4+)
-  - Empty days before the 1st are rendered as blank cells
-  - Today is highlighted with accent border
-- **Weekly view**: 7-column grid showing one week (Monday to Sunday)
-  - Each day shows the day number, entry count badge, and a list of entry titles
-  - Clicking an entry title navigates directly to the entry viewer
-- **Navigation**: Previous/Next buttons to move by month or week, "Today" button to return to current date
-- **Go to date**: Text input (YYYY-MM-DD format) with "Go" button to jump to a specific date; invalid input shows red border feedback
-- **Day selection**: Clicking a day cell highlights it and renders a ResultGrid below the calendar with that day's entries
-  - ResultGrid columns: Time, Title, Categories (with icon+color), Tags (with icon+color)
-  - Clicking an entry row navigates to the entry viewer
-  - Updates `viewEntryList` for prev/next navigation in viewer
-- Entry data fetched via `DB.getEntries()` and filtered client-side by date range
-- Full CSS theme support via variables; responsive design with mobile breakpoints
-
-## 5. Custom Views
+## 5. Custom Views (CustomViewEditorActivity.kt)
 
 - Saved filter/sort/group combinations with a name
 - Condition builder: field, operator, value triplets
 - Logic: AND, OR, NOT combinations
 - Supported fields: date, time, title, content, categories, tags, placeName, locations, weather, people
-- Operators vary by field type: contains, equals, starts with, ends with, before, after, between, includes, not includes, is empty, is not empty
-- Group by: date, category, tag, place, weather condition
-- Sort by: multiple fields with asc/desc
-- Display mode override: card or list view
-- Pin to dashboard: view appears as quick action button
-- Default view: optionally set one view as default on app open
-- Preview: show matching entries without saving the view
-- Load into SQL Explorer: populate explorer conditions from saved view
+- Group by, sort by, display mode override
+- Pin to dashboard as quick action button
 
-## 6. SQL Explorer
+## 6. SQL Explorer (ExplorerActivity.kt)
 
-- Accessible from "SQL Explorer" item in hamburger menu
 - Two input modes: raw SQL textarea or visual condition builder
-- Visual builder: field chips, operator dropdown, value input, add/remove rows
-- Raw SQL: queries targeting non-entries tables (e.g., `SELECT * FROM icons`) run directly via sql.js
-- Entry queries: parsed from SQL or built from conditions, executed as in-memory filter
-- Supported fields (condition builder): date, time, title, content, categories, tags, placeName, locations, weather
-- Type-specific operators: contains, equals, starts/ends with, before/after, between, includes, is empty, has/no data
-- Toggleable field chips to select which columns appear in results
-- Results table: row numbers, clickable rows to open record detail overlay, inline delete button (with "Delete journal entry" tooltip)
-- Record detail overlay: full-screen modal showing all field values (untruncated), prev/next navigation between records, click outside or x to close
-- Load Custom View dropdown: load conditions from saved custom views into the builder and auto-run
-- CSV export button: exports current results grid to CSV file with all values double-quoted, date-stamped filename (e.g., `explorer_results_2026-04-01.csv`)
-- iCalendar export button: exports entry-based results as .ics file with VEVENT per entry (date, time, title, location, description); only available for entry queries (not raw SQL on non-entry tables)
-- Table browser: clickable table name chips (dynamically loaded from SQLite schema) show column schema (name, type, PK, not null, default) and up to 5 sample rows
-- Clear button resets both SQL and builder
+- Table browser: clickable table chips show column schema + sample data
+- Condition builder: Spinner dropdowns for field/op selection, EditText for values
+- SQL parser: Kotlin reimplementation — SELECT/FROM/WHERE parsing, quote-aware AND splitting
+- Results: HorizontalScrollView table, clickable rows → AlertDialog record detail with prev/next + "View Entry"
+- CSV export: saved to Downloads via MediaStore scoped storage
+- iCalendar export: .ics VEVENT per entry (entry queries only)
 
-## 7. Reports
+## 7. Reports (ReportsActivity.kt)
 
 ### Formats
-- **HTML**: rendered in-page with template substitution, printable
-- **PDF**: generated via jsPDF, page breaks between entries
+- **HTML**: rendered in output area with template substitution
+- **PDF**: native `PdfDocument` API, page breaks between entries, saved to Downloads
 - **CSV**: all fields as columns, double-quoted values
 
 ### Templates
-- HTML templates with field substitution tags:
-  - `<%TITLE%>`, `<%DATE%>`, `<%TIME%>`, `<%CONTENT%>`, `<%RICH_CONTENT%>`
-  - `<%CATEGORIES%>`, `<%TAGS%>`, `<%PLACES%>`, `<%WEATHER%>`
-  - `<%DT_CREATED%>`, `<%DT_UPDATED%>`, `<%ID%>`
-- Inline template editor in Reports page
+- HTML templates with field substitution tags: `<%TITLE%>`, `<%DATE%>`, `<%TIME%>`, `<%CONTENT%>`, etc.
 - Template CRUD in Settings > Templates tab
-- Sample templates provided in /web/templates/
 
 ### Filters
-- Date range (from/to)
-- Category filter
-- Tag filter
-- Applied before report generation
+- Date range (from/to), category, tag — applied before report generation
 
-## 8. Settings
+## 8. Settings (SettingsActivity.kt, ~3000+ lines)
+
+### Tabs (6 total, with emoji icons + 3D styling)
+- ⚙️ Preferences | 📝 Templates | 🏷️ Metadata | 💾 Data | 🧩 Widgets | 📊 Dashboard
 
 ### Preferences
-- Auto-open last journal (skip login)
-- Confirm before delete (entries)
-- Biometric authentication toggle
+- Auto-open last journal, confirm before delete, biometric toggle
 - Geocoding provider: Photon, Nominatim, or Google
 - Viewer font: family + size with live preview
-- Date display format: Short, Long, ISO, US, EU, Weekday
-- Time display format: 12-hour, 24-hour
-- Max pinned entries count
-- Default sort field and direction
+- Date/time format settings
+- Max pinned entries, default sort
 
 ### Wallpaper
-- Browse and select a background image in Settings > Preferences > Wallpaper
-- Wallpaper applied as `background-size: cover` on dashboard page and entry viewer page
-- Semi-transparent theme-colored overlay (55% opacity) ensures text readability over any image
-- Image resized to max 1920px width and JPEG-compressed at 85% quality before storage
-- Stored as base64 in encrypted DB `settings` table (key: `wallpaper`)
-- Preview thumbnail shown in settings UI after selection
-- Clear button removes wallpaper and restores theme defaults
+- Browse and select background image, max 1920px, JPEG 85%
+- Stored as base64 in encrypted DB settings table
+- Preview thumbnail, clear button
 
-### Themes
-- 12 themes: Light, Dark, Ocean, Midnight, Forest, Amethyst, Aurora, Lavender, Frost, Navy, Sunflower, Meadow
-- All implemented via CSS `[data-theme]` custom properties
+### Themes (12)
+- Light, Dark, Ocean, Midnight, Forest, Amethyst, Aurora, Lavender, Frost, Navy, Sunflower, Meadow
 - Theme selection persisted in settings DB
 
 ### Metadata Editing
-- Categories: add, rename, delete, assign color (color picker with swatches), editable description (shown as hint in entry form)
-- Tags: add, rename, delete, assign color (color picker with swatches), editable description (stored in tags table, shown as hint in entry form and autocomplete dropdown)
-- "Use category/tag colors" toggles — colors applied in entry list and dashboard
-- People: add, edit, delete (first name, last name, description)
-- Icons: custom image icons for categories, tags, and people
-  - Standard: 64x64 PNG data URL for chips and list views
-  - HD: 128x128 PNG data URL for full-image 3D buttons (stored as `type_hd` in icons table)
-  - Upload auto-generates both sizes if source image >=96px; small sources get standard only
-  - 3-tier fallback in RankedPanel card view: HD image button → standard icon + text → 2-letter text abbreviation
-- Entry field visibility toggles (show/hide fields in entry form)
+- Categories: add, rename, delete, color picker, description, icons
+- Tags: add, rename, delete, color picker, description
+- People: add, edit, delete (first/last name, description)
+- Icons: custom 64x64 (standard) and 128x128 (HD) PNG data URLs
 
 ### Data Management
-- **Consolidated UI**: Export and Import each have a dropdown selector + action button (replaces individual buttons)
-- **Export dropdown**: Export Encrypted, Export Unencrypted, Export CSV File, Export MetaData — with 📤 icon button
-- **Import dropdown**: Import Data, Import CSV File, Import MetaData — with 📥 icon button
-- **CSV Import**: Full-screen modal with column mapping (label + full-width dropdown per CSV column), date/time format configuration, duplicate detection
-- **Metadata Export**: JSON containing categories, tags, people, icons, settings, report templates, pre-fill templates, custom views (excludes entries/images)
-- **Metadata Import**: Overwrite warning, full replace, in-place UI refresh (no page reload); supports both old (string[]) and new ({name,description}[]) category format
-- **Metadata Export/Import fields**: categories (with descriptions), icons, people, tag descriptions, settings, widgets
-- **Backup Folder** (Android only): SAF folder picker for persistent backup directory, backup all data to JSON, restore from backup files, list available backups
-- **Password Change**: Verify old password, re-encrypt entire database
+- Export: encrypted DB, CSV, metadata JSON
+- Import: CSV with column mapping (CsvMappingActivity), metadata JSON
+- Backup folder: SAF folder picker, backup/restore JSON files
+- Password change: verify old, re-encrypt database
 
 ### Pre-fill Templates
-- Saved templates that auto-fill entry form fields
-- Fields: date pattern, time, title, content, categories, tags
-- CRUD in Settings > Templates tab
-- Apply from entry form dropdown
+- Saved templates that auto-fill entry form fields (date, time, title, content, categories, tags)
+
+### Widgets (WidgetEditorActivity.kt)
+- Widget list, create/edit/delete
+- Header Info (name, desc, icon, color), Filters (field/op/value), Functions (Count/Sum/Max/Min/Average)
+- Background color picker dialog: 24 preset colors, hex input, live preview swatch — opens on swatch or input tap
+- Live preview in editor
+
+### Dashboard Components
+- Toggle 10 dashboard components on/off: Weather & Streak, Stats Grid, Quick Actions, Widgets, Pinned Entries, Recent Entries, Top Tags, Top Categories, Top Places, People
+- Reorder components via ▲/▼ arrow buttons
+- Config stored in BootstrapService as `dashboard_components` JSON array of `{id, enabled}` objects
+- DashboardActivity reads config and reorders/hides panels dynamically
 
 ## 9. Weather Integration
 
-- Provider: Open-Meteo API (free, no API key)
+- Provider: Open-Meteo API (free, no API key) via WeatherService.kt
 - City search by name → select location → save as default
 - Fetch current weather: temperature (C/F toggle), condition code, description
 - Weather data stored per-entry as JSON
 - Weather location persisted in settings
-- Display: weather badge in entry cards, full details in viewer
-- Dashboard weather: inset 3D styled display, clickable to navigate to Settings > Weather Location
 
 ## 10. Android Platform
 
-### Activities
+### Activities (all Kotlin — 14 total, no WebView)
 1. **LoginActivity** (launcher) — Journal selection, password, biometric
-2. **MainActivity** — WebView container with AndroidBridge
-3. **DashboardActivity** — Native stats/entries/rankings
+2. **DashboardActivity** — Native stats/entries/rankings/widgets
+3. **CalendarActivity** — Native monthly calendar with entry dots, day selection
 4. **AboutActivity** — App info, version, links
+5. **SearchActivity** — Native full-text search across all entries
+6. **EntryViewerActivity** — Native entry viewer with font customization
+7. **SettingsActivity** — Full native settings (6 tabs: Prefs, Templates, Metadata, Data, Widgets, Dashboard)
+8. **EntryListActivity** — Native entry list with search, filter, sort, pagination, batch delete
+9. **ExplorerActivity** — Native SQL Explorer with table browser, query builder, results, exports
+10. **EntryFormActivity** — Native entry form with rich text, images, categories, tags, people, locations, weather
+11. **ReportsActivity** — Native reports with HTML/PDF/CSV generation
+12. **WidgetEditorActivity** — Native widget editor with tabs, live preview
+13. **CustomViewEditorActivity** — Native custom view editor
+14. **CsvMappingActivity** — Native CSV import column mapping
+
+### Services (via ServiceProvider singleton)
+- **ServiceProvider.kt** — Singleton holding all 4 services, initialized in LoginActivity
+- **BootstrapService.kt** — SharedPreferences wrapper
+- **CryptoService.kt** — AES-256-GCM + PBKDF2
+- **WeatherService.kt** — Open-Meteo HTTP client
+- **DatabaseService.kt** — SQLCipher encrypted DB (~35 CRUD methods)
+
+### Utilities
+- **DashboardDataBuilder.kt** — Computes dashboard JSON from DatabaseService
 
 ### Permissions
 - INTERNET — API access (weather, geocoding, CDN)
@@ -316,32 +275,15 @@ summary: "Complete functional requirements for all 12 feature areas — authenti
 - USE_BIOMETRIC — Fingerprint/face unlock
 - CAMERA — Photo capture for journal entries
 
-### AndroidBridge (JS ↔ Native)
-- File downloads via scoped storage (API 29+)
-- Biometric prompting
-- Credential storage in SharedPreferences
-- Dashboard data exchange
-- Platform detection
-- Crypto key and journal list sync (via Bootstrap store, not localStorage)
-- Backup folder: selectBackupFolder, hasBackupFolder, getBackupFolderName, clearBackupFolder, saveFileToBackupFolder, listBackupFolderFiles, readBackupFolderFile
+## 11. File Downloads
 
-### CSS
-- style-android.css loaded only on Android (`.android` body class)
-- Compact navbar with icon-only buttons
-- Touch-optimized button sizes (2.2rem minimum)
-- 3D button styling with gradients and shadows
-- Active/press states with inset shadow + transform
+- `ServiceProvider.saveFileToDownloads(filename, base64Data, mimeType)` — scoped storage via MediaStore (API 29+)
+- Supported formats: PDF, CSV, SQLite (.db), JSON, HTML, iCalendar (.ics)
 
-## 11. Reusable UI Components (components.js)
+## 12. Browser-Only Web Fallback
 
-- **ResultGrid** — scrollable data table with configurable columns, row numbers, click handlers, highlight term support, and max-height scroll. Used in: dashboard search, SQL explorer results, entry list (table view).
-- **RankedPanel** — self-contained ranked list/card panel with built-in list/card view toggle, show all/top N, localStorage-persisted view mode, click-to-filter. Used in: dashboard ranked panels (tags, categories, places, people).
-- **RecordViewer** — full-screen detail overlay for a single record with prev/next navigation, field formatters, highlight support. Used in: dashboard search row click, SQL explorer row click.
-- **CollapsiblePanel** — reusable collapsible container with header toggle and pin-to-expand button. Pin state persisted to localStorage. Used in: entry list search & filter controls.
-
-## 12. File Downloads
-
-- **Web browser**: standard blob URL download or anchor click
-- **Android WebView**: MUST use `downloadFile()` → `AndroidBridge.saveFile()` (blob URLs crash WebView)
-- Supported formats: PDF, CSV, SQLite (.db), JSON, HTML
-- Scoped storage on Android API 29+ (Downloads directory)
+The `/web/` directory contains a standalone SPA that works in browsers (Chrome/Firefox) without Android. It is NOT bundled in the APK. Features:
+- sql.js (SQLite WASM) with IndexedDB persistence and AES-256-GCM encryption via Web Crypto API
+- Quill.js rich text editor, jsPDF for PDF export
+- Same 12 themes, same features as native app
+- Requires HTTPS or localhost for Web Crypto API

@@ -1,0 +1,158 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="@color/login_bg">
+
+    <!-- Top Navbar -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:paddingHorizontal="12dp"
+        android:paddingVertical="8dp"
+        android:background="@color/login_card_bg"
+        android:elevation="4dp">
+
+        <Button
+            android:id="@+id/btn_back"
+            android:layout_width="42dp"
+            android:layout_height="42dp"
+            android:text="←"
+            android:textSize="18sp"
+            android:background="@drawable/btn_secondary"
+            android:layout_marginEnd="8dp" />
+
+        <TextView
+            android:id="@+id/editor_title"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Custom View"
+            android:textColor="@color/login_accent"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            android:letterSpacing="0.06" />
+
+        <Button
+            android:id="@+id/btn_delete"
+            android:layout_width="42dp"
+            android:layout_height="42dp"
+            android:text="🗑️"
+            android:textSize="16sp"
+            android:background="@drawable/btn_secondary"
+            android:visibility="gone" />
+    </LinearLayout>
+
+    <!-- Tab Bar -->
+    <LinearLayout
+        android:id="@+id/tab_bar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center"
+        android:paddingHorizontal="12dp"
+        android:paddingVertical="6dp"
+        android:background="@color/login_card_bg">
+
+        <Button
+            android:id="@+id/tab_info"
+            android:layout_width="0dp"
+            android:layout_height="38dp"
+            android:layout_weight="1"
+            android:text="Info"
+            android:textSize="13sp"
+            android:textAllCaps="false"
+            android:background="@drawable/btn_accent"
+            android:textColor="@color/login_card_bg"
+            android:layout_marginEnd="4dp" />
+
+        <Button
+            android:id="@+id/tab_conditions"
+            android:layout_width="0dp"
+            android:layout_height="38dp"
+            android:layout_weight="1"
+            android:text="Conditions"
+            android:textSize="13sp"
+            android:textAllCaps="false"
+            android:background="@drawable/btn_secondary"
+            android:textColor="@color/login_text"
+            android:layout_marginEnd="4dp" />
+
+        <Button
+            android:id="@+id/tab_display"
+            android:layout_width="0dp"
+            android:layout_height="38dp"
+            android:layout_weight="1"
+            android:text="Sort/Display"
+            android:textSize="13sp"
+            android:textAllCaps="false"
+            android:background="@drawable/btn_secondary"
+            android:textColor="@color/login_text" />
+    </LinearLayout>
+
+    <!-- Scrollable Content -->
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:fillViewport="true">
+
+        <LinearLayout
+            android:id="@+id/content_container"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="12dp" />
+    </ScrollView>
+
+    <!-- Bottom Action Bar -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center"
+        android:paddingHorizontal="12dp"
+        android:paddingVertical="8dp"
+        android:background="@color/login_card_bg"
+        android:elevation="8dp">
+
+        <Button
+            android:id="@+id/btn_preview"
+            android:layout_width="0dp"
+            android:layout_height="42dp"
+            android:layout_weight="1"
+            android:text="Preview"
+            android:textSize="14sp"
+            android:textAllCaps="false"
+            android:background="@drawable/btn_secondary"
+            android:textColor="@color/login_text"
+            android:layout_marginEnd="4dp" />
+
+        <Button
+            android:id="@+id/btn_save"
+            android:layout_width="0dp"
+            android:layout_height="42dp"
+            android:layout_weight="1"
+            android:text="Save"
+            android:textSize="14sp"
+            android:textAllCaps="false"
+            android:background="@drawable/btn_accent"
+            android:textColor="@color/login_card_bg"
+            android:layout_marginEnd="4dp" />
+
+        <Button
+            android:id="@+id/btn_cancel"
+            android:layout_width="0dp"
+            android:layout_height="42dp"
+            android:layout_weight="1"
+            android:text="Cancel"
+            android:textSize="14sp"
+            android:textAllCaps="false"
+            android:background="@drawable/btn_secondary"
+            android:textColor="@color/login_text" />
+    </LinearLayout>
+
+</LinearLayout>

@@ -1,14 +1,14 @@
 ---
-tags: [architecture, project-structure, tech-stack, database-schema, AndroidBridge, build, conventions, themes, encryption]
-related_files: [REQUIREMENT.md, COMPONENTS.md, README.md]
-summary: "Project architecture reference — directory structure, tech stack, database schema, AndroidBridge API, build instructions, and coding conventions."
+tags: [architecture, project-structure, tech-stack, database-schema, build, conventions, themes, encryption]
+related_files: [REQUIREMENT.md, TODO.md, README.md]
+summary: "Project architecture reference — directory structure, tech stack, database schema, ServiceProvider pattern, build instructions, and coding conventions."
 ---
 
 # MYJOURNAL — Project Guide
 
 ## Overview
 
-Android WebView-based encrypted journal app. Native Java shell handles authentication, biometrics, file I/O, and a native dashboard. The web layer (HTML/CSS/JS SPA) handles all core journal functionality. All data stored locally in AES-256-GCM encrypted SQLite (sql.js WASM) via IndexedDB.
+Fully native Android encrypted journal app. All 14 screens are native Kotlin activities. Services (crypto, database, bootstrap, weather) are managed by a `ServiceProvider` singleton. The web layer (`/web/` directory) is a standalone browser-only fallback SPA — it is NOT bundled in the Android APK. All data stored locally in AES-256-GCM encrypted SQLCipher database.
 
 **App Name:** My Journal | **Version:** 1.5.0 | **Package:** com.journal.app | **Min SDK:** 24 | **Target SDK:** 34
 
@@ -19,45 +19,60 @@ MYJOURNAL/
 ├── app/
 │   ├── build.gradle                # Android build config (compileSdk 34, minSdk 24)
 │   ├── src/main/
-│   │   ├── AndroidManifest.xml     # 4 activities, permissions (internet, location, camera, biometric)
-│   │   ├── java/com/journal/app/
-│   │   │   ├── LoginActivity.java      # Entry point: journal select, password, biometric login
-│   │   │   ├── MainActivity.java       # WebView container + AndroidBridge JS interface
-│   │   │   ├── DashboardActivity.java  # Native dashboard (stats, ranked lists, pinned/recent)
-│   │   │   └── AboutActivity.java      # App info screen
+│   │   ├── AndroidManifest.xml     # 14 activities, permissions (internet, location, camera, biometric)
+│   │   ├── java/com/journal/app/    # All Kotlin sources (20 files)
+│   │   │   ├── LoginActivity.kt         # Entry point: journal select, password, biometric login
+│   │   │   ├── DashboardActivity.kt     # Native dashboard (stats, ranked lists, pinned/recent, widgets)
+│   │   │   ├── CalendarActivity.kt      # Native calendar view
+│   │   │   ├── AboutActivity.kt         # App info screen
+│   │   │   ├── SearchActivity.kt        # Native full-text search screen
+│   │   │   ├── EntryViewerActivity.kt   # Native entry viewer with font settings
+│   │   │   ├── EntryListActivity.kt     # Native entry list (search, filter, sort, paginate, batch delete)
+│   │   │   ├── ExplorerActivity.kt      # Native SQL Explorer (table browser, query builder, raw SQL, CSV/iCal export)
+│   │   │   ├── SettingsActivity.kt      # Native settings (6 tabs: Prefs, Templates, Metadata, Data, Widgets, Dashboard)
+│   │   │   ├── EntryFormActivity.kt     # Native entry form (rich text, images, categories, tags, people, locations, weather)
+│   │   │   ├── ReportsActivity.kt       # Native reports (HTML/PDF/CSV, filters, templates)
+│   │   │   ├── WidgetEditorActivity.kt  # Native widget editor (header/filters/functions tabs, preview)
+│   │   │   ├── CustomViewEditorActivity.kt # Native custom view editor (conditions, groupBy, orderBy, display)
+│   │   │   ├── CsvMappingActivity.kt    # Native CSV import mapping screen
+│   │   │   ├── ServiceProvider.kt       # Singleton service holder (replaces old MainActivity.instance)
+│   │   │   ├── DashboardDataBuilder.kt  # Computes dashboard JSON from DatabaseService
+│   │   │   ├── BootstrapService.kt      # SharedPreferences wrapper
+│   │   │   ├── CryptoService.kt         # AES-256-GCM + PBKDF2
+│   │   │   ├── WeatherService.kt        # Open-Meteo HTTP client
+│   │   │   └── DatabaseService.kt       # SQLCipher encrypted DB
 │   │   ├── res/
-│   │   │   ├── drawable/           # Button ripples, input/card/search/stat backgrounds (16 XML files)
-│   │   │   ├── layout/            # activity_main, activity_login, activity_dashboard, activity_about
+│   │   │   ├── drawable/           # Button ripples, input/card/search/stat backgrounds, 3D tab/search drawables (25+ XML files)
+│   │   │   ├── layout/            # 14 activity layouts + 2 spinner item layouts
 │   │   │   ├── values/            # colors.xml, strings.xml, styles.xml, app_info.xml
 │   │   │   └── xml/file_paths.xml # FileProvider for camera
-│   │   └── assets/web/            # ← copied from /web at build time (copyWebAssets task)
-├── web/                            # Shared web SPA (loaded by WebView)
-│   ├── index.html                  # Single-page app, all views as hidden divs (~1,200 lines)
-│   ├── app_info.xml                # App metadata & changelog (single source of truth)
+├── web/                            # Browser-only SPA fallback (NOT bundled in APK)
+│   ├── index.html                  # Single-page app, all views as hidden divs
+│   ├── app_info.xml                # App metadata & changelog
 │   ├── css/
-│   │   ├── style.css               # 12 themes via CSS variables, all component styles
-│   │   └── style-android.css       # Android-only overrides (.android prefix rules)
+│   │   ├── style.css               # 12 themes via CSS variables
+│   │   └── style-android.css       # Android-only overrides (unused since WebView removed)
 │   ├── js/
 │   │   ├── app.js          # Main controller: login, navigation, theme, Quill editor
-│   │   ├── app_info.js     # Parses app_info.xml → APP_INFO + APP_CHANGELOG objects
-│   │   ├── bootstrap.js    # IndexedDB-backed key-value store replacing localStorage
+│   │   ├── app_info.js     # Parses app_info.xml
+│   │   ├── bootstrap.js    # IndexedDB-backed key-value store
 │   │   ├── components.js   # Reusable UI: ResultGrid, RankedPanel, RecordViewer, CollapsiblePanel
 │   │   ├── crypto.js       # PBKDF2 + AES-256-GCM via Web Crypto API
-│   │   ├── db.js           # sql.js SQLite abstraction, IndexedDB persistence, CRUD
+│   │   ├── db.js           # sql.js SQLite abstraction, IndexedDB persistence
 │   │   ├── entries.js      # Entry form, list view, search, filter, pagination
-│   │   ├── dashboard.js    # Stats aggregation, ranked lists, widgets, quick actions
-│   │   ├── views.js        # Custom saved views: AND/OR/NOT filter, group, sort
-│   │   ├── explorer.js     # SQL Explorer: query builder, raw SQL, CSV/iCalendar export
-│   │   ├── calendar.js     # Calendar View: monthly/weekly grid, day selection, entry results
-│   │   ├── reports.js      # HTML/PDF/CSV report generation with templates
-│   │   ├── settings.js     # All settings: preferences, themes, metadata, widgets, import/export
-│   │   ├── weather.js      # Open-Meteo API, city search, GPS location
-│   │   └── widgets.js      # Dashboard widgets: filters, aggregate functions, editor
+│   │   ├── dashboard.js    # Stats aggregation, ranked lists, widgets
+│   │   ├── views.js        # Custom saved views
+│   │   ├── explorer.js     # SQL Explorer
+│   │   ├── calendar.js     # Calendar View
+│   │   ├── reports.js      # Report generation
+│   │   ├── settings.js     # Settings UI
+│   │   ├── weather.js      # Open-Meteo API
+│   │   └── widgets.js      # Dashboard widgets
 │   ├── lib/
 │   │   ├── sql-wasm.js         # sql.js library
 │   │   └── sql-wasm-base64.js  # Base64-encoded WASM fallback for file:// protocol
 │   └── templates/              # Sample report templates (HTML)
-├── build.gradle                # Root Gradle config (AGP 8.3.0)
+├── build.gradle                # Root Gradle config (AGP 8.3.0, Kotlin 1.9.22)
 ├── settings.gradle
 ├── gradle.properties
 └── README.md
@@ -73,25 +88,23 @@ gradlew.bat assembleDebug
 
 Output: `app/build/outputs/apk/debug/app-debug.apk`
 
-The `copyWebAssets` Gradle task copies `/web` → `app/src/main/assets/web/` before each build.
-
 ## Tech Stack
 
 | Layer | Technology | Notes |
 |-------|-----------|-------|
-| Android | Java, SDK 34 | WebView + AndroidX BiometricPrompt |
-| Web | Plain HTML/CSS/JS | No frameworks, SPA with div toggling |
-| Database | sql.js (SQLite→WASM) | Encrypted bytes in IndexedDB |
-| Encryption | AES-256-GCM | PBKDF2-SHA256, 100k iterations, Web Crypto API |
-| Editor | Quill.js 1.3.7 | Rich text with image support |
-| PDF | jsPDF 2.5.1 | Report/entry PDF export |
+| Android | Kotlin, SDK 34 | Fully native activities + AndroidX BiometricPrompt |
+| Web (browser only) | Plain HTML/CSS/JS | Standalone SPA, not bundled in APK |
+| Database | SQLCipher 4.5.6 | Encrypted SQLite via `net.zetetic:sqlcipher-android` |
+| Encryption | AES-256-GCM | PBKDF2-SHA256, 100k iterations via javax.crypto |
+| Rich text (Android) | Spannable | Bold/Italic/Underline/Strikethrough via Html.fromHtml()/toHtml() |
+| PDF (Android) | PdfDocument | Native Android PDF generation |
 | Weather | Open-Meteo API | Free, no API key required |
 | Geocoding | Photon / Nominatim / Google | Configurable in settings |
 | Font | Quicksand | Google Fonts CDN |
 
 ## Database Schema
 
-**entries** — id, date, time, title, content, richContent, categories (JSON), tags (JSON), people (JSON), placeName, locations (JSON), weather (JSON), pinned, locked, dtCreated, dtUpdated
+**entries** — id, date, time, title, content, richContent, categories (JSON), tags (JSON), people (JSON), placeName, locations (JSON of {lat, lng, address, name?}), weather (JSON), pinned, locked, dtCreated, dtUpdated
 **images** — id, entryId, name, data (base64), thumb, sortOrder
 **categories** — name (PK), description
 **tags** — name (PK), description
@@ -101,31 +114,41 @@ The `copyWebAssets` Gradle task copies `/web` → `app/src/main/assets/web/` bef
 **settings** — key (PK), value
 **schema_version** — version (INT)
 
-## AndroidBridge Interface
+## ServiceProvider Pattern
 
-JavaScript calls from WebView to native Android:
-- `saveFile(filename, base64Data, mimeType)` — Scoped storage file download
-- `isBiometricAvailable()` / `authenticate(callback)` — Biometric prompt
-- `saveCredential()` / `getCredential()` / `hasCredential()` / `removeCredential()` — Password storage
-- `onDashboardReady(json)` / `requestDashboardRefresh()` — Native dashboard data
-- `onAutoLoginComplete(json)` / `onAutoLoginFailed(error)` — Auto-login result callbacks
-- `returnToLogin()` — Back to LoginActivity
-- `syncCryptoKey()` / `syncJournalList()` — Sync Bootstrap store ↔ SharedPreferences
-- `isAndroid()` / `hasNativeLogin()` — Platform detection
-- `selectBackupFolder()` / `hasBackupFolder()` / `getBackupFolderName()` / `clearBackupFolder()` — SAF backup folder management
-- `saveFileToBackupFolder()` / `listBackupFolderFiles()` / `readBackupFolderFile()` — Backup file I/O
+`ServiceProvider` is a Kotlin singleton that holds all 4 services:
+- `cryptoService: CryptoService` — AES-256-GCM encryption/decryption
+- `bootstrapService: BootstrapService` — SharedPreferences key-value store
+- `weatherService: WeatherService` — Open-Meteo HTTP client
+- `databaseService: DatabaseService` — SQLCipher encrypted DB
+
+`ServiceProvider.init(context)` creates all services. `ServiceProvider.clear()` closes DB and nulls references. All activities access services via `ServiceProvider.xxxService`.
+
+`ServiceProvider.saveFileToDownloads(filename, base64Data, mimeType)` handles scoped storage file exports.
+
+## App Flow
+
+1. **LoginActivity** — User selects/creates journal, enters password, optional biometric
+2. `ServiceProvider.init(context)` — Creates all services
+3. `DatabaseService.open(password, journalId)` — Opens/creates encrypted SQLCipher DB
+4. `DashboardDataBuilder.build(db, bs)` — Computes dashboard JSON (stats, streaks, ranked lists, widgets, pinned/recent entries)
+5. **DashboardActivity** — Displays dashboard, launches other activities directly
+
+No WebView intermediary. All navigation between activities uses standard Android `startActivity()`.
 
 ## Themes (12)
 
-Light, Dark, Ocean, Midnight, Forest, Amethyst, Aurora, Lavender, Frost, Navy, Sunflower, Meadow — all via CSS `[data-theme]` variables.
+Light, Dark, Ocean, Midnight, Forest, Amethyst, Aurora, Lavender, Frost, Navy, Sunflower, Meadow — theme selection stored in settings DB.
 
 ## Key Conventions
 
-- **No frameworks** — vanilla JS, no React/Vue/Angular
-- **Single-page app** — pages are div sections toggled via `navigateTo(page)`
-- **Encryption everywhere** — all DB writes go through Crypto.encrypt → IndexedDB
-- **Bootstrap store** — all client-side key-value storage uses `Bootstrap.get/set/remove()` (IndexedDB-backed), NOT localStorage
-- **Dual auth** — web crypto.js and native LoginActivity both implement PBKDF2+AES-GCM (must stay in sync)
-- **AndroidBridge** — file downloads MUST use `downloadFile()` (not blob URLs) to avoid WebView crashes
-- **CSS themes** — all colors via CSS variables; never hardcode colors
-- **copyWebAssets** — changes to `/web` are automatically copied to assets at build time
+- **Fully native** — all 14 screens are Kotlin activities, no WebView
+- **ServiceProvider singleton** — all activities access services via `ServiceProvider.xxxService`
+- **DashboardDataBuilder** — computes dashboard JSON natively from DatabaseService
+- **Encryption everywhere** — SQLCipher auto-encrypts DB files
+- **Bootstrap store** — all key-value storage uses BootstrapService (SharedPreferences wrapper)
+- **Large data to activities** — SearchActivity, CalendarActivity use static `companion object` holders for entry data (avoids TransactionTooLargeException)
+- **Dashboard component settings** — Settings > Dashboard tab allows toggling/reordering 10 components; stored in BootstrapService as `dashboard_components` JSON
+- **DashboardActivity navigation** — launches other activities directly via `startActivity()`, stays in back stack
+- **Rich content rendering** — `Html.fromHtml()` + `TextView` (no WebView)
+- **File exports** — `ServiceProvider.saveFileToDownloads()` via MediaStore scoped storage (API 29+)

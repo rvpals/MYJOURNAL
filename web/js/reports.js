@@ -98,9 +98,11 @@ function renderHtmlReport(entries) {
                         <td>${(e.categories || []).join(', ')}</td>
                         <td>${(e.tags || []).join(', ')}</td>
                         <td>${escapeHtml(e.placeName || '')}${(e.locations || []).length > 0 ? ': ' + (e.locations || []).map(l => {
-                            let s = l.address || '';
-                            if (l.lat != null) s += ' [' + l.lat + ',' + l.lng + ']';
-                            return escapeHtml(s);
+                            const parts = [];
+                            if (l.name) parts.push(l.name);
+                            if (l.address) parts.push(l.address);
+                            if (l.lat != null) parts.push('[' + l.lat + ',' + l.lng + ']');
+                            return escapeHtml(parts.join(' — '));
                         }).join('; ') : ''}</td>
                     </tr>
                 `).join('')}
@@ -121,9 +123,11 @@ function exportCsv(entries) {
         csvEscape((e.categories || []).join('; ')),
         csvEscape((e.tags || []).join('; ')),
         csvEscape((e.placeName || '') + ((e.locations || []).length > 0 ? ': ' + (e.locations || []).map(l => {
-            let s = l.address || '';
-            if (l.lat != null) s += ' | ' + l.lat + ',' + l.lng;
-            return s;
+            const parts = [];
+            if (l.name) parts.push(l.name);
+            if (l.address) parts.push(l.address);
+            if (l.lat != null) parts.push(l.lat + ',' + l.lng);
+            return parts.join(' | ');
         }).join('; ') : '')),
         csvEscape(e.dtCreated || ''),
         csvEscape(e.dtUpdated || '')
@@ -190,9 +194,11 @@ function exportPdf(entries) {
             let placeStr = e.placeName || '';
             if ((e.locations || []).length > 0) {
                 const locStrs = e.locations.map(l => {
-                    let s = l.address || '';
-                    if (l.lat != null) s += ' (' + l.lat + ', ' + l.lng + ')';
-                    return s;
+                    const parts = [];
+                    if (l.name) parts.push(l.name);
+                    if (l.address) parts.push(l.address);
+                    if (l.lat != null) parts.push('(' + l.lat + ', ' + l.lng + ')');
+                    return parts.join(' — ');
                 });
                 placeStr += (placeStr ? ': ' : '') + locStrs.join('; ');
             }
@@ -275,14 +281,16 @@ async function saveReportTemplateFromEditor() {
 
 function applyTemplateToEntry(templateHtml, entry) {
     const locStrs = (entry.locations || []).map(l => {
-        let s = l.address || '';
-        if (l.lat != null) s += ' (' + l.lat + ', ' + l.lng + ')';
-        return s;
+        const parts = [];
+        if (l.name) parts.push(l.name);
+        if (l.address) parts.push(l.address);
+        if (l.lat != null) parts.push('(' + l.lat + ', ' + l.lng + ')');
+        return parts.join(' — ');
     });
     const placesFormatted = (entry.placeName || '') + (locStrs.length > 0 ? (entry.placeName ? ': ' : '') + locStrs.join('; ') : '');
 
     const placeNames = entry.placeName || '';
-    const placeAddresses = (entry.locations || []).map(l => l.address || '').filter(Boolean).join('; ');
+    const placeAddresses = (entry.locations || []).map(l => [l.name, l.address].filter(Boolean).join(' — ')).filter(Boolean).join('; ');
     const placeCoords = (entry.locations || []).map(l => l.lat != null ? l.lat + ',' + l.lng : '').filter(Boolean).join('; ');
 
     const weatherStr = entry.weather ? Weather.formatWeather(entry.weather) : '';
@@ -517,8 +525,11 @@ function exportSingleEntryPdf(entry) {
         y += 5;
         doc.setFont(undefined, 'normal');
         locs.forEach(loc => {
-            let s = loc.address || '';
-            if (loc.lat != null) s += ' (' + loc.lat + ', ' + loc.lng + ')';
+            const parts = [];
+            if (loc.name) parts.push(loc.name);
+            if (loc.address) parts.push(loc.address);
+            if (loc.lat != null) parts.push('(' + loc.lat + ', ' + loc.lng + ')');
+            const s = parts.join(' — ');
             const locLines = doc.splitTextToSize(s, maxWidth);
             if (y + locLines.length * 4.5 > 280) { doc.addPage(); y = 20; }
             doc.text(locLines, margin, y);
