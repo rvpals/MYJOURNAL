@@ -233,7 +233,7 @@ summary: "Complete functional requirements for all feature areas — authenticat
 
 ### Data Management
 - Export: encrypted DB, CSV, metadata JSON
-- Import: CSV with column mapping (CsvMappingActivity), metadata JSON
+- Import: CSV with column mapping (CsvMappingActivity — file picker, auto-map headers, test preview of 20 random rows, result grid), metadata JSON
 - Backup folder: SAF folder picker, backup/restore JSON files
 - Password change: verify old, re-encrypt database
 
@@ -276,7 +276,7 @@ summary: "Complete functional requirements for all feature areas — authenticat
 11. **ReportsActivity** — Native reports with HTML/PDF/CSV generation
 12. **WidgetEditorActivity** — Native widget editor with tabs, live preview
 13. **CustomViewEditorActivity** — Native custom view editor
-14. **CsvMappingActivity** — Native CSV import column mapping
+14. **CsvMappingActivity** — Native CSV import column mapping with file picker, test preview (20 random rows), result grid
 
 ### Services (via ServiceProvider singleton)
 - **ServiceProvider.kt** — Singleton holding all 4 services, initialized in LoginActivity

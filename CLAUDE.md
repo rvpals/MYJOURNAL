@@ -34,7 +34,7 @@ MYJOURNAL/
 │   │   │   ├── ReportsActivity.kt       # Native reports (HTML export+browser open, PDF/CSV, filters, templates)
 │   │   │   ├── WidgetEditorActivity.kt  # Native widget editor (header/filters/functions tabs, preview)
 │   │   │   ├── CustomViewEditorActivity.kt # Native custom view editor (conditions, groupBy, orderBy, display)
-│   │   │   ├── CsvMappingActivity.kt    # Native CSV import mapping screen
+│   │   │   ├── CsvMappingActivity.kt    # Native CSV import mapping screen (file picker, test preview, result grid)
 │   │   │   ├── ServiceProvider.kt       # Singleton service holder (replaces old MainActivity.instance)
 │   │   │   ├── DashboardDataBuilder.kt  # Computes dashboard JSON from DatabaseService (stats, streaks, ranked lists, widgets, today in history)
 │   │   │   ├── BootstrapService.kt      # SharedPreferences wrapper
@@ -161,3 +161,4 @@ Light, Dark, Ocean, Midnight, Forest, Amethyst, Aurora, Lavender, Frost, Navy, S
 - **Entry list** — Collapsible "Filter Info" box with search/filter controls and Order by dropdowns (field + asc/desc); alternating row colors (`CARD_BG`/`INPUT_BG`) with `CARD_BORDER` stroke
 - **Settings tabs** — 2-row grid layout (3 tabs per row), equal-width buttons, no horizontal scrolling
 - **HTML reports** — Exported to Downloads and opened in browser via `ACTION_VIEW` intent
+- **CSV mapping** — CsvMappingActivity has Select CSV (file picker + auto-map headers), Test (20 random rows with mapping applied), and Save Mapping buttons; result grid with HorizontalScrollView and alternating row colors

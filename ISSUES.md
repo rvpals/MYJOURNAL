@@ -19,6 +19,7 @@ summary: "Known bugs, platform limitations, fixed issues, and architectural note
 - **CSV import regex crash** — `parseDateWithFormat()` used chained `.replace()` that corrupted named groups. Rewritten as single-pass `Regex.replace()` with lambda.
 - **"Use space to separate tags" missing** — Lost during Kotlin conversion. Restored checkbox in CsvMappingActivity.
 - **EntryFormActivity edit opened blank form** — `loadEntryData()` never set `dateValue`, `timeValue`, `titleValue`, `contentValue`. Added four missing assignments.
+- **CSV mapping had no preview** — Users couldn't validate mapping against actual CSV data before import. Added Select CSV file picker, Test button (20 random rows), and horizontally scrollable result grid with mapped/parsed values.
 
 ### 2026-04-28
 

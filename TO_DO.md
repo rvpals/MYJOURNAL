@@ -48,6 +48,9 @@ summary: "Remaining backlog, test checklist, version-by-version completion histo
 - [ ] **WidgetEditorActivity** — Create widget: name/desc/icon/color, add filter rows, add function rows, preview, save. Edit existing widget: loads data, updates correctly. Color picker dialog opens on swatch/input tap with presets and hex input
 - [ ] **CustomViewEditorActivity** — Create view: name, conditions (field/op/value), groupBy, orderBy, displayMode, pinToDashboard. Edit existing view, delete
 - [ ] **CsvMappingActivity** — Column mapping dropdowns, date/time format config, "Use space to separate tags" checkbox, duplicate detection, import executes correctly
+- [ ] **CsvMappingActivity Select CSV** — Select CSV file via file picker, verify headers auto-mapped to entry fields, toast shows filename/row count/column count
+- [ ] **CsvMappingActivity Test** — Click Test after selecting CSV, verify 20 random rows shown in result grid with mapped column headers and parsed date/time values
+- [ ] **CsvMappingActivity Test without file** — Click Test without selecting CSV, verify toast "Please select a CSV file first"
 - [ ] **CSV date/time parsing** — Import with custom date formats (YYYY-MM-DD, MM/DD/YYYY, DD-MM-YYYY) and time formats (HH:mm, H:mm A) parses correctly without regex errors
 - [ ] **Back button** — Proper navigation between all activities
 
@@ -444,6 +447,12 @@ summary: "Remaining backlog, test checklist, version-by-version completion histo
 - [x] SettingsActivity: Tab bar changed from horizontal scroll to 2-row grid (3 tabs per row, equal-width)
 - [x] DashboardDataBuilder: Recent entries sorted by date descending with time tiebreaker
 - [x] File cleanup: COMPONENTS.md deleted; KT_TODO.md + TODO.md + TO_TEST.md combined into TO_DO.md
+
+### v1.5.0+ (2026-04-29, CSV mapping test preview)
+- [x] CsvMappingActivity: "Select CSV" button — file picker to load CSV, auto-maps headers to entry fields (preserves saved mapping)
+- [x] CsvMappingActivity: "Test" button — imports 20 random rows from selected CSV, applies current mapping and date/time parsing
+- [x] CsvMappingActivity: Result grid — horizontally scrollable table with mapped column headers, alternating row colors, "Test Preview — N of M rows" label
+- [x] CsvMappingActivity: Bottom bar redesigned — 3 buttons (Select CSV | Test | Save Mapping)
 
 ## Kotlin Migration (complete)
 
