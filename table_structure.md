@@ -17,7 +17,6 @@ Primary table storing all journal entries.
 | time | TEXT | | Entry time (HH:MM) |
 | title | TEXT | | Entry title |
 | content | TEXT | | Plain text content |
-| richContent | TEXT | | Rich text content (HTML via Spannable + Html.toHtml()) |
 | categories | TEXT | | JSON array of category names, e.g. `["Work","Travel"]` |
 | tags | TEXT | | JSON array of tag names, e.g. `["daily","personal"]` |
 | people | TEXT | | JSON array of `{firstName, lastName}` objects |

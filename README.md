@@ -54,4 +54,4 @@ Output: `app/build/outputs/apk/debug/app-debug.apk`
 
 ## Browser Fallback
 
-The `/web/` directory contains a standalone browser-only SPA (plain HTML/CSS/JS, sql.js WASM, Quill.js) that is NOT bundled in the Android APK.
+The `/web/` directory contains a standalone browser-only SPA (plain HTML/CSS/JS, sql.js WASM) that is NOT bundled in the Android APK.

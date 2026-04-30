@@ -3,7 +3,6 @@
  * Supports multiple journal files with individual passwords.
  */
 
-let quillEditor = null;
 let currentEntryTags = [];
 let currentEntryLocations = [];
 let currentEntryImages = [];
@@ -206,7 +205,6 @@ function enterApp(journalId) {
         if (sel) sel.value = settings.theme;
     }
 
-    initQuill();
     navigateTo('dashboard');
 }
 
@@ -430,26 +428,6 @@ function renderThemePreview() {
     ).join('');
 }
 
-// ========== Quill Editor ==========
-
-function initQuill() {
-    if (quillEditor) return;
-    quillEditor = new Quill('#rich-content-editor', {
-        theme: 'snow',
-        placeholder: 'Paste or type rich content here...',
-        modules: {
-            toolbar: [
-                ['bold', 'italic', 'underline', 'strike'],
-                [{ 'header': [1, 2, 3, false] }],
-                [{ 'list': 'ordered' }, { 'list': 'bullet' }],
-                [{ 'color': [] }, { 'background': [] }],
-                ['link'],
-                ['clean']
-            ]
-        }
-    });
-}
-
 // ========== Entry Form Dirty Check ==========
 
 let entryFormSaved = false;
@@ -457,8 +435,7 @@ let entryFormSaved = false;
 function isEntryFormDirty() {
     if (entryFormSaved) return false;
     const content = document.getElementById('entry-content').value.trim();
-    const richContent = quillEditor ? quillEditor.getText().trim() : '';
-    return content.length > 0 || richContent.length > 0;
+    return content.length > 0;
 }
 
 // ========== Entry Form Helpers ==========
@@ -499,8 +476,6 @@ function prepareEntryForm(entry) {
     document.getElementById('entry-weather').value = '';
     hideWeatherDetail();
 
-    if (quillEditor) quillEditor.setContents([]);
-
     // Show/hide template bar (only for new entries)
     populateEntryTemplateSelect();
 
@@ -512,10 +487,6 @@ function prepareEntryForm(entry) {
         document.getElementById('entry-content').value = entry.content || '';
         document.getElementById('entry-form-title').textContent = 'Edit Entry';
         document.getElementById('btn-delete-entry').style.display = 'inline-block';
-
-        if (entry.richContent && quillEditor) {
-            quillEditor.root.innerHTML = entry.richContent;
-        }
 
         currentEntryTags = [...(entry.tags || [])];
         currentEntryImages = (entry.images || []).map(img => ({ ...img }));

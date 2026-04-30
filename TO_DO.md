@@ -13,7 +13,7 @@ summary: "Remaining backlog, test checklist, version-by-version completion histo
 - [ ] Entry image thumbnails could be optimized (currently full base64 stored)
 - [ ] Consider lazy loading for large journal databases (1000+ entries)
 - [ ] Password strength indicator on journal creation
-- [ ] Entry search: full-text search across rich content (currently plain text only)
+
 - [ ] Accessibility audit (screen reader support, keyboard navigation)
 - [ ] Localization / i18n support
 
@@ -35,14 +35,12 @@ summary: "Remaining backlog, test checklist, version-by-version completion histo
 - [ ] **AboutActivity** — App info display, clickable email/URL/Play Store links, changelog entries
 - [ ] **CalendarActivity** — Monthly grid renders correctly, day selection shows entries, today/selected highlighting, prev/next month navigation, Today button, entry rows clickable
 - [ ] **SearchActivity** — Search icon button on dashboard opens native search screen, text input with search/clear, whole-word checkbox, results show title/date/content snippet/metadata, back button returns to dashboard
-- [ ] **EntryViewerActivity** — Font settings applied (reads ev_font_family/ev_font_size from BootstrapService), rich content rendered in themed WebView (inline images, tables, all HTML), title bold at 1.3x
+- [ ] **EntryViewerActivity** — Font settings applied (reads ev_font_family/ev_font_size from BootstrapService), title bold at 1.3x
 - [ ] **SettingsActivity** — All 6 tabs load and function: Preferences (toggles, font, date/time, theme, wallpaper, weather), Templates (views/entry/report), Metadata (categories/tags CRUD with icons/colors), Data (export/import, password change), Widgets (list/editor with filters/functions), Dashboard (component toggle/reorder)
 - [ ] **Settings tab icons** — All 6 tabs show emoji icons with 3D active/inactive styling
 - [ ] **EntryListActivity** — Search across all fields, category/tag filter spinners, sort by configured field, pagination (10/20/50/100), card view with all entry metadata, select mode with batch delete, navigation to EntryViewerActivity
 - [ ] **ExplorerActivity** — Table browser (click chip shows schema + sample), SQL textarea (raw SQL on any table), condition builder (add/remove rows, field/op/value spinners), field chips (toggle columns), Run Query, results table (clickable rows → record detail dialog), CSV export, iCalendar export, Clear button
-- [ ] **EntryFormActivity** — New entry: date/time pickers, title, content, rich content (launches RichEditorActivity), image add (gallery + camera), save. Edit entry: loads existing data, updates correctly. Categories checkboxes + quick-add, tags autocomplete + chips, place name, location search (Photon/Nominatim) + GPS, weather import, delete button on existing entries
-- [ ] **RichEditorActivity** — Quill.js editor loads, toolbar works (bold/italic/underline/strike, headers, font size, lists, colors, align, links, images), "Copy Content" imports plain text, "Done" returns HTML, paste from web preserves formatting and images
-- [ ] **RichEditorActivity theme** — Editor colors match current theme (toolbar bg, editor bg, text color, accent)
+- [ ] **EntryFormActivity** — New entry: date/time pickers, title, content, image add (gallery + camera), save. Edit entry: loads existing data, updates correctly. Categories checkboxes + quick-add, tags autocomplete + chips, place name, location search (Photon/Nominatim) + GPS, weather import, delete button on existing entries
 - [ ] **EntryFormActivity images** — Gallery picker adds images with thumbnails, camera capture works, remove button on each image, images saved as base64 with thumb
 - [ ] **EntryFormActivity tabs** — Main/Misc tab switching, all fields accessible, scroll position preserved
 - [ ] **ReportsActivity** — HTML report generation with template, date/category/tag filters, CSV export, PDF export via native PdfDocument, template selection
@@ -57,7 +55,6 @@ summary: "Remaining backlog, test checklist, version-by-version completion histo
 
 ### Entry Form
 
-- [ ] **Rich text editor** — "Edit Rich Content" button opens RichEditorActivity, Quill.js toolbar works, paste web content with images, "Done" saves HTML back to entry form
 - [ ] **Image attachments** — Gallery picker via GetMultipleContents, camera capture via TakePicturePreview, thumbnail grid, remove button per image
 - [x] **Categories** — Checkboxes with quick-add (verified 2026-04-03)
 - [x] **Tags** — Auto-complete, create new from form via quick-create panel (verified 2026-04-03)
@@ -240,7 +237,6 @@ summary: "Remaining backlog, test checklist, version-by-version completion histo
 - [x] Core CRUD operations
 - [x] Encryption/decryption cycle
 - [x] Multi-journal management
-- [x] Rich text editor
 - [x] Image attachments and lightbox
 - [x] All 12 themes
 - [x] Export/import (SQLite, JSON)
@@ -256,7 +252,6 @@ summary: "Remaining backlog, test checklist, version-by-version completion histo
 - [x] AES-256-GCM encryption with PBKDF2 key derivation (100k iterations)
 - [x] sql.js (SQLite WASM) database with IndexedDB persistence
 - [x] Journal entries: create, edit, delete, view
-- [x] Rich text editing (Quill.js) with image support
 - [x] Image attachments: gallery picker, camera capture, base64 storage, lightbox viewer
 - [x] Categories (single-select) and tags (multi-select) per entry
 - [x] Location/place name with geocoding (Photon/Nominatim/Google)
@@ -380,7 +375,6 @@ summary: "Remaining backlog, test checklist, version-by-version completion histo
 - [x] Kotlin build support: `kotlin-gradle-plugin:1.9.22`, `kotlin-android` plugin
 - [x] All 5 original activities converted from Java to Kotlin
 - [x] Native CalendarActivity created in Kotlin
-- [x] Entry form: "Copy" button for rich content
 - [x] Zero Java source files remain
 
 ### v1.5.0+ (2026-04-25, location name + service layer)
@@ -394,7 +388,7 @@ summary: "Remaining backlog, test checklist, version-by-version completion histo
 - [x] SearchActivity.kt — Native search screen
 - [x] SettingsActivity.kt (~2865 lines) — 5 tabs
 - [x] EntryListActivity.kt (~850 lines) — Full native entry list
-- [x] EntryViewerActivity.kt — Font settings, rich content
+- [x] EntryViewerActivity.kt — Font settings
 
 ### v1.5.0+ (2026-04-27, native Explorer + dashboard wiring)
 - [x] ExplorerActivity.kt — Full native SQL Explorer
@@ -430,9 +424,7 @@ summary: "Remaining backlog, test checklist, version-by-version completion histo
 - [x] Restored "Use space to separate tags" option
 
 ### v1.5.0+ (2026-04-29, UI improvements)
-- [x] EntryFormActivity: "Content" group box with 2 sub-tabs (Content / Rich Content)
-- [x] EntryFormActivity: Rich Content sub-tab (originally inline Spannable editor, later replaced with RichEditorActivity launcher)
-- [x] EntryFormActivity: Content tab enlarged (minLines 10, maxLines 20)
+- [x] EntryFormActivity: Content input enlarged (minLines 10, maxLines 20)
 - [x] EntryFormActivity: All action buttons (Save, Cancel, Delete) moved to top navbar row alongside Back button
 - [x] EntryFormActivity: Bottom action bar removed — more vertical space for content
 - [x] ReportsActivity: HTML output area enlarged (400dp → 600dp)
@@ -452,18 +444,6 @@ summary: "Remaining backlog, test checklist, version-by-version completion histo
 - [x] CsvMappingActivity: Result grid — horizontally scrollable table with mapped column headers, alternating row colors, "Test Preview — N of M rows" label
 - [x] CsvMappingActivity: Bottom bar redesigned — 3 buttons (Select CSV | Test | Save Mapping)
 
-### v1.5.0+ (2026-04-29, Quill.js rich text editor)
-- [x] RichEditorActivity: Full-screen Quill.js editor in WebView (`assets/rich_editor.html`)
-- [x] RichEditorActivity: Toolbar — bold, italic, underline, strike, headers (H1/H2/H3), font size, ordered/bullet lists, text/background color, alignment, links, inline images
-- [x] RichEditorActivity: "Copy Content" button imports plain text from Content tab into Quill
-- [x] RichEditorActivity: Theme-aware — CSS variables from ThemeManager (bg, card, text, accent, border, input)
-- [x] RichEditorActivity: Returns HTML via ActivityResult intent extra
-- [x] EntryFormActivity: Rich Content tab replaced — now shows HTML preview + "Edit Rich Content" button launching RichEditorActivity
-- [x] EntryFormActivity: Removed old Spannable EditText, formatting toolbar, toggleFormat() method
-- [x] EntryViewerActivity: Rich content now rendered in themed WebView (supports inline images, tables, all HTML formatting)
-- [x] activity_entry_viewer.xml: ev_rich_content changed from TextView to WebView
-- [x] AndroidManifest.xml: Registered RichEditorActivity (15th activity)
-
 ### v1.5.0+ (2026-04-30, people removal + dashboard refresh)
 - [x] Removed people feature entirely: people table, people column from entries, people CRUD in DatabaseService, people section in EntryFormActivity/SettingsActivity/EntryViewerActivity, people ranked panel in Dashboard, people from CSV import/export, people from widget/view filter fields
 - [x] Dashboard auto-refresh: `DashboardActivity.needsRefresh` flag checked in `onResume()`
@@ -472,7 +452,7 @@ summary: "Remaining backlog, test checklist, version-by-version completion histo
 
 ## Kotlin Migration (complete)
 
-All original Java activities were converted to Kotlin (2026-04-17/18). MainActivity was later removed entirely when WebView was eliminated (2026-04-28). The app is now 100% Kotlin with 22 source files: 15 activities + 4 services + ServiceProvider + DashboardDataBuilder + ThemeManager.
+All original Java activities were converted to Kotlin (2026-04-17/18). MainActivity was later removed entirely when WebView was eliminated (2026-04-28). The app is now 100% Kotlin with 21 source files: 14 activities + 4 services + ServiceProvider + DashboardDataBuilder + ThemeManager.
 
 ### Service Layer
 

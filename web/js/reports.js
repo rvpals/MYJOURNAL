@@ -303,7 +303,6 @@ function applyTemplateToEntry(templateHtml, entry) {
         '<%DATE%>': formatDate(entry.date) || '',
         '<%TIME%>': entry.time || '',
         '<%CONTENT%>': escapeHtml(entry.content || '').replace(/\n/g, '<br>'),
-        '<%RICH_CONTENT%>': entry.richContent || '',
         '<%CATEGORIES%>': (entry.categories || []).join(', '),
         '<%TAGS%>': (entry.tags || []).join(', '),
         '<%PLACES%>': escapeHtml(placesFormatted),

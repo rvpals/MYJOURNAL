@@ -779,7 +779,7 @@ class ReportsActivity : AppCompatActivity() {
             "<%DATE%>" to formatDateDisplay(entry.optString("date", "")),
             "<%TIME%>" to (entry.optString("time", "")),
             "<%CONTENT%>" to escapeHtml(entry.optString("content", "")).replace("\n", "<br>"),
-            "<%RICH_CONTENT%>" to (entry.optString("richContent", "")),
+
             "<%CATEGORIES%>" to jsonArrayToStringList(entry.optJSONArray("categories")).joinToString(", "),
             "<%TAGS%>" to jsonArrayToStringList(entry.optJSONArray("tags")).joinToString(", "),
             "<%PLACES%>" to escapeHtml(placesFormatted),

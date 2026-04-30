@@ -8,7 +8,7 @@ summary: "Project architecture reference — directory structure, tech stack, da
 
 ## Overview
 
-Fully native Android encrypted journal app. All 15 screens are native Kotlin activities. Services (crypto, database, bootstrap, weather) are managed by a `ServiceProvider` singleton. The web layer (`/web/` directory) is a standalone browser-only fallback SPA — it is NOT bundled in the Android APK. All data stored locally in AES-256-GCM encrypted SQLCipher database.
+Fully native Android encrypted journal app. All 14 screens are native Kotlin activities. Services (crypto, database, bootstrap, weather) are managed by a `ServiceProvider` singleton. The web layer (`/web/` directory) is a standalone browser-only fallback SPA — it is NOT bundled in the Android APK. All data stored locally in AES-256-GCM encrypted SQLCipher database.
 
 **App Name:** My Journal | **Version:** 1.5.0 | **Package:** com.journal.app | **Min SDK:** 24 | **Target SDK:** 34
 
@@ -19,8 +19,8 @@ MYJOURNAL/
 ├── app/
 │   ├── build.gradle                # Android build config (compileSdk 34, minSdk 24)
 │   ├── src/main/
-│   │   ├── AndroidManifest.xml     # 15 activities, permissions (internet, location, camera, biometric)
-│   │   ├── java/com/journal/app/    # All Kotlin sources (22 files)
+│   │   ├── AndroidManifest.xml     # 14 activities, permissions (internet, location, camera, biometric)
+│   │   ├── java/com/journal/app/    # All Kotlin sources (21 files)
 │   │   │   ├── LoginActivity.kt         # Entry point: journal select, password, biometric login
 │   │   │   ├── DashboardActivity.kt     # Native dashboard (stats, ranked lists, pinned/recent, widgets, hamburger menu)
 │   │   │   ├── CalendarActivity.kt      # Native calendar view
@@ -30,8 +30,7 @@ MYJOURNAL/
 │   │   │   ├── EntryListActivity.kt     # Native entry list (collapsible filters, order-by dropdowns, alternating rows, search, sort, paginate, batch delete)
 │   │   │   ├── ExplorerActivity.kt      # Native SQL Explorer (table browser, query builder, raw SQL, CSV/iCal export)
 │   │   │   ├── SettingsActivity.kt      # Native settings (6 tabs in 2-row grid: Prefs, Templates, Metadata (categories/tags), Data, Widgets, Dashboard)
-│   │   │   ├── EntryFormActivity.kt     # Native entry form (Content group box with sub-tabs, launches RichEditorActivity, images, categories, tags, locations, weather)
-│   │   │   ├── RichEditorActivity.kt   # Full-screen Quill.js rich text editor (WebView, theme-aware, returns HTML)
+│   │   │   ├── EntryFormActivity.kt     # Native entry form (content, images, categories, tags, locations, weather)
 │   │   │   ├── ReportsActivity.kt       # Native reports (HTML export+browser open, PDF/CSV, filters, templates)
 │   │   │   ├── WidgetEditorActivity.kt  # Native widget editor (header/filters/functions tabs, preview)
 │   │   │   ├── CustomViewEditorActivity.kt # Native custom view editor (conditions, groupBy, orderBy, display)
@@ -43,11 +42,9 @@ MYJOURNAL/
 │   │   │   ├── WeatherService.kt        # Open-Meteo HTTP client
 │   │   │   └── DatabaseService.kt       # SQLCipher encrypted DB
 │   │   │   ├── ThemeManager.kt          # Runtime theme system (12 themes, view tree recoloring)
-│   │   ├── assets/
-│   │   │   └── rich_editor.html    # Quill.js rich text editor page (CDN-loaded, theme-aware)
 │   │   ├── res/
 │   │   │   ├── drawable/           # Button ripples, input/card/search/stat backgrounds, 3D tab/search drawables (25+ XML files)
-│   │   │   ├── layout/            # 15 activity layouts + 2 spinner item layouts
+│   │   │   ├── layout/            # 14 activity layouts + 2 spinner item layouts
 │   │   │   ├── values/            # colors.xml, strings.xml, styles.xml, app_info.xml
 │   │   │   └── xml/file_paths.xml # FileProvider for camera
 ├── web/                            # Browser-only SPA fallback (NOT bundled in APK)
@@ -57,7 +54,7 @@ MYJOURNAL/
 │   │   ├── style.css               # 12 themes via CSS variables
 │   │   └── style-android.css       # Android-only overrides (unused since WebView removed)
 │   ├── js/
-│   │   ├── app.js          # Main controller: login, navigation, theme, Quill editor
+│   │   ├── app.js          # Main controller: login, navigation, theme
 │   │   ├── app_info.js     # Parses app_info.xml
 │   │   ├── bootstrap.js    # IndexedDB-backed key-value store
 │   │   ├── components.js   # Reusable UI: ResultGrid, RankedPanel, RecordViewer, CollapsiblePanel
@@ -100,7 +97,6 @@ Output: `app/build/outputs/apk/debug/app-debug.apk`
 | Web (browser only) | Plain HTML/CSS/JS | Standalone SPA, not bundled in APK |
 | Database | SQLCipher 4.5.6 | Encrypted SQLite via `net.zetetic:sqlcipher-android` |
 | Encryption | AES-256-GCM | PBKDF2-SHA256, 100k iterations via javax.crypto |
-| Rich text (Android) | Quill.js in WebView | Full-screen RichEditorActivity — bold/italic/underline/strike, headers, font size, lists, colors, alignment, links, inline images; stored as HTML |
 | PDF (Android) | PdfDocument | Native Android PDF generation |
 | Weather | Open-Meteo API | Free, no API key required |
 | Geocoding | Photon / Nominatim / Google | Configurable in settings |
@@ -108,7 +104,7 @@ Output: `app/build/outputs/apk/debug/app-debug.apk`
 
 ## Database Schema
 
-**entries** — id, date, time, title, content, richContent, categories (JSON), tags (JSON), placeName, locations (JSON of {lat, lng, address, name?}), weather (JSON), pinned, locked, dtCreated, dtUpdated
+**entries** — id, date, time, title, content, categories (JSON), tags (JSON), placeName, locations (JSON of {lat, lng, address, name?}), weather (JSON), pinned, locked, dtCreated, dtUpdated
 **images** — id, entryId, name, data (base64), thumb, sortOrder
 **categories** — name (PK), description
 **tags** — name (PK), description
@@ -138,7 +134,7 @@ Output: `app/build/outputs/apk/debug/app-debug.apk`
 5. `DashboardDataBuilder.build(db, bs)` — Computes dashboard JSON (stats, streaks, ranked lists, widgets, today in history, pinned/recent entries)
 6. **DashboardActivity** — Displays dashboard, launches other activities directly
 
-Navigation between activities uses standard Android `startActivity()`. The only WebView usage is the Quill.js rich text editor (RichEditorActivity) and the entry viewer's rich content display.
+Navigation between activities uses standard Android `startActivity()`.
 
 ## Themes (12)
 
@@ -148,7 +144,7 @@ Light, Dark, Ocean, Midnight, Forest, Amethyst, Aurora, Lavender, Frost, Navy, S
 
 ## Key Conventions
 
-- **Fully native** — all 15 screens are Kotlin activities (RichEditorActivity uses WebView for Quill.js editor only)
+- **Fully native** — all 14 screens are Kotlin activities
 - **ServiceProvider singleton** — all activities access services via `ServiceProvider.xxxService`
 - **ThemeManager singleton** — runtime theme colors via `ThemeManager.color(C.*)`, replaces static `R.color.login_*` resources
 - **DashboardDataBuilder** — computes dashboard JSON natively from DatabaseService
@@ -158,10 +154,8 @@ Light, Dark, Ocean, Midnight, Forest, Amethyst, Aurora, Lavender, Frost, Navy, S
 - **Dashboard component settings** — Settings > Dashboard tab allows toggling/reordering 10 components; stored in BootstrapService as `dashboard_components` JSON
 - **Dashboard auto-refresh** — `DashboardActivity.needsRefresh` static flag; set after erase all entries or CSV import completion; checked in `onResume()` to rebuild dashboard data
 - **DashboardActivity navigation** — hamburger menu (☰) in top navbar with PopupMenu (Entries, Calendar, Reports, Explorer, Settings, About); no bottom nav bar
-- **Rich content editing** — Full-screen RichEditorActivity with Quill.js (WebView); supports bold, italic, underline, strike, headers, font size, lists, colors, alignment, links, inline images; "Copy Content" button imports plain text; returns HTML via ActivityResult
-- **Rich content viewing** — EntryViewerActivity renders richContent HTML in a themed WebView (supports inline images, tables, all formatting)
 - **File exports** — `ServiceProvider.saveFileToDownloads()` via MediaStore scoped storage (API 29+)
-- **Entry form layout** — Content/Rich Content in a tabbed group box; Rich Content tab shows preview + "Edit Rich Content" button that launches RichEditorActivity; all action buttons (Save/Cancel/Delete) in top navbar, no bottom bar
+- **Entry form layout** — Plain text content input; all action buttons (Save/Cancel/Delete) in top navbar, no bottom bar
 - **Entry list** — Collapsible "Filter Info" box with search/filter controls and Order by dropdowns (field + asc/desc); alternating row colors (`CARD_BG`/`INPUT_BG`) with `CARD_BORDER` stroke
 - **Settings tabs** — 2-row grid layout (3 tabs per row), equal-width buttons, no horizontal scrolling
 - **HTML reports** — Exported to Downloads and opened in browser via `ACTION_VIEW` intent

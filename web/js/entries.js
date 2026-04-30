@@ -30,14 +30,6 @@ function onSearchInput() {
 
 // ========== Save Entry ==========
 
-function copyContentToRichContent() {
-    const content = document.getElementById('entry-content').value;
-    if (!content) return;
-    if (quillEditor) {
-        quillEditor.setText(content);
-    }
-}
-
 async function saveEntry(event) {
     event.preventDefault();
 
@@ -46,7 +38,6 @@ async function saveEntry(event) {
     const time = document.getElementById('entry-time').value;
     const title = document.getElementById('entry-title').value.trim();
     const content = document.getElementById('entry-content').value;
-    const richContent = quillEditor ? quillEditor.root.innerHTML : '';
 
     // Get selected categories
     const categoryCheckboxes = document.querySelectorAll('#category-select input[type="checkbox"]:checked');
@@ -61,7 +52,7 @@ async function saveEntry(event) {
     if (id) {
         // Update existing
         await DB.updateEntry(id, {
-            date, time, title, content, richContent,
+            date, time, title, content,
             categories,
             tags: [...currentEntryTags],
             people: [...currentEntryPeople],
@@ -75,7 +66,7 @@ async function saveEntry(event) {
         // Create new
         const entry = {
             id: generateId(),
-            date, time, title, content, richContent,
+            date, time, title, content,
             categories,
             tags: [...currentEntryTags],
             people: [...currentEntryPeople],
@@ -694,10 +685,6 @@ function showEntryView(entry, skipNav) {
         mainHtml += `<div class="ev-row ev-row-block"><span class="ev-label">Content</span><div class="ev-value ev-content">${escapeHtml(entry.content)}</div></div>`;
     }
 
-    if (entry.richContent && entry.richContent !== '<p><br></p>') {
-        mainHtml += `<div class="ev-row ev-row-block"><span class="ev-label">Rich Content</span><div class="ev-value ev-rich-content">${entry.richContent}</div></div>`;
-    }
-
     if (entry.images && entry.images.length > 0) {
         const imgGrid = entry.images.map((img, i) =>
             `<div class="ev-img-thumb-wrap">` +
@@ -793,7 +780,7 @@ function showEntryView(entry, skipNav) {
 
 function highlightInViewer(term) {
     if (!term) return;
-    const targets = document.querySelectorAll('#page-entry-view .ev-content, #page-entry-view .ev-rich-content, #page-entry-view #entry-view-title');
+    const targets = document.querySelectorAll('#page-entry-view .ev-content, #page-entry-view #entry-view-title');
     const escaped = term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
     const regex = new RegExp('(' + escaped + ')', 'gi');
     targets.forEach(el => {

@@ -9,7 +9,6 @@ CREATE TABLE IF NOT EXISTS entries (
     time TEXT,
     title TEXT,
     content TEXT,
-    richContent TEXT,
     categories TEXT,          -- JSON array of category names
     tags TEXT,                -- JSON array of tag names
     placeName TEXT,

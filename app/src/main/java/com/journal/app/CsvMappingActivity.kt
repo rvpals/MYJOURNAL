@@ -33,7 +33,6 @@ class CsvMappingActivity : AppCompatActivity() {
             "time" to "Time",
             "title" to "Title",
             "content" to "Content",
-            "richContent" to "Rich Content (HTML)",
             "categories" to "Categories",
             "tags" to "Tags",
             "placeName" to "Place Name",
@@ -109,7 +108,6 @@ class CsvMappingActivity : AppCompatActivity() {
             h.matches(Regex("^(time|entrytime)$")) -> "time"
             h.matches(Regex("^(title|subject|heading)$")) -> "title"
             h.matches(Regex("^(content|body|text|description|note)$")) -> "content"
-            h.matches(Regex("^(richcontent|html|htmlcontent)$")) -> "richContent"
             h.startsWith("categor") -> "categories"
             h.startsWith("tag") -> "tags"
             h.matches(Regex("^(place|placename|location|locationname)$")) -> "placeName"

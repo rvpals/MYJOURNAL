@@ -70,8 +70,6 @@ class EntryFormActivity : AppCompatActivity() {
     private var currentImages = mutableListOf<JSONObject>()
     private var currentWeather: JSONObject? = null
     private var placeName = ""
-    private var originalRichContent = ""
-
     // Misc tab field refs
     private lateinit var placeNameInput: EditText
     private lateinit var locationSearchInput: EditText
@@ -83,17 +81,6 @@ class EntryFormActivity : AppCompatActivity() {
     private var allTags = listOf<String>()
     private var allPlaceNames = listOf<String>()
     private var tagDescriptions = mutableMapOf<String, String>()
-
-    private var activeContentTab = "content"
-    private var contentSubTabContainer: LinearLayout? = null
-
-    private val richEditorLauncher = registerForActivityResult(
-        ActivityResultContracts.StartActivityForResult()
-    ) { result ->
-        if (result.resultCode == RESULT_OK) {
-            richContentHtml = result.data?.getStringExtra("richContentHtml") ?: ""
-        }
-    }
 
     private val imagePicker = registerForActivityResult(ActivityResultContracts.GetMultipleContents()) { uris ->
         for (uri in uris) processImageUri(uri)
@@ -219,7 +206,6 @@ class EntryFormActivity : AppCompatActivity() {
         currentWeather = if (w is JSONObject) w else null
 
         placeName = entry.optString("placeName", "")
-        originalRichContent = entry.optString("richContent", "")
     }
 
     // ========== Tabs ==========
@@ -266,7 +252,6 @@ class EntryFormActivity : AppCompatActivity() {
     private var timeValue = ""
     private var titleValue = ""
     private var contentValue = ""
-    private var richContentHtml = ""
 
     // ========== Main Tab ==========
 
@@ -274,7 +259,7 @@ class EntryFormActivity : AppCompatActivity() {
         if (::titleInput.isInitialized) {
             titleValue = titleInput.text.toString()
         }
-        if (::contentInput.isInitialized && activeContentTab == "content") {
+        if (::contentInput.isInitialized) {
             contentValue = contentInput.text.toString()
         }
 
@@ -336,113 +321,8 @@ class EntryFormActivity : AppCompatActivity() {
         titleInput = makeInput("Entry title", titleValue)
         contentContainer.addView(titleInput)
 
-        // Content group box
-        buildContentGroupBox()
-
-        // Images
-        addSectionHeader("Images")
-        buildImageSection()
-    }
-
-    private fun buildContentGroupBox() {
-        if (::contentInput.isInitialized && activeContentTab == "content") {
-            contentValue = contentInput.text.toString()
-        }
-
-        val groupBox = LinearLayout(this).apply {
-            orientation = LinearLayout.VERTICAL
-            val bg = GradientDrawable().apply {
-                cornerRadius = dp(8).toFloat()
-                setStroke(dp(1), ThemeManager.color(C.CARD_BORDER))
-                setColor(ThemeManager.color(C.CARD_BG))
-            }
-            background = bg
-            setPadding(dp(10), dp(8), dp(10), dp(10))
-            layoutParams = linParams().apply { bottomMargin = dp(12) }
-        }
-
-        // Group box header
-        groupBox.addView(TextView(this).apply {
-            text = "Content"
-            setTextColor(ThemeManager.color(C.ACCENT))
-            textSize = 14f
-            setTypeface(null, Typeface.BOLD)
-            setPadding(dp(2), 0, 0, dp(6))
-        })
-
-        // Sub-tab bar
-        val tabBar = LinearLayout(this).apply {
-            orientation = LinearLayout.HORIZONTAL
-            gravity = Gravity.CENTER_VERTICAL
-            layoutParams = linParams().apply { bottomMargin = dp(8) }
-        }
-
-        val contentTabBtn = Button(this).apply {
-            text = "Content"
-            textSize = 12f
-            isAllCaps = false
-            layoutParams = LinearLayout.LayoutParams(0, dp(34), 1f).apply { marginEnd = dp(4) }
-            setPadding(dp(8), 0, dp(8), 0)
-        }
-        val richTabBtn = Button(this).apply {
-            text = "Rich Content"
-            textSize = 12f
-            isAllCaps = false
-            layoutParams = LinearLayout.LayoutParams(0, dp(34), 1f)
-            setPadding(dp(8), 0, dp(8), 0)
-        }
-
-        fun styleContentTabs() {
-            if (activeContentTab == "content") {
-                contentTabBtn.background = ContextCompat.getDrawable(this, R.drawable.btn_accent)
-                contentTabBtn.setTextColor(ThemeManager.color(C.CARD_BG))
-                richTabBtn.background = ContextCompat.getDrawable(this, R.drawable.btn_secondary)
-                richTabBtn.setTextColor(ThemeManager.color(C.TEXT))
-            } else {
-                richTabBtn.background = ContextCompat.getDrawable(this, R.drawable.btn_accent)
-                richTabBtn.setTextColor(ThemeManager.color(C.CARD_BG))
-                contentTabBtn.background = ContextCompat.getDrawable(this, R.drawable.btn_secondary)
-                contentTabBtn.setTextColor(ThemeManager.color(C.TEXT))
-            }
-        }
-
-        val subContainer = LinearLayout(this).apply {
-            orientation = LinearLayout.VERTICAL
-            layoutParams = linParams()
-        }
-        contentSubTabContainer = subContainer
-
-        fun showContentSubTab(tab: String) {
-            if (::contentInput.isInitialized && activeContentTab == "content") {
-                contentValue = contentInput.text.toString()
-            }
-            activeContentTab = tab
-            styleContentTabs()
-            subContainer.removeAllViews()
-            when (tab) {
-                "content" -> buildContentSubTab(subContainer)
-                "rich" -> buildRichContentSubTab(subContainer)
-            }
-        }
-
-        contentTabBtn.setOnClickListener { showContentSubTab("content") }
-        richTabBtn.setOnClickListener { showContentSubTab("rich") }
-
-        tabBar.addView(contentTabBtn)
-        tabBar.addView(richTabBtn)
-        groupBox.addView(tabBar)
-        groupBox.addView(subContainer)
-
-        styleContentTabs()
-        when (activeContentTab) {
-            "content" -> buildContentSubTab(subContainer)
-            "rich" -> buildRichContentSubTab(subContainer)
-        }
-
-        contentContainer.addView(groupBox)
-    }
-
-    private fun buildContentSubTab(container: LinearLayout) {
+        // Content
+        addLabel("Content")
         contentInput = EditText(this).apply {
             hint = "Write your journal entry..."
             setText(contentValue)
@@ -453,50 +333,15 @@ class EntryFormActivity : AppCompatActivity() {
             setHintTextColor(ThemeManager.color(C.TEXT_SECONDARY))
             background = ContextCompat.getDrawable(this@EntryFormActivity, R.drawable.input_bg)
             setPadding(dp(12), dp(10), dp(12), dp(10))
-            layoutParams = linParams()
+            layoutParams = linParams().apply { bottomMargin = dp(8) }
             inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_FLAG_MULTI_LINE
             gravity = Gravity.TOP
         }
-        container.addView(contentInput)
-    }
+        contentContainer.addView(contentInput)
 
-    private fun buildRichContentSubTab(container: LinearLayout) {
-        val hasContent = richContentHtml.isNotEmpty() || originalRichContent.isNotEmpty()
-        val preview = TextView(this).apply {
-            if (hasContent) {
-                val html = richContentHtml.ifEmpty { originalRichContent }
-                text = android.text.Html.fromHtml(html, android.text.Html.FROM_HTML_MODE_COMPACT)
-                setTextColor(ThemeManager.color(C.TEXT))
-            } else {
-                text = "No rich content yet. Tap Edit to open the rich text editor."
-                setTextColor(ThemeManager.color(C.TEXT_SECONDARY))
-            }
-            textSize = 14f
-            minLines = 4
-            maxLines = 12
-            background = ContextCompat.getDrawable(this@EntryFormActivity, R.drawable.input_bg)
-            setPadding(dp(12), dp(10), dp(12), dp(10))
-            layoutParams = linParams().apply { bottomMargin = dp(8) }
-        }
-        container.addView(preview)
-
-        container.addView(makeAccentButton("Edit Rich Content") {
-            launchRichEditor()
-        }.apply {
-            layoutParams = linParams().apply { bottomMargin = dp(4) }
-        })
-    }
-
-    private fun launchRichEditor() {
-        if (::contentInput.isInitialized && activeContentTab == "content") {
-            contentValue = contentInput.text.toString()
-        }
-        val html = richContentHtml.ifEmpty { originalRichContent }
-        RichEditorActivity.initialHtml = html
-        RichEditorActivity.plainContent = contentValue
-        originalRichContent = ""
-        val intent = Intent(this, RichEditorActivity::class.java)
-        richEditorLauncher.launch(intent)
+        // Images
+        addSectionHeader("Images")
+        buildImageSection()
     }
 
     // ========== Images ==========
@@ -1204,7 +1049,7 @@ class EntryFormActivity : AppCompatActivity() {
             timeValue = timeInput.text.toString().trim()
             titleValue = titleInput.text.toString().trim()
         }
-        if (::contentInput.isInitialized && activeContentTab == "content") {
+        if (::contentInput.isInitialized) {
             contentValue = contentInput.text.toString()
         }
 
@@ -1235,7 +1080,6 @@ class EntryFormActivity : AppCompatActivity() {
                 put("time", timeValue)
                 put("title", titleValue)
                 put("content", contentValue)
-                put("richContent", richContentHtml)
                 put("categories", JSONArray(selectedCategories.toList()))
                 put("tags", JSONArray(currentTags))
                 put("placeName", placeName)
@@ -1252,7 +1096,6 @@ class EntryFormActivity : AppCompatActivity() {
                 put("time", timeValue)
                 put("title", titleValue)
                 put("content", contentValue)
-                put("richContent", richContentHtml)
                 put("categories", JSONArray(selectedCategories.toList()))
                 put("tags", JSONArray(currentTags))
                 put("placeName", placeName)

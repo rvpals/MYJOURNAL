@@ -95,8 +95,7 @@ class SearchActivity : AppCompatActivity() {
                 val entry = entries.optJSONObject(i) ?: continue
                 val title = entry.optString("title", "")
                 val content = entry.optString("content", "")
-                val richContent = entry.optString("richContent", "")
-                if (regex.containsMatchIn(title) || regex.containsMatchIn(content) || regex.containsMatchIn(richContent)) {
+                if (regex.containsMatchIn(title) || regex.containsMatchIn(content)) {
                     matches.add(entry)
                 }
             }
@@ -106,8 +105,7 @@ class SearchActivity : AppCompatActivity() {
                 val entry = entries.optJSONObject(i) ?: continue
                 val title = entry.optString("title", "").lowercase()
                 val content = entry.optString("content", "").lowercase()
-                val richContent = entry.optString("richContent", "").lowercase()
-                if (title.contains(lowerTerm) || content.contains(lowerTerm) || richContent.contains(lowerTerm)) {
+                if (title.contains(lowerTerm) || content.contains(lowerTerm)) {
                     matches.add(entry)
                 }
             }

@@ -77,7 +77,6 @@ class DatabaseService(private val context: Context) {
                 time TEXT,
                 title TEXT,
                 content TEXT,
-                richContent TEXT,
                 categories TEXT,
                 tags TEXT,
                 placeName TEXT,
@@ -200,7 +199,7 @@ class DatabaseService(private val context: Context) {
         d.execSQL("""
             CREATE TABLE IF NOT EXISTS entries (
                 id TEXT PRIMARY KEY, date TEXT, time TEXT, title TEXT,
-                content TEXT, richContent TEXT, categories TEXT, tags TEXT,
+                content TEXT, categories TEXT, tags TEXT,
                 placeName TEXT, locations TEXT, weather TEXT,
                 pinned INTEGER DEFAULT 0, locked INTEGER DEFAULT 0,
                 dtCreated TEXT, dtUpdated TEXT
@@ -329,7 +328,6 @@ class DatabaseService(private val context: Context) {
         obj.put("time", cursor.getString(cursor.getColumnIndexOrThrow("time")) ?: "")
         obj.put("title", cursor.getString(cursor.getColumnIndexOrThrow("title")) ?: "")
         obj.put("content", cursor.getString(cursor.getColumnIndexOrThrow("content")) ?: "")
-        obj.put("richContent", cursor.getString(cursor.getColumnIndexOrThrow("richContent")) ?: "")
         obj.put("categories", safeParseArray(cursor.getString(cursor.getColumnIndexOrThrow("categories"))))
         obj.put("tags", safeParseArray(cursor.getString(cursor.getColumnIndexOrThrow("tags"))))
         obj.put("placeName", cursor.getString(cursor.getColumnIndexOrThrow("placeName")) ?: "")
@@ -361,7 +359,7 @@ class DatabaseService(private val context: Context) {
         val cv = ContentValues()
         val fieldMap = mapOf(
             "date" to "date", "time" to "time", "title" to "title",
-            "content" to "content", "richContent" to "richContent",
+            "content" to "content",
             "placeName" to "placeName", "dtCreated" to "dtCreated", "dtUpdated" to "dtUpdated"
         )
         val jsonFields = setOf("categories", "tags", "locations")
@@ -445,7 +443,6 @@ class DatabaseService(private val context: Context) {
         cv.put("time", entry.optString("time", ""))
         cv.put("title", entry.optString("title", ""))
         cv.put("content", entry.optString("content", ""))
-        cv.put("richContent", entry.optString("richContent", ""))
         cv.put("categories", entry.optJSONArray("categories")?.toString() ?: "[]")
         cv.put("tags", entry.optJSONArray("tags")?.toString() ?: "[]")
         cv.put("placeName", entry.optString("placeName", ""))

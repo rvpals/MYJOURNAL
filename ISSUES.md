@@ -17,6 +17,7 @@ summary: "Known bugs, platform limitations, fixed issues, and architectural note
 
 - **Dashboard not refreshing after data changes** — `onResume()` only checked for theme changes. Added `DashboardActivity.needsRefresh` static flag, set after erase all entries and CSV import completion. CSV import now shows AlertDialog with count; OK closes Settings and triggers dashboard rebuild.
 - **People feature removed** — Deleted people table, people column from entries, all people CRUD functions, people UI in form/viewer/settings/dashboard/CSV/widgets. Simplifies schema and reduces form complexity.
+- **Rich content / Quill.js editor removed** — Deleted RichEditorActivity, rich_editor.html asset, activity_rich_editor.xml layout, richContent column from entries, and all related code across EntryForm, EntryViewer, Search, Reports, CsvMapping, Settings, and web SPA. App goes from 15 to 14 activities, 22 to 21 Kotlin files. Content editing is now plain text only.
 
 ### 2026-04-29
 
@@ -25,8 +26,6 @@ summary: "Known bugs, platform limitations, fixed issues, and architectural note
 - **"Use space to separate tags" missing** — Lost during Kotlin conversion. Restored checkbox in CsvMappingActivity.
 - **EntryFormActivity edit opened blank form** — `loadEntryData()` never set `dateValue`, `timeValue`, `titleValue`, `contentValue`. Added four missing assignments.
 - **CSV mapping had no preview** — Users couldn't validate mapping against actual CSV data before import. Added Select CSV file picker, Test button (20 random rows), and horizontally scrollable result grid with mapped/parsed values.
-- **Rich text editor too limited** — Native EditText + Spannable only supported bold/italic/underline/strikethrough. Could not paste web pages with images, tables, font sizes, headers, lists, or colors. Replaced with full-screen RichEditorActivity using Quill.js in a WebView — full rich text editing with inline images. EntryViewerActivity now renders richContent in a themed WebView instead of `Html.fromHtml()` + `TextView`.
-
 ### 2026-04-28
 
 - **Widget icon not showing on dashboard** — `createWidgetCard()` never read the `icon` field. Added `ImageView` with `loadBase64Image()`.
@@ -66,20 +65,18 @@ summary: "Known bugs, platform limitations, fixed issues, and architectural note
 
 ### Fully Native Architecture (2026-04-28+)
 
-- All 15 screens are Kotlin activities. WebView used only for Quill.js rich text editor (RichEditorActivity) and rich content display in EntryViewerActivity.
+- All 14 screens are Kotlin activities. No WebView usage.
 - **ServiceProvider singleton**: Holds CryptoService, BootstrapService, WeatherService, DatabaseService. Initialized in LoginActivity, accessed by all activities.
 - **ThemeManager singleton**: Runtime theme system with 12 color maps. `ThemeManager.color(C.*)` replaces static XML resources. `applyToActivity()` recolors view tree. Theme changes detected via `themeVersion` counter.
 - **DashboardDataBuilder**: Computes dashboard JSON natively from DatabaseService.
 - **Login flow**: LoginActivity -> ServiceProvider.init() -> DB open -> ThemeManager.init() -> DashboardDataBuilder.build() -> DashboardActivity.
-- **22 Kotlin source files**: 15 activities + 4 services + ServiceProvider + DashboardDataBuilder + ThemeManager.
+- **21 Kotlin source files**: 14 activities + 4 services + ServiceProvider + DashboardDataBuilder + ThemeManager.
 - **Web SPA**: `/web/` directory preserved as standalone browser-only fallback, NOT bundled in APK.
 
 ### UI Patterns (2026-04-29)
 
 - **DashboardActivity**: No bottom nav bar. Top navbar has Search, journal name, New Entry, Lock, and ☰ hamburger menu (`PopupMenu` with Entries, Calendar, Reports, Explorer, Settings, About).
-- **EntryFormActivity**: Content/Rich Content in a tabbed group box. Rich Content tab shows HTML preview + "Edit Rich Content" button launching RichEditorActivity. Action buttons (Save/Cancel/Delete) in top navbar, no bottom bar.
-- **RichEditorActivity**: Full-screen Quill.js editor in WebView. Navbar: Back, Copy Content (imports plain text), Done. Theme-aware (CSS variables from ThemeManager). Returns HTML via ActivityResult.
-- **EntryViewerActivity**: Rich content rendered in themed WebView (supports inline images, tables, all HTML formatting).
+- **EntryFormActivity**: Plain text content input. Action buttons (Save/Cancel/Delete) in top navbar, no bottom bar.
 - **ReportsActivity**: HTML button exports to Downloads and opens in browser via ACTION_VIEW intent. Output area 600dp.
 - **EntryListActivity**: Collapsible "Filter Info" box with search, category/tag filters, "Order by" dropdowns (field + direction), select mode, page size. Alternating row colors (CARD_BG/INPUT_BG) with CARD_BORDER stroke.
 - **SettingsActivity**: 6 tabs in 2-row grid (3 per row, equal-width) instead of horizontal scroll.

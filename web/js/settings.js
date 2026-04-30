@@ -678,7 +678,7 @@ function exportCsvFromSettings() {
     }
 
     const headers = [
-        'Date', 'Time', 'Title', 'Content', 'Rich Content',
+        'Date', 'Time', 'Title', 'Content',
         'Categories', 'Tags', 'Place Name', 'Locations',
         'Weather', 'Created', 'Updated'
     ];
@@ -702,7 +702,6 @@ function exportCsvFromSettings() {
             esc(e.time || ''),
             esc(e.title || ''),
             esc(e.content || ''),
-            esc(e.richContent || ''),
             esc((e.categories || []).join('; ')),
             esc((e.tags || []).join('; ')),
             esc(e.placeName || ''),
@@ -776,7 +775,6 @@ const CSV_JOURNAL_FIELDS = [
     { key: 'time',         label: 'Time' },
     { key: 'title',        label: 'Title' },
     { key: 'content',      label: 'Content' },
-    { key: 'richContent',  label: 'Rich Content (HTML)' },
     { key: 'categories',   label: 'Categories' },
     { key: 'tags',         label: 'Tags' },
     { key: 'people',       label: 'People' },
@@ -897,7 +895,6 @@ function autoDetectField(header) {
     if (/^time$|^entrytime$/.test(h)) return 'time';
     if (/^title$|^subject$|^heading$/.test(h)) return 'title';
     if (/^content$|^body$|^text$|^description$|^note$/.test(h)) return 'content';
-    if (/^richcontent$|^html$|^htmlcontent$/.test(h)) return 'richContent';
     if (/^categor/.test(h)) return 'categories';
     if (/^tag/.test(h)) return 'tags';
     if (/^place$|^placename$|^location$|^locationname$/.test(h)) return 'placeName';
@@ -1097,7 +1094,6 @@ async function executeCsvImport() {
             time: '',
             title: '',
             content: '',
-            richContent: '',
             categories: [],
             tags: [],
             people: [],
@@ -1127,9 +1123,6 @@ async function executeCsvImport() {
                     break;
                 case 'content':
                     entry.content = val;
-                    break;
-                case 'richContent':
-                    entry.richContent = val;
                     break;
                 case 'categories':
                     entry.categories = val.split(separator).map(s => s.trim()).filter(Boolean);
@@ -1862,7 +1855,6 @@ function createTemplate() {
         <div>Weather: <%WEATHER%></div>
     </div>
     <div class="content"><%CONTENT%></div>
-    <div class="content"><%RICH_CONTENT%></div>
     <div class="tags">Tags: <%TAGS%></div>
     <div class="meta">Places: <%PLACES%></div>
 </body>

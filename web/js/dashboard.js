@@ -379,7 +379,7 @@ function dashboardSearch() {
             const escaped = term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
             const regex = new RegExp('\\b' + escaped + '\\b', 'i');
             for (const e of entries) {
-                if (regex.test(e.title || '') || regex.test(e.content || '') || regex.test(e.richContent || '')) {
+                if (regex.test(e.title || '') || regex.test(e.content || '')) {
                     matches.push(e);
                 }
             }
@@ -388,8 +388,7 @@ function dashboardSearch() {
             for (const e of entries) {
                 const titleMatch = (e.title || '').toLowerCase().includes(lowerTerm);
                 const contentMatch = (e.content || '').toLowerCase().includes(lowerTerm);
-                const richMatch = (e.richContent || '').toLowerCase().includes(lowerTerm);
-                if (titleMatch || contentMatch || richMatch) {
+                if (titleMatch || contentMatch) {
                     matches.push(e);
                 }
             }

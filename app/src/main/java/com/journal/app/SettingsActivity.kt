@@ -2587,7 +2587,6 @@ class SettingsActivity : AppCompatActivity() {
                         put("time", "")
                         put("title", "")
                         put("content", "")
-                        put("richContent", "")
                         put("categories", JSONArray())
                         put("tags", JSONArray())
                         put("placeName", "")
@@ -2612,7 +2611,6 @@ class SettingsActivity : AppCompatActivity() {
                             "time" -> entry.put("time", parseTimeWithFormat(value, misc))
                             "title" -> entry.put("title", value)
                             "content" -> entry.put("content", value)
-                            "richContent" -> entry.put("richContent", value)
                             "categories" -> entry.put("categories", JSONArray(value.split(separator).map { it.trim() }.filter { it.isNotEmpty() }))
                             "tags" -> {
                                 val tagSep = if (tagsSpaceSep) Regex("\\s+") else Regex(Regex.escape(separator))

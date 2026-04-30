@@ -151,26 +151,6 @@
                     android:layout_marginBottom="10dp"
                     android:visibility="gone" />
 
-                <!-- Rich Content (HTML rendered in WebView) -->
-                <TextView
-                    android:id="@+id/ev_rich_label"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="RICH CONTENT"
-                    android:textColor="@color/login_accent"
-                    android:textSize="11sp"
-                    android:textStyle="bold"
-                    android:letterSpacing="0.08"
-                    android:layout_marginBottom="4dp"
-                    android:visibility="gone" />
-
-                <WebView
-                    android:id="@+id/ev_rich_content"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginBottom="10dp"
-                    android:visibility="gone" />
-
                 <!-- Image Thumbnails -->
                 <TextView
                     android:id="@+id/ev_images_label"

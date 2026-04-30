@@ -42,7 +42,7 @@ summary: "Complete functional requirements for all feature areas — authenticat
 - ~35 CRUD methods for all tables
 
 ### Schema
-- **entries**: id, date (YYYY-MM-DD), time (HH:MM), title, content (plain text), richContent (HTML), categories (JSON array), tags (JSON array), placeName, locations (JSON array of {lat, lng, address, name?}), weather (JSON {temp, unit, description, code}), pinned (0/1), locked (0/1), dtCreated, dtUpdated
+- **entries**: id, date (YYYY-MM-DD), time (HH:MM), title, content (plain text), categories (JSON array), tags (JSON array), placeName, locations (JSON array of {lat, lng, address, name?}), weather (JSON {temp, unit, description, code}), pinned (0/1), locked (0/1), dtCreated, dtUpdated
 - **images**: id, entryId (FK), name, data (base64), thumb (base64), sortOrder
 - **categories**: name (PK), description
 - **tags**: name (PK), description
@@ -72,9 +72,7 @@ summary: "Complete functional requirements for all feature areas — authenticat
 - Top navbar: Back (←), title, Save, Cancel, Delete (edit only) — no bottom action bar
 - Date: `DatePickerDialog`; Time: `TimePickerDialog`
 - Title: `EditText`
-- Content group box with 2 sub-tabs:
-  - **Content tab**: large plain text editor (minLines 10, maxLines 20)
-  - **Rich Content tab**: HTML preview of current rich content + "Edit Rich Content" button that launches full-screen RichEditorActivity; richContent stored as HTML string
+- Content: large plain text editor (minLines 10, maxLines 20)
 - Categories: checkboxes from managed list + quick-add inline
 - Tags: `AutoCompleteTextView` with chip display + quick-add inline
 - Place name: `EditText`
@@ -94,18 +92,8 @@ summary: "Complete functional requirements for all feature areas — authenticat
 - Multi-select mode: checkbox per entry, batch delete with confirmation
 - Widget filter support: `matchesWidgetFilters()` with date/text/array operators
 
-### Rich Text Editor (RichEditorActivity.kt)
-- Full-screen Quill.js editor in a WebView (`assets/rich_editor.html`)
-- Toolbar: bold, italic, underline, strikethrough, headers (H1/H2/H3), font size (small/normal/large/huge), ordered/bullet lists, text/background color, alignment, links, inline images
-- "Copy Content" button: imports plain text content from the Content tab into the editor
-- Theme-aware: CSS variables set from ThemeManager colors (bg, card, text, accent, border, input)
-- Quill loaded from CDN (`cdn.quilljs.com/1.3.7`)
-- Returns HTML via `ActivityResult` intent extra `richContentHtml`
-- Paste from web pages preserves formatting and inline images (converted to base64 data URLs)
-
 ### Entry Viewer (EntryViewerActivity.kt)
 - Read-only display of all entry fields
-- Rich content rendered in a themed WebView (supports inline images, tables, all HTML formatting)
 - Image thumbnails displayed
 - Action buttons: Lock/Unlock, Pin/Unpin, Edit, Delete, Back
 - Lock/Unlock toggle with confirmation prompt; locked entries disable Edit button
@@ -268,22 +256,21 @@ summary: "Complete functional requirements for all feature areas — authenticat
 
 ## 10. Android Platform
 
-### Activities (all Kotlin — 15 total)
+### Activities (all Kotlin — 14 total)
 1. **LoginActivity** (launcher) — Journal selection, password, biometric
 2. **DashboardActivity** — Native stats/entries/rankings/widgets
 3. **CalendarActivity** — Native monthly calendar with entry dots, day selection
 4. **AboutActivity** — App info, version, links
 5. **SearchActivity** — Native full-text search across all entries
-6. **EntryViewerActivity** — Native entry viewer with font customization, rich content in WebView
+6. **EntryViewerActivity** — Native entry viewer with font customization
 7. **SettingsActivity** — Full native settings (6 tabs: Prefs, Templates, Metadata, Data, Widgets, Dashboard)
 8. **EntryListActivity** — Native entry list with search, filter, sort, pagination, batch delete
 9. **ExplorerActivity** — Native SQL Explorer with table browser, query builder, results, exports
-10. **EntryFormActivity** — Native entry form with rich text (launches RichEditorActivity), images, categories, tags, locations, weather
-11. **RichEditorActivity** — Full-screen Quill.js rich text editor in WebView (headers, font size, lists, colors, inline images)
-12. **ReportsActivity** — Native reports with HTML/PDF/CSV generation
-13. **WidgetEditorActivity** — Native widget editor with tabs, live preview
-14. **CustomViewEditorActivity** — Native custom view editor
-15. **CsvMappingActivity** — Native CSV import column mapping with file picker, test preview (20 random rows), result grid
+10. **EntryFormActivity** — Native entry form with images, categories, tags, locations, weather
+11. **ReportsActivity** — Native reports with HTML/PDF/CSV generation
+12. **WidgetEditorActivity** — Native widget editor with tabs, live preview
+13. **CustomViewEditorActivity** — Native custom view editor
+14. **CsvMappingActivity** — Native CSV import column mapping with file picker, test preview (20 random rows), result grid
 
 ### Services (via ServiceProvider singleton)
 - **ServiceProvider.kt** — Singleton holding all 4 services, initialized in LoginActivity
@@ -297,7 +284,7 @@ summary: "Complete functional requirements for all feature areas — authenticat
 - **ThemeManager.kt** — Runtime theme singleton with 12 theme color maps, view tree recoloring, light/dark status bar
 
 ### Permissions
-- INTERNET — API access (weather, geocoding, CDN)
+- INTERNET — API access (weather, geocoding)
 - ACCESS_FINE_LOCATION + ACCESS_COARSE_LOCATION — GPS for weather/places
 - USE_BIOMETRIC — Fingerprint/face unlock
 - CAMERA — Photo capture for journal entries
@@ -311,6 +298,6 @@ summary: "Complete functional requirements for all feature areas — authenticat
 
 The `/web/` directory contains a standalone SPA that works in browsers (Chrome/Firefox) without Android. It is NOT bundled in the APK. Features:
 - sql.js (SQLite WASM) with IndexedDB persistence and AES-256-GCM encryption via Web Crypto API
-- Quill.js rich text editor, jsPDF for PDF export
+- jsPDF for PDF export
 - Same 12 themes, same features as native app
 - Requires HTTPS or localhost for Web Crypto API

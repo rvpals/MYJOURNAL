@@ -85,7 +85,7 @@ const DB = (() => {
         db.run(`
             CREATE TABLE IF NOT EXISTS entries (
                 id TEXT PRIMARY KEY, date TEXT, time TEXT, title TEXT,
-                content TEXT, richContent TEXT, categories TEXT, tags TEXT,
+                content TEXT, categories TEXT, tags TEXT,
                 placeName TEXT, locations TEXT, weather TEXT,
                 pinned INTEGER DEFAULT 0, locked INTEGER DEFAULT 0,
                 dtCreated TEXT, dtUpdated TEXT, people TEXT
@@ -138,7 +138,7 @@ const DB = (() => {
     function entryToParams(entry) {
         return [
             entry.id, entry.date || null, entry.time || null,
-            entry.title || '', entry.content || '', entry.richContent || '',
+            entry.title || '', entry.content || '',
             JSON.stringify(entry.categories || []), JSON.stringify(entry.tags || []),
             entry.placeName || '', JSON.stringify(entry.locations || []),
             entry.weather ? JSON.stringify(entry.weather) : null,
@@ -154,7 +154,6 @@ const DB = (() => {
         return {
             id: obj.id, date: obj.date || '', time: obj.time || '',
             title: obj.title || '', content: obj.content || '',
-            richContent: obj.richContent || '',
             categories: safeJsonParse(obj.categories, []),
             tags: safeJsonParse(obj.tags, []),
             placeName: obj.placeName || '',
@@ -248,7 +247,7 @@ const DB = (() => {
         const db = new SQL.Database();
         db.run('PRAGMA foreign_keys = ON');
         createSchema(db);
-        const entrySQL = `INSERT INTO entries VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`;
+        const entrySQL = `INSERT INTO entries VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`;
         const imgSQL = `INSERT INTO images VALUES (?,?,?,?,?,?)`;
         for (const entry of (data.entries || [])) {
             db.run(entrySQL, entryToParams(entry));
@@ -366,7 +365,7 @@ const DB = (() => {
         sqlDB = new SQL.Database();
         sqlDB.run('PRAGMA foreign_keys = ON');
         createSchema(sqlDB);
-        const entrySQL = `INSERT INTO entries VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`;
+        const entrySQL = `INSERT INTO entries VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`;
         const imgSQL = `INSERT INTO images VALUES (?,?,?,?,?,?)`;
         for (const entry of (data.entries || [])) {
             sqlDB.run(entrySQL, entryToParams(entry));
@@ -482,7 +481,7 @@ const DB = (() => {
             return Promise.resolve();
         }
         if (!sqlDB) return;
-        const sql = `INSERT INTO entries VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`;
+        const sql = `INSERT INTO entries VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`;
         sqlDB.run(sql, entryToParams(entry));
         if (entry.images && entry.images.length > 0) {
             const imgSQL = `INSERT INTO images VALUES (?,?,?,?,?,?)`;
@@ -501,7 +500,7 @@ const DB = (() => {
         if (!sqlDB) return;
         const fieldMap = {
             date: 'date', time: 'time', title: 'title', content: 'content',
-            richContent: 'richContent', placeName: 'placeName',
+            placeName: 'placeName',
             pinned: 'pinned', locked: 'locked', dtCreated: 'dtCreated', dtUpdated: 'dtUpdated'
         };
         const jsonFields = { categories: true, tags: true, locations: true, people: true };

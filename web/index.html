@@ -6,7 +6,6 @@
     <title>My Journal</title>
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="css/style-android.css">
-    <link rel="stylesheet" href="https://cdn.quilljs.com/1.3.7/quill.snow.css">
 
 </head>
 <body>
@@ -208,11 +207,6 @@
                     <div class="form-group">
                         <label for="entry-content">Content</label>
                         <textarea id="entry-content" rows="6" placeholder="Write your journal entry..."></textarea>
-                    </div>
-
-                    <div class="form-group">
-                        <label>Rich Content (optional) <button type="button" class="btn-copy-content" onclick="copyContentToRichContent()" title="Copy from Content above">Copy</button></label>
-                        <div id="rich-content-editor"></div>
                     </div>
 
                     <div class="form-group">
@@ -437,7 +431,6 @@
                             <code>&lt;%DATE%&gt;</code>
                             <code>&lt;%TIME%&gt;</code>
                             <code>&lt;%CONTENT%&gt;</code>
-                            <code>&lt;%RICH_CONTENT%&gt;</code>
                             <code>&lt;%CATEGORIES%&gt;</code>
                             <code>&lt;%TAGS%&gt;</code>
                             <code>&lt;%PLACES%&gt;</code>
@@ -992,7 +985,6 @@
                         <code>&lt;%DATE%&gt;</code>
                         <code>&lt;%TIME%&gt;</code>
                         <code>&lt;%CONTENT%&gt;</code>
-                        <code>&lt;%RICH_CONTENT%&gt;</code>
                         <code>&lt;%CATEGORIES%&gt;</code>
                         <code>&lt;%TAGS%&gt;</code>
                         <code>&lt;%PLACES%&gt;</code>
@@ -1199,8 +1191,6 @@
         </div>
     </div>
 
-    <!-- Quill JS -->
-    <script src="https://cdn.quilljs.com/1.3.7/quill.min.js"></script>
     <!-- jsPDF for PDF export -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
