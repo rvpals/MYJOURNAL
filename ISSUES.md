@@ -17,7 +17,8 @@ summary: "Known bugs, platform limitations, fixed issues, and architectural note
 
 - **Dashboard not refreshing after data changes** — `onResume()` only checked for theme changes. Added `DashboardActivity.needsRefresh` static flag, set after erase all entries and CSV import completion. CSV import now shows AlertDialog with count; OK closes Settings and triggers dashboard rebuild.
 - **People feature removed** — Deleted people table, people column from entries, all people CRUD functions, people UI in form/viewer/settings/dashboard/CSV/widgets. Simplifies schema and reduces form complexity.
-- **Rich content / Quill.js editor removed** — Deleted RichEditorActivity, rich_editor.html asset, activity_rich_editor.xml layout, richContent column from entries, and all related code across EntryForm, EntryViewer, Search, Reports, CsvMapping, Settings, and web SPA. App goes from 15 to 14 activities, 22 to 21 Kotlin files. Content editing is now plain text only.
+- **Rich content / Quill.js editor removed** — Deleted RichEditorActivity, rich_editor.html asset, activity_rich_editor.xml layout, richContent column from entries, and all related code across EntryForm, EntryViewer, Search, Reports, CsvMapping, Settings. App goes from 15 to 14 activities, 22 to 21 Kotlin files. Content editing is now plain text only.
+- **Web SPA directory removed** — Deleted entire `/web/` directory (24 files: HTML, CSS, JS, WASM, templates). The browser-only fallback SPA is no longer part of the project. All references removed from documentation.
 
 ### 2026-04-29
 
@@ -71,7 +72,6 @@ summary: "Known bugs, platform limitations, fixed issues, and architectural note
 - **DashboardDataBuilder**: Computes dashboard JSON natively from DatabaseService.
 - **Login flow**: LoginActivity -> ServiceProvider.init() -> DB open -> ThemeManager.init() -> DashboardDataBuilder.build() -> DashboardActivity.
 - **21 Kotlin source files**: 14 activities + 4 services + ServiceProvider + DashboardDataBuilder + ThemeManager.
-- **Web SPA**: `/web/` directory preserved as standalone browser-only fallback, NOT bundled in APK.
 
 ### UI Patterns (2026-04-29)
 
@@ -110,4 +110,3 @@ Weather/streak, Stats, Quick actions, Widgets, Pinned entries, Recent entries, T
 - No cloud sync — all data is local-only
 - Camera capture stores full-resolution images (no automatic compression setting)
 - No undo/redo in native entry form beyond OS default
-- Web fallback requires HTTPS or localhost for Web Crypto API

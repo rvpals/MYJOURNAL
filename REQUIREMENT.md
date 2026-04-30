@@ -294,10 +294,3 @@ summary: "Complete functional requirements for all feature areas — authenticat
 - `ServiceProvider.saveFileToDownloads(filename, base64Data, mimeType)` — scoped storage via MediaStore (API 29+)
 - Supported formats: PDF, CSV, SQLite (.db), JSON, HTML, iCalendar (.ics)
 
-## 12. Browser-Only Web Fallback
-
-The `/web/` directory contains a standalone SPA that works in browsers (Chrome/Firefox) without Android. It is NOT bundled in the APK. Features:
-- sql.js (SQLite WASM) with IndexedDB persistence and AES-256-GCM encryption via Web Crypto API
-- jsPDF for PDF export
-- Same 12 themes, same features as native app
-- Requires HTTPS or localhost for Web Crypto API

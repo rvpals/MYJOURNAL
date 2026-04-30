@@ -51,7 +51,3 @@ Output: `app/build/outputs/apk/debug/app-debug.apk`
 - **PDF** — Native Android PdfDocument API
 - **Weather** — Open-Meteo API (free, no key required)
 - **Geocoding** — Photon / Nominatim / Google (configurable)
-
-## Browser Fallback
-
-The `/web/` directory contains a standalone browser-only SPA (plain HTML/CSS/JS, sql.js WASM) that is NOT bundled in the Android APK.

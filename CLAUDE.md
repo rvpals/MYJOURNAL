@@ -8,7 +8,7 @@ summary: "Project architecture reference — directory structure, tech stack, da
 
 ## Overview
 
-Fully native Android encrypted journal app. All 14 screens are native Kotlin activities. Services (crypto, database, bootstrap, weather) are managed by a `ServiceProvider` singleton. The web layer (`/web/` directory) is a standalone browser-only fallback SPA — it is NOT bundled in the Android APK. All data stored locally in AES-256-GCM encrypted SQLCipher database.
+Fully native Android encrypted journal app. All 14 screens are native Kotlin activities. Services (crypto, database, bootstrap, weather) are managed by a `ServiceProvider` singleton. All data stored locally in AES-256-GCM encrypted SQLCipher database.
 
 **App Name:** My Journal | **Version:** 1.5.0 | **Package:** com.journal.app | **Min SDK:** 24 | **Target SDK:** 34
 
@@ -47,32 +47,6 @@ MYJOURNAL/
 │   │   │   ├── layout/            # 14 activity layouts + 2 spinner item layouts
 │   │   │   ├── values/            # colors.xml, strings.xml, styles.xml, app_info.xml
 │   │   │   └── xml/file_paths.xml # FileProvider for camera
-├── web/                            # Browser-only SPA fallback (NOT bundled in APK)
-│   ├── index.html                  # Single-page app, all views as hidden divs
-│   ├── app_info.xml                # App metadata & changelog
-│   ├── css/
-│   │   ├── style.css               # 12 themes via CSS variables
-│   │   └── style-android.css       # Android-only overrides (unused since WebView removed)
-│   ├── js/
-│   │   ├── app.js          # Main controller: login, navigation, theme
-│   │   ├── app_info.js     # Parses app_info.xml
-│   │   ├── bootstrap.js    # IndexedDB-backed key-value store
-│   │   ├── components.js   # Reusable UI: ResultGrid, RankedPanel, RecordViewer, CollapsiblePanel
-│   │   ├── crypto.js       # PBKDF2 + AES-256-GCM via Web Crypto API
-│   │   ├── db.js           # sql.js SQLite abstraction, IndexedDB persistence
-│   │   ├── entries.js      # Entry form, list view, search, filter, pagination
-│   │   ├── dashboard.js    # Stats aggregation, ranked lists, widgets
-│   │   ├── views.js        # Custom saved views
-│   │   ├── explorer.js     # SQL Explorer
-│   │   ├── calendar.js     # Calendar View
-│   │   ├── reports.js      # Report generation
-│   │   ├── settings.js     # Settings UI
-│   │   ├── weather.js      # Open-Meteo API
-│   │   └── widgets.js      # Dashboard widgets
-│   ├── lib/
-│   │   ├── sql-wasm.js         # sql.js library
-│   │   └── sql-wasm-base64.js  # Base64-encoded WASM fallback for file:// protocol
-│   └── templates/              # Sample report templates (HTML)
 ├── build.gradle                # Root Gradle config (AGP 8.3.0, Kotlin 1.9.22)
 ├── settings.gradle
 ├── gradle.properties
@@ -94,7 +68,6 @@ Output: `app/build/outputs/apk/debug/app-debug.apk`
 | Layer | Technology | Notes |
 |-------|-----------|-------|
 | Android | Kotlin, SDK 34 | Fully native activities + AndroidX BiometricPrompt |
-| Web (browser only) | Plain HTML/CSS/JS | Standalone SPA, not bundled in APK |
 | Database | SQLCipher 4.5.6 | Encrypted SQLite via `net.zetetic:sqlcipher-android` |
 | Encryption | AES-256-GCM | PBKDF2-SHA256, 100k iterations via javax.crypto |
 | PDF (Android) | PdfDocument | Native Android PDF generation |

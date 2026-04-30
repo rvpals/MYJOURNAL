@@ -9,7 +9,6 @@ summary: "Remaining backlog, test checklist, version-by-version completion histo
 ## Remaining TODO
 
 - [ ] Re-test all features after WebView removal (all native screens)
-- [ ] Web app: HTTPS requirement for Web Crypto API (browser-only fallback)
 - [ ] Entry image thumbnails could be optimized (currently full base64 stored)
 - [ ] Consider lazy loading for large journal databases (1000+ entries)
 - [ ] Password strength indicator on journal creation
@@ -226,12 +225,6 @@ summary: "Remaining backlog, test checklist, version-by-version completion histo
 - [ ] **DB settings** — getSettings/setSettings round-trip correctly
 - [ ] **DB export/stats/raw SQL** — exportJSON, getDBStats, execRawSQL
 
-### Browser-Only Fallback (web/ directory)
-
-- [ ] **Web browser** — Full functionality in Chrome/Firefox (localhost or HTTPS)
-- [ ] **File downloads** — PDF, CSV, SQLite, JSON, iCalendar exports
-- [ ] **Theme consistency** — All 12 themes render correctly
-
 ### Prior Sessions (pre-UI overhaul, tested OK)
 
 - [x] Core CRUD operations
@@ -250,7 +243,6 @@ summary: "Remaining backlog, test checklist, version-by-version completion histo
 ### Core (v0.9.0 – v1.0.0)
 - [x] Multi-journal support with per-journal passwords
 - [x] AES-256-GCM encryption with PBKDF2 key derivation (100k iterations)
-- [x] sql.js (SQLite WASM) database with IndexedDB persistence
 - [x] Journal entries: create, edit, delete, view
 - [x] Image attachments: gallery picker, camera capture, base64 storage, lightbox viewer
 - [x] Categories (single-select) and tags (multi-select) per entry
@@ -299,7 +291,6 @@ summary: "Remaining backlog, test checklist, version-by-version completion histo
 - [x] Dashboard search with live results
 - [x] Settings tabs (Preferences, Templates, Edit Metadata, Data Management)
 - [x] Android navbar redesign: icon-only, two-row layout
-- [x] Separated CSS: style.css (web) + style-android.css (Android-only)
 - [x] Category and tag colors: color picker swatches, "Use colors" toggles
 - [x] Metadata export/import (JSON — categories, tags, icons, settings, templates, views)
 - [x] SQL Explorer: CSV export, raw SQL for any table, record detail overlay, custom view loader
@@ -310,10 +301,6 @@ summary: "Remaining backlog, test checklist, version-by-version completion histo
 - [x] Native DashboardActivity: stats grid, pinned/recent entries, ranked panels
 - [x] Styled Android drawables: buttons (primary, secondary, accent, delete, biometric), inputs, cards, spinners, search/stat/entry/ranked backgrounds
 - [x] Android layout XMLs: login screen, dashboard, spinner items
-- [x] Web crypto.js: sync hooks for native SharedPreferences
-- [x] Web dashboard.js: getDashboardDataJSON() with streak for native dashboard
-- [x] Web db.js: journal list sync updates
-- [x] Reusable components.js: ResultGrid, RankedPanel, RecordViewer, CollapsiblePanel
 - [x] Dashboard: refactored ranked panels, whole-word search toggle, ResultGrid
 - [x] Explorer: replaced inline results with ResultGrid, RecordViewer
 - [x] Simplified index.html: component container divs
@@ -402,7 +389,6 @@ summary: "Remaining backlog, test checklist, version-by-version completion histo
 - [x] EntryFormActivity.kt (~1400 lines) — Native entry form
 - [x] CsvMappingActivity.kt — CSV import mapping
 - [x] **Removed MainActivity.kt** (1,267 lines) — WebView eliminated
-- [x] **Removed app/src/main/assets/web/** — Web assets no longer bundled
 - [x] **Created ServiceProvider.kt** — Singleton replacing `MainActivity.instance`
 - [x] **Created DashboardDataBuilder.kt** — Native dashboard data computation
 - [x] 14 activities, 4 services, ServiceProvider, DashboardDataBuilder — fully native
@@ -444,11 +430,13 @@ summary: "Remaining backlog, test checklist, version-by-version completion histo
 - [x] CsvMappingActivity: Result grid — horizontally scrollable table with mapped column headers, alternating row colors, "Test Preview — N of M rows" label
 - [x] CsvMappingActivity: Bottom bar redesigned — 3 buttons (Select CSV | Test | Save Mapping)
 
-### v1.5.0+ (2026-04-30, people removal + dashboard refresh)
+### v1.5.0+ (2026-04-30, cleanup: people, rich content, web SPA removal)
 - [x] Removed people feature entirely: people table, people column from entries, people CRUD in DatabaseService, people section in EntryFormActivity/SettingsActivity/EntryViewerActivity, people ranked panel in Dashboard, people from CSV import/export, people from widget/view filter fields
 - [x] Dashboard auto-refresh: `DashboardActivity.needsRefresh` flag checked in `onResume()`
 - [x] Erase all entries sets refresh flag so dashboard updates on return
 - [x] CSV import completion now shows AlertDialog with import count; OK closes Settings and refreshes dashboard
+- [x] Removed rich content / Quill.js editor: RichEditorActivity, rich_editor.html, richContent column, all related code (15→14 activities, 22→21 Kotlin files)
+- [x] Removed entire `/web/` directory (24 files) — browser-only SPA fallback no longer part of project
 
 ## Kotlin Migration (complete)
 
