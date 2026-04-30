@@ -12,15 +12,7 @@ import android.graphics.Typeface
 import android.graphics.drawable.GradientDrawable
 import android.net.Uri
 import android.os.Bundle
-import android.text.Editable
-import android.text.Html
 import android.text.InputType
-import android.text.Spannable
-import android.text.SpannableStringBuilder
-import android.text.TextWatcher
-import android.text.style.StyleSpan
-import android.text.style.StrikethroughSpan
-import android.text.style.UnderlineSpan
 import android.util.Base64
 import android.util.TypedValue
 import android.view.Gravity
@@ -70,12 +62,10 @@ class EntryFormActivity : AppCompatActivity() {
     private lateinit var timeInput: EditText
     private lateinit var titleInput: EditText
     private lateinit var contentInput: EditText
-    private lateinit var richContentInput: EditText
 
     // Data
     private var selectedCategories = mutableSetOf<String>()
     private var currentTags = mutableListOf<String>()
-    private var currentPeople = mutableListOf<JSONObject>()
     private var currentLocations = mutableListOf<JSONObject>()
     private var currentImages = mutableListOf<JSONObject>()
     private var currentWeather: JSONObject? = null
@@ -91,18 +81,19 @@ class EntryFormActivity : AppCompatActivity() {
     private var allCategories = listOf<String>()
     private var allCategoriesWithDesc = listOf<JSONObject>()
     private var allTags = listOf<String>()
-    private var allPeople = listOf<JSONObject>()
     private var allPlaceNames = listOf<String>()
     private var tagDescriptions = mutableMapOf<String, String>()
 
-    // Rich text formatting toolbar state
-    private var isBold = false
-    private var isItalic = false
-    private var isUnderline = false
-    private var isStrikethrough = false
-
     private var activeContentTab = "content"
     private var contentSubTabContainer: LinearLayout? = null
+
+    private val richEditorLauncher = registerForActivityResult(
+        ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        if (result.resultCode == RESULT_OK) {
+            richContentHtml = result.data?.getStringExtra("richContentHtml") ?: ""
+        }
+    }
 
     private val imagePicker = registerForActivityResult(ActivityResultContracts.GetMultipleContents()) { uris ->
         for (uri in uris) processImageUri(uri)
@@ -196,10 +187,6 @@ class EntryFormActivity : AppCompatActivity() {
             for (key in tdJson.keys()) tagDescriptions[key] = tdJson.optString(key, "")
         } catch (_: Exception) {}
         try {
-            val pJson = JSONArray(db.getPeople())
-            allPeople = (0 until pJson.length()).map { pJson.getJSONObject(it) }
-        } catch (_: Exception) {}
-        try {
             val pnJson = JSONArray(db.getAllPlaceNames())
             allPlaceNames = (0 until pnJson.length()).map { pnJson.getString(it) }
         } catch (_: Exception) {}
@@ -218,10 +205,6 @@ class EntryFormActivity : AppCompatActivity() {
         // Tags
         val tags = entry.optJSONArray("tags") ?: JSONArray()
         currentTags = (0 until tags.length()).map { tags.getString(it) }.toMutableList()
-
-        // People
-        val people = entry.optJSONArray("people") ?: JSONArray()
-        currentPeople = (0 until people.length()).mapNotNull { people.optJSONObject(it) }.toMutableList()
 
         // Locations
         val locs = entry.optJSONArray("locations") ?: JSONArray()
@@ -288,15 +271,11 @@ class EntryFormActivity : AppCompatActivity() {
     // ========== Main Tab ==========
 
     private fun buildMainTab() {
-        // Save current values before rebuilding
         if (::titleInput.isInitialized) {
             titleValue = titleInput.text.toString()
         }
         if (::contentInput.isInitialized && activeContentTab == "content") {
             contentValue = contentInput.text.toString()
-        }
-        if (::richContentInput.isInitialized && activeContentTab == "rich") {
-            richContentHtml = Html.toHtml(richContentInput.text as Spannable, Html.TO_HTML_PARAGRAPH_LINES_CONSECUTIVE)
         }
 
         addSectionHeader("Main")
@@ -366,12 +345,8 @@ class EntryFormActivity : AppCompatActivity() {
     }
 
     private fun buildContentGroupBox() {
-        // Save current content values from inputs before rebuilding
         if (::contentInput.isInitialized && activeContentTab == "content") {
             contentValue = contentInput.text.toString()
-        }
-        if (::richContentInput.isInitialized && activeContentTab == "rich") {
-            richContentHtml = Html.toHtml(richContentInput.text as Spannable, Html.TO_HTML_PARAGRAPH_LINES_CONSECUTIVE)
         }
 
         val groupBox = LinearLayout(this).apply {
@@ -441,9 +416,6 @@ class EntryFormActivity : AppCompatActivity() {
             if (::contentInput.isInitialized && activeContentTab == "content") {
                 contentValue = contentInput.text.toString()
             }
-            if (::richContentInput.isInitialized && activeContentTab == "rich") {
-                richContentHtml = Html.toHtml(richContentInput.text as Spannable, Html.TO_HTML_PARAGRAPH_LINES_CONSECUTIVE)
-            }
             activeContentTab = tab
             styleContentTabs()
             subContainer.removeAllViews()
@@ -489,119 +461,42 @@ class EntryFormActivity : AppCompatActivity() {
     }
 
     private fun buildRichContentSubTab(container: LinearLayout) {
-        buildRichTextToolbar(container)
-
-        richContentInput = EditText(this).apply {
-            hint = "Type or paste rich content here..."
+        val hasContent = richContentHtml.isNotEmpty() || originalRichContent.isNotEmpty()
+        val preview = TextView(this).apply {
+            if (hasContent) {
+                val html = richContentHtml.ifEmpty { originalRichContent }
+                text = android.text.Html.fromHtml(html, android.text.Html.FROM_HTML_MODE_COMPACT)
+                setTextColor(ThemeManager.color(C.TEXT))
+            } else {
+                text = "No rich content yet. Tap Edit to open the rich text editor."
+                setTextColor(ThemeManager.color(C.TEXT_SECONDARY))
+            }
             textSize = 14f
-            minLines = 8
-            maxLines = 16
-            setTextColor(ThemeManager.color(C.TEXT))
-            setHintTextColor(ThemeManager.color(C.TEXT_SECONDARY))
+            minLines = 4
+            maxLines = 12
             background = ContextCompat.getDrawable(this@EntryFormActivity, R.drawable.input_bg)
             setPadding(dp(12), dp(10), dp(12), dp(10))
             layoutParams = linParams().apply { bottomMargin = dp(8) }
-            inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_FLAG_MULTI_LINE
-            gravity = Gravity.TOP
         }
-        if (richContentHtml.isNotEmpty()) {
-            richContentInput.setText(Html.fromHtml(richContentHtml, Html.FROM_HTML_MODE_COMPACT))
-        } else if (originalRichContent.isNotEmpty()) {
-            richContentInput.setText(Html.fromHtml(originalRichContent, Html.FROM_HTML_MODE_COMPACT))
-            originalRichContent = ""
-        }
-        container.addView(richContentInput)
+        container.addView(preview)
 
-        container.addView(makeSecondaryButton("Copy Content → Rich Content") {
-            val text = if (::contentInput.isInitialized) contentInput.text.toString() else contentValue
-            if (text.isNotEmpty()) {
-                richContentInput.setText(text)
-            }
+        container.addView(makeAccentButton("Edit Rich Content") {
+            launchRichEditor()
         }.apply {
-            layoutParams = linParams()
+            layoutParams = linParams().apply { bottomMargin = dp(4) }
         })
     }
 
-    private fun buildRichTextToolbar(container: LinearLayout) {
-        val toolbar = LinearLayout(this).apply {
-            orientation = LinearLayout.HORIZONTAL
-            gravity = Gravity.CENTER_VERTICAL
-            setPadding(dp(4), dp(4), dp(4), dp(4))
-            background = ContextCompat.getDrawable(this@EntryFormActivity, R.drawable.input_bg)
-            layoutParams = linParams().apply { bottomMargin = dp(2) }
+    private fun launchRichEditor() {
+        if (::contentInput.isInitialized && activeContentTab == "content") {
+            contentValue = contentInput.text.toString()
         }
-
-        fun fmtBtn(label: String, onClick: () -> Unit): Button {
-            return Button(this).apply {
-                text = label
-                textSize = 13f
-                isAllCaps = false
-                setTextColor(ThemeManager.color(C.TEXT))
-                setBackgroundColor(Color.TRANSPARENT)
-                layoutParams = LinearLayout.LayoutParams(dp(38), dp(34))
-                setPadding(0, 0, 0, 0)
-                setOnClickListener { onClick() }
-            }
-        }
-
-        toolbar.addView(fmtBtn("B") { toggleFormat("bold") }.apply {
-            setTypeface(null, Typeface.BOLD)
-        })
-        toolbar.addView(fmtBtn("I") { toggleFormat("italic") }.apply {
-            setTypeface(null, Typeface.ITALIC)
-        })
-        toolbar.addView(fmtBtn("U") { toggleFormat("underline") })
-        toolbar.addView(fmtBtn("S") { toggleFormat("strike") })
-
-        container.addView(toolbar)
-    }
-
-    private fun toggleFormat(format: String) {
-        if (!::richContentInput.isInitialized) return
-        val start = richContentInput.selectionStart
-        val end = richContentInput.selectionEnd
-        if (start < 0) return
-
-        val spannable = richContentInput.text as? Spannable ?: return
-
-        if (start == end) return
-
-        when (format) {
-            "bold" -> {
-                val existing = spannable.getSpans(start, end, StyleSpan::class.java)
-                    .filter { it.style == Typeface.BOLD }
-                if (existing.isNotEmpty()) {
-                    existing.forEach { spannable.removeSpan(it) }
-                } else {
-                    spannable.setSpan(StyleSpan(Typeface.BOLD), start, end, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
-                }
-            }
-            "italic" -> {
-                val existing = spannable.getSpans(start, end, StyleSpan::class.java)
-                    .filter { it.style == Typeface.ITALIC }
-                if (existing.isNotEmpty()) {
-                    existing.forEach { spannable.removeSpan(it) }
-                } else {
-                    spannable.setSpan(StyleSpan(Typeface.ITALIC), start, end, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
-                }
-            }
-            "underline" -> {
-                val existing = spannable.getSpans(start, end, UnderlineSpan::class.java)
-                if (existing.isNotEmpty()) {
-                    existing.forEach { spannable.removeSpan(it) }
-                } else {
-                    spannable.setSpan(UnderlineSpan(), start, end, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
-                }
-            }
-            "strike" -> {
-                val existing = spannable.getSpans(start, end, StrikethroughSpan::class.java)
-                if (existing.isNotEmpty()) {
-                    existing.forEach { spannable.removeSpan(it) }
-                } else {
-                    spannable.setSpan(StrikethroughSpan(), start, end, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
-                }
-            }
-        }
+        val html = richContentHtml.ifEmpty { originalRichContent }
+        RichEditorActivity.initialHtml = html
+        RichEditorActivity.plainContent = contentValue
+        originalRichContent = ""
+        val intent = Intent(this, RichEditorActivity::class.java)
+        richEditorLauncher.launch(intent)
     }
 
     // ========== Images ==========
@@ -724,12 +619,6 @@ class EntryFormActivity : AppCompatActivity() {
         // Tags
         addSectionHeader("Tags")
         buildTagSection()
-
-        addSpacer()
-
-        // People
-        addSectionHeader("People")
-        buildPeopleSection()
 
         addSpacer()
 
@@ -900,137 +789,6 @@ class EntryFormActivity : AppCompatActivity() {
             layoutParams = LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, dp(36))
         })
         contentContainer.addView(tagRow)
-    }
-
-    // ========== People ==========
-
-    private fun buildPeopleSection() {
-        // Selected people chips
-        if (currentPeople.isNotEmpty()) {
-            val chipFlow = LinearLayout(this).apply {
-                orientation = LinearLayout.HORIZONTAL
-                layoutParams = linParams().apply { bottomMargin = dp(6) }
-            }
-            val chipScroll = HorizontalScrollView(this).apply { layoutParams = linParams() }
-            chipScroll.addView(chipFlow)
-
-            for (person in currentPeople) {
-                val fullName = "${person.optString("firstName")} ${person.optString("lastName")}".trim()
-                val chip = LinearLayout(this).apply {
-                    orientation = LinearLayout.HORIZONTAL
-                    gravity = Gravity.CENTER_VERTICAL
-                    setPadding(dp(8), dp(4), dp(4), dp(4))
-                    val bg = GradientDrawable().apply {
-                        cornerRadius = dp(12).toFloat()
-                        setColor(ThemeManager.color(C.INPUT_BG))
-                    }
-                    background = bg
-                    layoutParams = LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT).apply { marginEnd = dp(4) }
-                }
-                chip.addView(TextView(this).apply {
-                    text = "👤 $fullName"
-                    setTextColor(ThemeManager.color(C.TEXT))
-                    textSize = 13f
-                })
-                val removePerson = person
-                chip.addView(Button(this).apply {
-                    text = "✕"
-                    textSize = 10f
-                    setTextColor(ThemeManager.color(C.ERROR))
-                    setBackgroundColor(Color.TRANSPARENT)
-                    layoutParams = LinearLayout.LayoutParams(dp(24), dp(24)).apply { marginStart = dp(2) }
-                    setPadding(0, 0, 0, 0)
-                    setOnClickListener {
-                        currentPeople.removeAll { it.optString("firstName") == removePerson.optString("firstName") && it.optString("lastName") == removePerson.optString("lastName") }
-                        showTab("misc")
-                    }
-                })
-                chipFlow.addView(chip)
-            }
-            contentContainer.addView(chipScroll)
-        }
-
-        // People checkbox list
-        for (p in allPeople) {
-            val first = p.optString("firstName", "")
-            val last = p.optString("lastName", "")
-            val fullName = "$first $last".trim()
-            val isSelected = currentPeople.any { it.optString("firstName") == first && it.optString("lastName") == last }
-
-            val cb = CheckBox(this).apply {
-                text = fullName
-                isChecked = isSelected
-                setTextColor(ThemeManager.color(C.TEXT))
-                textSize = 14f
-                buttonTintList = ThemeManager.colorStateList(C.ACCENT)
-                setOnCheckedChangeListener { _, checked ->
-                    if (checked) {
-                        if (!currentPeople.any { it.optString("firstName") == first && it.optString("lastName") == last }) {
-                            currentPeople.add(JSONObject().apply { put("firstName", first); put("lastName", last) })
-                        }
-                    } else {
-                        currentPeople.removeAll { it.optString("firstName") == first && it.optString("lastName") == last }
-                    }
-                }
-            }
-            contentContainer.addView(cb)
-        }
-
-        if (allPeople.isEmpty()) {
-            contentContainer.addView(TextView(this).apply {
-                text = "No people yet. Add people in Settings > Edit Metadata."
-                setTextColor(ThemeManager.color(C.TEXT_SECONDARY))
-                textSize = 12f
-                setPadding(dp(4), dp(4), dp(4), dp(4))
-            })
-        }
-
-        // Quick add person
-        addSpacer()
-        val qpRow = LinearLayout(this).apply {
-            orientation = LinearLayout.HORIZONTAL
-            gravity = Gravity.CENTER_VERTICAL
-            layoutParams = linParams().apply { bottomMargin = dp(4) }
-        }
-        val firstInput = EditText(this).apply {
-            hint = "First"
-            textSize = 13f
-            setTextColor(ThemeManager.color(C.TEXT))
-            setHintTextColor(ThemeManager.color(C.TEXT_SECONDARY))
-            background = ContextCompat.getDrawable(this@EntryFormActivity, R.drawable.input_bg)
-            setPadding(dp(8), dp(6), dp(8), dp(6))
-            layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f).apply { marginEnd = dp(4) }
-            isSingleLine = true
-        }
-        val lastInput = EditText(this).apply {
-            hint = "Last"
-            textSize = 13f
-            setTextColor(ThemeManager.color(C.TEXT))
-            setHintTextColor(ThemeManager.color(C.TEXT_SECONDARY))
-            background = ContextCompat.getDrawable(this@EntryFormActivity, R.drawable.input_bg)
-            setPadding(dp(8), dp(6), dp(8), dp(6))
-            layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f).apply { marginEnd = dp(4) }
-            isSingleLine = true
-        }
-        qpRow.addView(firstInput)
-        qpRow.addView(lastInput)
-        qpRow.addView(makeAccentButton("+ Person") {
-            val f = firstInput.text.toString().trim()
-            val l = lastInput.text.toString().trim()
-            if (f.isNotEmpty() && l.isNotEmpty()) {
-                if (!allPeople.any { it.optString("firstName") == f && it.optString("lastName") == l }) {
-                    db.addPerson(f, l, "")
-                    loadMetadata()
-                }
-                if (!currentPeople.any { it.optString("firstName") == f && it.optString("lastName") == l }) {
-                    currentPeople.add(JSONObject().apply { put("firstName", f); put("lastName", l) })
-                }
-                showTab("misc")
-            }
-        }.apply {
-            layoutParams = LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, dp(36))
-        })
-        contentContainer.addView(qpRow)
     }
 
     // ========== Locations ==========
@@ -1449,9 +1207,6 @@ class EntryFormActivity : AppCompatActivity() {
         if (::contentInput.isInitialized && activeContentTab == "content") {
             contentValue = contentInput.text.toString()
         }
-        if (::richContentInput.isInitialized && activeContentTab == "rich") {
-            richContentHtml = Html.toHtml(richContentInput.text as Spannable, Html.TO_HTML_PARAGRAPH_LINES_CONSECUTIVE)
-        }
 
         if (titleValue.isEmpty()) {
             Toast.makeText(this, "Please enter a title.", Toast.LENGTH_SHORT).show()
@@ -1473,9 +1228,6 @@ class EntryFormActivity : AppCompatActivity() {
         val locsArr = JSONArray()
         for (loc in currentLocations) locsArr.put(loc)
 
-        val peopleArr = JSONArray()
-        for (p in currentPeople) peopleArr.put(p)
-
         if (isNew) {
             val entry = JSONObject().apply {
                 put("id", generateId())
@@ -1486,7 +1238,6 @@ class EntryFormActivity : AppCompatActivity() {
                 put("richContent", richContentHtml)
                 put("categories", JSONArray(selectedCategories.toList()))
                 put("tags", JSONArray(currentTags))
-                put("people", peopleArr)
                 put("placeName", placeName)
                 put("locations", locsArr)
                 put("weather", currentWeather ?: JSONObject.NULL)
@@ -1504,7 +1255,6 @@ class EntryFormActivity : AppCompatActivity() {
                 put("richContent", richContentHtml)
                 put("categories", JSONArray(selectedCategories.toList()))
                 put("tags", JSONArray(currentTags))
-                put("people", peopleArr)
                 put("placeName", placeName)
                 put("locations", locsArr)
                 put("weather", currentWeather ?: JSONObject.NULL)

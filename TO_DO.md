@@ -31,17 +31,18 @@ summary: "Remaining backlog, test checklist, version-by-version completion histo
 ### Native Android Activities (14 activities, no WebView)
 
 - [ ] **LoginActivity → DashboardActivity** — Login completes, ServiceProvider initialized, DB opened, DashboardDataBuilder computes data, DashboardActivity launches directly (no WebView)
-- [ ] **DashboardActivity** — Stats grid (total, week, month, year), pinned entries, recent entries, ranked panels (tags, categories, places, people), widgets with colored backgrounds
+- [ ] **DashboardActivity** — Stats grid (total, week, month, year), pinned entries, recent entries, ranked panels (tags, categories, places), widgets with colored backgrounds
 - [ ] **AboutActivity** — App info display, clickable email/URL/Play Store links, changelog entries
 - [ ] **CalendarActivity** — Monthly grid renders correctly, day selection shows entries, today/selected highlighting, prev/next month navigation, Today button, entry rows clickable
 - [ ] **SearchActivity** — Search icon button on dashboard opens native search screen, text input with search/clear, whole-word checkbox, results show title/date/content snippet/metadata, back button returns to dashboard
-- [ ] **EntryViewerActivity** — Font settings applied (reads ev_font_family/ev_font_size from BootstrapService), rich content via Html.fromHtml() + TextView, title bold at 1.3x
-- [ ] **SettingsActivity** — All 6 tabs load and function: Preferences (toggles, font, date/time, theme, wallpaper, weather), Templates (views/entry/report), Metadata (categories/tags/people CRUD with icons/colors), Data (export/import, password change), Widgets (list/editor with filters/functions), Dashboard (component toggle/reorder)
+- [ ] **EntryViewerActivity** — Font settings applied (reads ev_font_family/ev_font_size from BootstrapService), rich content rendered in themed WebView (inline images, tables, all HTML), title bold at 1.3x
+- [ ] **SettingsActivity** — All 6 tabs load and function: Preferences (toggles, font, date/time, theme, wallpaper, weather), Templates (views/entry/report), Metadata (categories/tags CRUD with icons/colors), Data (export/import, password change), Widgets (list/editor with filters/functions), Dashboard (component toggle/reorder)
 - [ ] **Settings tab icons** — All 6 tabs show emoji icons with 3D active/inactive styling
 - [ ] **EntryListActivity** — Search across all fields, category/tag filter spinners, sort by configured field, pagination (10/20/50/100), card view with all entry metadata, select mode with batch delete, navigation to EntryViewerActivity
 - [ ] **ExplorerActivity** — Table browser (click chip shows schema + sample), SQL textarea (raw SQL on any table), condition builder (add/remove rows, field/op/value spinners), field chips (toggle columns), Run Query, results table (clickable rows → record detail dialog), CSV export, iCalendar export, Clear button
-- [ ] **EntryFormActivity** — New entry: date/time pickers, title, content with B/I/U/S formatting toolbar, image add (gallery + camera), save. Edit entry: loads existing data, updates correctly. Categories checkboxes + quick-add, tags autocomplete + chips, people checkboxes + quick-add, place name, location search (Photon/Nominatim) + GPS, weather import, delete button on existing entries
-- [ ] **EntryFormActivity rich text** — Bold/italic/underline/strikethrough toggle, formatting persists after save and reload, Html.fromHtml()/toHtml() round-trip
+- [ ] **EntryFormActivity** — New entry: date/time pickers, title, content, rich content (launches RichEditorActivity), image add (gallery + camera), save. Edit entry: loads existing data, updates correctly. Categories checkboxes + quick-add, tags autocomplete + chips, place name, location search (Photon/Nominatim) + GPS, weather import, delete button on existing entries
+- [ ] **RichEditorActivity** — Quill.js editor loads, toolbar works (bold/italic/underline/strike, headers, font size, lists, colors, align, links, images), "Copy Content" imports plain text, "Done" returns HTML, paste from web preserves formatting and images
+- [ ] **RichEditorActivity theme** — Editor colors match current theme (toolbar bg, editor bg, text color, accent)
 - [ ] **EntryFormActivity images** — Gallery picker adds images with thumbnails, camera capture works, remove button on each image, images saved as base64 with thumb
 - [ ] **EntryFormActivity tabs** — Main/Misc tab switching, all fields accessible, scroll position preserved
 - [ ] **ReportsActivity** — HTML report generation with template, date/category/tag filters, CSV export, PDF export via native PdfDocument, template selection
@@ -56,11 +57,10 @@ summary: "Remaining backlog, test checklist, version-by-version completion histo
 
 ### Entry Form
 
-- [ ] **Rich text editor** — Bold, italic, underline, strikethrough via Spannable toolbar buttons, formatting visible in EditText
+- [ ] **Rich text editor** — "Edit Rich Content" button opens RichEditorActivity, Quill.js toolbar works, paste web content with images, "Done" saves HTML back to entry form
 - [ ] **Image attachments** — Gallery picker via GetMultipleContents, camera capture via TakePicturePreview, thumbnail grid, remove button per image
 - [x] **Categories** — Checkboxes with quick-add (verified 2026-04-03)
 - [x] **Tags** — Auto-complete, create new from form via quick-create panel (verified 2026-04-03)
-- [x] **People** — Multi-select, create new from form via quick-create panel (verified 2026-04-03)
 - [ ] **Location** — Place name input, geocoding search (Photon/Nominatim), GPS via requestSingleUpdate, manual lat/lng add
 - [ ] **Weather** — Fetch current weather via WeatherService, display in form and viewer
 - [ ] **Date/Time** — DatePickerDialog and TimePickerDialog
@@ -80,13 +80,13 @@ summary: "Remaining backlog, test checklist, version-by-version completion histo
 ### Dashboard
 
 - [x] **Stats cards** — Total entries, this week, this month, this year (verified 2026-04-06)
-- [x] **Ranked panels** — Top tags, categories, places, people (verified 2026-04-06)
+- [x] **Ranked panels** — Top tags, categories, places (verified 2026-04-06)
 - [x] **Pinned entries** — Display, click to view (verified 2026-04-06)
 - [x] **Recent entries** — Display, click to view (verified 2026-04-06)
 - [x] **Dashboard weather** — Inset 3D styling, click to navigate to Settings > Weather Location (verified 2026-04-06)
 - [x] **Quick actions** — Pinned custom views on dashboard (verified 2026-04-06)
 - [ ] **Today in History** — Verify panel shows entries from same month/day in past years, displays title + 20-char content preview + "N year(s) ago" badge, hidden when no matches, entries clickable to viewer
-- [ ] **Dashboard component settings** — Toggle components on/off in Settings > Dashboard (11 components including Today in History), verify hidden components disappear from dashboard
+- [ ] **Dashboard component settings** — Toggle components on/off in Settings > Dashboard (10 components including Today in History), verify hidden components disappear from dashboard
 - [ ] **Dashboard component reorder** — Reorder components via arrows in Settings > Dashboard, verify new order on dashboard
 - [ ] **Dashboard ranked badge 3D** — Rank badges show gradient + shadow, count badges show dark gradient + shadow
 - [ ] **Dashboard search button** — 3D icon button in navbar row (left of journal name) opens SearchActivity
@@ -102,7 +102,7 @@ summary: "Remaining backlog, test checklist, version-by-version completion histo
 - [ ] **Dashboard → Entry Form** — Tap "New Entry" (✏️) button, native EntryFormActivity launches
 - [ ] **Dashboard → Lock** — Tap "Lock" (🔒) button, returns to LoginActivity, DB closed
 - [ ] **Dashboard stat cards filter** — Tap "This Week" stat card, EntryListActivity opens with date range filter
-- [ ] **Dashboard ranked panel filter** — Tap a tag/category/place/person, EntryListActivity opens with proper filter
+- [ ] **Dashboard ranked panel filter** — Tap a tag/category/place, EntryListActivity opens with proper filter
 - [ ] **Dashboard widget click** — Tap widget card, EntryListActivity opens with widget filters applied
 - [ ] **Dashboard widget edit** — Tap pencil button on widget card, native WidgetEditorActivity opens
 - [ ] **Dashboard pinned/recent entry click** — Tap entry row, EntryViewerActivity opens showing that entry
@@ -144,7 +144,6 @@ summary: "Remaining backlog, test checklist, version-by-version completion histo
 - [ ] **Weather city search** — Search city, select from results, save location
 - [ ] **Categories editor** — Add, rename, delete, color picker, icon upload
 - [ ] **Tags editor** — Add, rename, delete, color picker, description
-- [ ] **People editor** — Add, edit, delete (first/last name, description)
 - [ ] **Custom Views** — Create/edit/delete views
 - [ ] **Pre-fill templates** — Create, edit, delete entry templates
 - [ ] **Report templates** — CRUD for HTML templates
@@ -226,7 +225,7 @@ summary: "Remaining backlog, test checklist, version-by-version completion histo
 - [ ] **WeatherService** — City search returns results, `fetchCurrent` returns weather
 - [ ] **DatabaseService** — Open/close SQLCipher DB, CRUD on all tables
 - [ ] **DB entries** — getEntries, addEntry, updateEntry, deleteEntryById all work
-- [ ] **DB categories/tags/icons/people/widgets** — All CRUD operations
+- [ ] **DB categories/tags/icons/widgets** — All CRUD operations
 - [ ] **DB settings** — getSettings/setSettings round-trip correctly
 - [ ] **DB export/stats/raw SQL** — exportJSON, getDBStats, execRawSQL
 
@@ -301,14 +300,13 @@ summary: "Remaining backlog, test checklist, version-by-version completion histo
 - [x] Biometric authentication (AndroidX BiometricPrompt)
 
 ### Post-v1.3.1 (2026-03-31)
-- [x] People feature: first/last name, description, multi-select per entry
 - [x] Custom icons for tags/categories
 - [x] Dashboard search with live results
 - [x] Settings tabs (Preferences, Templates, Edit Metadata, Data Management)
 - [x] Android navbar redesign: icon-only, two-row layout
 - [x] Separated CSS: style.css (web) + style-android.css (Android-only)
 - [x] Category and tag colors: color picker swatches, "Use colors" toggles
-- [x] Metadata export/import (JSON — categories, tags, people, icons, settings, templates, views)
+- [x] Metadata export/import (JSON — categories, tags, icons, settings, templates, views)
 - [x] SQL Explorer: CSV export, raw SQL for any table, record detail overlay, custom view loader
 - [x] Delete button tooltip in Explorer results
 
@@ -325,7 +323,7 @@ summary: "Remaining backlog, test checklist, version-by-version completion histo
 - [x] Explorer: replaced inline results with ResultGrid, RecordViewer
 - [x] Simplified index.html: component container divs
 - [x] Entry list: CollapsiblePanel for filters, ResultGrid, "Clear All" button
-- [x] Entry form: quick-create buttons for Category, Tags, People
+- [x] Entry form: quick-create buttons for Category, Tags
 - [x] Dashboard 2x2 navigation grid
 - [x] Removed theme cycle button from navbar
 - [x] Updated app_info.xml: version 1.4.0
@@ -433,8 +431,8 @@ summary: "Remaining backlog, test checklist, version-by-version completion histo
 
 ### v1.5.0+ (2026-04-29, UI improvements)
 - [x] EntryFormActivity: "Content" group box with 2 sub-tabs (Content / Rich Content)
-- [x] EntryFormActivity: Rich text editor + formatting toolbar + "Copy Content → Rich Content" button moved to Rich Content sub-tab
-- [x] EntryFormActivity: Content tab enlarged (minLines 10, maxLines 20; Rich Content minLines 8, maxLines 16)
+- [x] EntryFormActivity: Rich Content sub-tab (originally inline Spannable editor, later replaced with RichEditorActivity launcher)
+- [x] EntryFormActivity: Content tab enlarged (minLines 10, maxLines 20)
 - [x] EntryFormActivity: All action buttons (Save, Cancel, Delete) moved to top navbar row alongside Back button
 - [x] EntryFormActivity: Bottom action bar removed — more vertical space for content
 - [x] ReportsActivity: HTML output area enlarged (400dp → 600dp)
@@ -454,9 +452,27 @@ summary: "Remaining backlog, test checklist, version-by-version completion histo
 - [x] CsvMappingActivity: Result grid — horizontally scrollable table with mapped column headers, alternating row colors, "Test Preview — N of M rows" label
 - [x] CsvMappingActivity: Bottom bar redesigned — 3 buttons (Select CSV | Test | Save Mapping)
 
+### v1.5.0+ (2026-04-29, Quill.js rich text editor)
+- [x] RichEditorActivity: Full-screen Quill.js editor in WebView (`assets/rich_editor.html`)
+- [x] RichEditorActivity: Toolbar — bold, italic, underline, strike, headers (H1/H2/H3), font size, ordered/bullet lists, text/background color, alignment, links, inline images
+- [x] RichEditorActivity: "Copy Content" button imports plain text from Content tab into Quill
+- [x] RichEditorActivity: Theme-aware — CSS variables from ThemeManager (bg, card, text, accent, border, input)
+- [x] RichEditorActivity: Returns HTML via ActivityResult intent extra
+- [x] EntryFormActivity: Rich Content tab replaced — now shows HTML preview + "Edit Rich Content" button launching RichEditorActivity
+- [x] EntryFormActivity: Removed old Spannable EditText, formatting toolbar, toggleFormat() method
+- [x] EntryViewerActivity: Rich content now rendered in themed WebView (supports inline images, tables, all HTML formatting)
+- [x] activity_entry_viewer.xml: ev_rich_content changed from TextView to WebView
+- [x] AndroidManifest.xml: Registered RichEditorActivity (15th activity)
+
+### v1.5.0+ (2026-04-30, people removal + dashboard refresh)
+- [x] Removed people feature entirely: people table, people column from entries, people CRUD in DatabaseService, people section in EntryFormActivity/SettingsActivity/EntryViewerActivity, people ranked panel in Dashboard, people from CSV import/export, people from widget/view filter fields
+- [x] Dashboard auto-refresh: `DashboardActivity.needsRefresh` flag checked in `onResume()`
+- [x] Erase all entries sets refresh flag so dashboard updates on return
+- [x] CSV import completion now shows AlertDialog with import count; OK closes Settings and refreshes dashboard
+
 ## Kotlin Migration (complete)
 
-All original Java activities were converted to Kotlin (2026-04-17/18). MainActivity was later removed entirely when WebView was eliminated (2026-04-28). The app is now 100% Kotlin with 21 source files: 14 activities + 4 services + ServiceProvider + DashboardDataBuilder + ThemeManager.
+All original Java activities were converted to Kotlin (2026-04-17/18). MainActivity was later removed entirely when WebView was eliminated (2026-04-28). The app is now 100% Kotlin with 22 source files: 15 activities + 4 services + ServiceProvider + DashboardDataBuilder + ThemeManager.
 
 ### Service Layer
 

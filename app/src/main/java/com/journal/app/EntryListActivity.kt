@@ -359,10 +359,9 @@ class EntryListActivity : AppCompatActivity() {
                 val place = e.optString("placeName", "").lowercase()
                 val tags = jsonArrayToStr(e.optJSONArray("tags")).lowercase()
                 val cats = jsonArrayToStr(e.optJSONArray("categories")).lowercase()
-                val people = peopleToStr(e.optJSONArray("people")).lowercase()
                 if (!title.contains(query) && !content.contains(query) &&
                     !place.contains(query) && !tags.contains(query) &&
-                    !cats.contains(query) && !people.contains(query)) continue
+                    !cats.contains(query)) continue
             }
 
             // Category filter
@@ -409,7 +408,7 @@ class EntryListActivity : AppCompatActivity() {
             val value2 = f.optString("value2", "")
             val fieldType = when (field) {
                 "date" -> "date"
-                "categories", "tags", "people" -> "array"
+                "categories", "tags" -> "array"
                 else -> "text"
             }
 
@@ -995,17 +994,6 @@ class EntryListActivity : AppCompatActivity() {
         val items = mutableListOf<String>()
         for (i in 0 until arr.length()) items.add(arr.optString(i, ""))
         return items.filter { it.isNotEmpty() }.joinToString(", ")
-    }
-
-    private fun peopleToStr(arr: JSONArray?): String {
-        arr ?: return ""
-        val items = mutableListOf<String>()
-        for (i in 0 until arr.length()) {
-            val p = arr.optJSONObject(i) ?: continue
-            val name = "${p.optString("firstName", "")} ${p.optString("lastName", "")}".trim()
-            if (name.isNotEmpty()) items.add(name)
-        }
-        return items.joinToString(", ")
     }
 
     private fun loadBase64Image(imageView: ImageView, dataUrl: String) {

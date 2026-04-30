@@ -1289,7 +1289,7 @@ class SettingsActivity : AppCompatActivity() {
     private val widgetFilterFields = listOf(
         "date" to "Date", "time" to "Time", "title" to "Title",
         "content" to "Content", "categories" to "Categories",
-        "tags" to "Tags", "people" to "People", "placeName" to "Place Name"
+        "tags" to "Tags", "placeName" to "Place Name"
     )
 
     private val widgetDateOps = listOf(
@@ -1309,7 +1309,7 @@ class SettingsActivity : AppCompatActivity() {
     private fun widgetOpsForField(field: String): List<Pair<String, String>> {
         return when (field) {
             "date" -> widgetDateOps
-            "categories", "tags", "people" -> widgetArrayOps
+            "categories", "tags" -> widgetArrayOps
             else -> widgetTextOps
         }
     }
@@ -1317,7 +1317,7 @@ class SettingsActivity : AppCompatActivity() {
     private val widgetAggFuncs = listOf("Count", "Sum", "Max", "Min", "Average")
     private val widgetAggFields = listOf(
         "entries" to "Entries", "tags" to "Tags", "categories" to "Categories",
-        "people" to "People", "placeName" to "Place Name", "title" to "Title"
+        "placeName" to "Place Name", "title" to "Title"
     )
 
     private fun buildWidgetsTab() {
@@ -1787,11 +1787,6 @@ class SettingsActivity : AppCompatActivity() {
         buildSectionHeader("🏷️  Tags")
         buildTagsList(settings)
 
-        buildSpacer()
-
-        // People
-        buildSectionHeader("👤  People")
-        buildPeopleList()
     }
 
     private fun buildCategoriesList(settings: JSONObject) {
@@ -2076,170 +2071,6 @@ class SettingsActivity : AppCompatActivity() {
             .show()
     }
 
-    private fun buildPeopleList() {
-        val peopleJson = db.getPeople()
-        val people = try { JSONArray(peopleJson) } catch (_: Exception) { JSONArray() }
-
-        // Add new person button
-        contentContainer.addView(Button(this).apply {
-            text = "+ New Person"
-            textSize = 13f
-            isAllCaps = false
-            setTextColor(ThemeManager.color(C.CARD_BG))
-            background = ContextCompat.getDrawable(this@SettingsActivity, R.drawable.btn_accent)
-            layoutParams = LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.WRAP_CONTENT, dp(38)
-            ).apply { bottomMargin = dp(8) }
-            setPadding(dp(14), dp(6), dp(14), dp(6))
-            setOnClickListener { editPersonDialog("", "", "") }
-        })
-
-        for (i in 0 until people.length()) {
-            val person = people.optJSONObject(i) ?: continue
-            val firstName = person.optString("firstName", "")
-            val lastName = person.optString("lastName", "")
-            val desc = person.optString("description", "")
-            val fullName = "$firstName $lastName".trim()
-
-            val row = LinearLayout(this).apply {
-                orientation = LinearLayout.HORIZONTAL
-                gravity = Gravity.CENTER_VERTICAL
-                setPadding(dp(10), dp(8), dp(10), dp(8))
-                background = ContextCompat.getDrawable(this@SettingsActivity, R.drawable.entry_row_bg)
-                layoutParams = LinearLayout.LayoutParams(
-                    LinearLayout.LayoutParams.MATCH_PARENT,
-                    LinearLayout.LayoutParams.WRAP_CONTENT
-                ).apply { bottomMargin = dp(4) }
-            }
-
-            val icon = loadIconSync("person", fullName)
-            if (icon != null) {
-                row.addView(ImageView(this).apply {
-                    layoutParams = LinearLayout.LayoutParams(dp(28), dp(28)).apply { marginEnd = dp(8) }
-                    scaleType = ImageView.ScaleType.CENTER_CROP
-                    setImageBitmap(icon)
-                })
-            }
-
-            val textCol = LinearLayout(this).apply {
-                orientation = LinearLayout.VERTICAL
-                layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
-            }
-            textCol.addView(TextView(this).apply {
-                text = fullName
-                setTextColor(ThemeManager.color(C.TEXT))
-                textSize = 14f
-            })
-            if (desc.isNotEmpty()) {
-                textCol.addView(TextView(this).apply {
-                    text = desc
-                    setTextColor(ThemeManager.color(C.TEXT_SECONDARY))
-                    textSize = 11f
-                })
-            }
-            row.addView(textCol)
-
-            row.addView(Button(this).apply {
-                text = "✏️"
-                textSize = 14f
-                setBackgroundColor(Color.TRANSPARENT)
-                layoutParams = LinearLayout.LayoutParams(dp(36), dp(36))
-                setOnClickListener { editPersonDialog(firstName, lastName, desc) }
-            })
-
-            row.addView(Button(this).apply {
-                text = "✕"
-                textSize = 14f
-                setTextColor(ThemeManager.color(C.ERROR))
-                setBackgroundColor(Color.TRANSPARENT)
-                layoutParams = LinearLayout.LayoutParams(dp(36), dp(36))
-                setOnClickListener { confirmDeletePerson(firstName, lastName) }
-            })
-
-            contentContainer.addView(row)
-        }
-    }
-
-    private fun editPersonDialog(origFirst: String, origLast: String, currentDesc: String) {
-        val isNew = origFirst.isEmpty() && origLast.isEmpty()
-        val container = LinearLayout(this).apply {
-            orientation = LinearLayout.VERTICAL
-            setPadding(dp(16), dp(12), dp(16), dp(4))
-        }
-        val firstInput = EditText(this).apply {
-            setText(origFirst)
-            hint = "First name"
-            textSize = 14f
-            setTextColor(ThemeManager.color(C.TEXT))
-            setHintTextColor(ThemeManager.color(C.TEXT_SECONDARY))
-            background = ContextCompat.getDrawable(this@SettingsActivity, R.drawable.input_bg)
-            setPadding(dp(12), dp(10), dp(12), dp(10))
-            layoutParams = LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT
-            ).apply { bottomMargin = dp(8) }
-        }
-        val lastInput = EditText(this).apply {
-            setText(origLast)
-            hint = "Last name"
-            textSize = 14f
-            setTextColor(ThemeManager.color(C.TEXT))
-            setHintTextColor(ThemeManager.color(C.TEXT_SECONDARY))
-            background = ContextCompat.getDrawable(this@SettingsActivity, R.drawable.input_bg)
-            setPadding(dp(12), dp(10), dp(12), dp(10))
-            layoutParams = LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT
-            ).apply { bottomMargin = dp(8) }
-        }
-        val descInput = EditText(this).apply {
-            setText(currentDesc)
-            hint = "Description"
-            textSize = 14f
-            setTextColor(ThemeManager.color(C.TEXT))
-            setHintTextColor(ThemeManager.color(C.TEXT_SECONDARY))
-            background = ContextCompat.getDrawable(this@SettingsActivity, R.drawable.input_bg)
-            setPadding(dp(12), dp(10), dp(12), dp(10))
-            inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_FLAG_MULTI_LINE
-            minLines = 2
-        }
-        container.addView(firstInput)
-        container.addView(lastInput)
-        container.addView(descInput)
-
-        AlertDialog.Builder(this)
-            .setTitle(if (isNew) "New Person" else "Edit Person")
-            .setView(container)
-            .setPositiveButton("Save") { _, _ ->
-                val first = firstInput.text.toString().trim()
-                val last = lastInput.text.toString().trim()
-                val desc = descInput.text.toString().trim()
-                if (first.isEmpty()) {
-                    Toast.makeText(this, "First name required", Toast.LENGTH_SHORT).show()
-                    return@setPositiveButton
-                }
-                if (isNew) {
-                    db.addPerson(first, last, desc)
-                } else {
-                    db.updatePerson(origFirst, origLast, first, last, desc)
-                }
-                showTab("cattags")
-            }
-            .setNegativeButton("Cancel", null)
-            .show()
-    }
-
-    private fun confirmDeletePerson(firstName: String, lastName: String) {
-        AlertDialog.Builder(this)
-            .setMessage("Delete \"$firstName $lastName\"?")
-            .setPositiveButton("Delete") { _, _ ->
-                db.deletePerson(firstName, lastName)
-                db.removeIcon("person", "$firstName $lastName".trim())
-                db.removeIcon("person_hd", "$firstName $lastName".trim())
-                showTab("cattags")
-            }
-            .setNegativeButton("Cancel", null)
-            .show()
-    }
-
     // ========== Data Tab ==========
 
     private fun buildDataTab() {
@@ -2334,6 +2165,22 @@ class SettingsActivity : AppCompatActivity() {
             ).apply { bottomMargin = dp(4) }
         }
         contentContainer.addView(csvStatusText)
+
+        buildSpacer()
+
+        // Erase All Entries
+        buildLabel("Danger Zone")
+        contentContainer.addView(Button(this).apply {
+            text = "Erase All Entries"
+            textSize = 13f
+            isAllCaps = false
+            setTextColor(ThemeManager.color(C.CARD_BG))
+            background = ContextCompat.getDrawable(this@SettingsActivity, R.drawable.btn_delete)
+            layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT, dp(40)
+            ).apply { bottomMargin = dp(4) }
+            setOnClickListener { confirmEraseAllEntries() }
+        })
 
         buildSpacer()
 
@@ -2432,6 +2279,25 @@ class SettingsActivity : AppCompatActivity() {
         })
     }
 
+    private fun confirmEraseAllEntries() {
+        AlertDialog.Builder(this)
+            .setTitle("Erase All Entries")
+            .setMessage("This will permanently delete ALL entries and their images. This cannot be undone.\n\nAre you sure?")
+            .setPositiveButton("Erase All") { _, _ ->
+                AlertDialog.Builder(this)
+                    .setMessage("Last chance — erase every single entry?")
+                    .setPositiveButton("Yes, erase everything") { _, _ ->
+                        db.eraseAllEntries()
+                        DashboardActivity.needsRefresh = true
+                        Toast.makeText(this, "All entries erased", Toast.LENGTH_SHORT).show()
+                    }
+                    .setNegativeButton("Cancel", null)
+                    .show()
+            }
+            .setNegativeButton("Cancel", null)
+            .show()
+    }
+
     private fun handleExport(type: String) {
         when (type) {
             "encrypted" -> {
@@ -2491,7 +2357,6 @@ class SettingsActivity : AppCompatActivity() {
         result.put("categories", JSONArray(db.getCategories()))
         result.put("settings", JSONObject(db.getSettings()))
         result.put("tags", JSONArray(db.getAllTags()))
-        result.put("people", JSONArray(db.getPeople()))
         result.put("icons", JSONArray(db.getAllIcons()))
         result.put("widgets", JSONArray(db.getWidgets()))
         return result.toString(2)
@@ -2656,6 +2521,7 @@ class SettingsActivity : AppCompatActivity() {
                 val mapping = settings.optJSONArray("csvMapping") ?: JSONArray()
                 val separator = settings.optString("csvSeparator", ",")
                 val tagsSpaceSep = settings.optBoolean("csvTagsSpaceSep", false)
+                val year2000s = settings.optBoolean("csvYear2000s", true)
 
                 // Build column index map: csvFieldName -> (colIndex, entryField, misc)
                 val colMap = mutableListOf<Triple<Int, String, String>>()
@@ -2698,17 +2564,9 @@ class SettingsActivity : AppCompatActivity() {
                     val arr = s.optJSONArray("tags") ?: JSONArray()
                     (0 until arr.length()).map { arr.optString(it, "").lowercase() }.toMutableSet()
                 } catch (_: Exception) { mutableSetOf() }
-                val existingPeople = try {
-                    val arr = JSONArray(db.getPeople())
-                    (0 until arr.length()).map {
-                        val p = arr.optJSONObject(it) ?: return@map ""
-                        "${p.optString("firstName", "")} ${p.optString("lastName", "")}".trim().lowercase()
-                    }.toMutableSet()
-                } catch (_: Exception) { mutableSetOf() }
 
                 val newCats = mutableSetOf<String>()
                 val newTags = mutableSetOf<String>()
-                val newPeople = mutableListOf<Pair<String, String>>()
 
                 val now = java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", java.util.Locale.US)
                     .apply { timeZone = java.util.TimeZone.getTimeZone("UTC") }
@@ -2732,7 +2590,6 @@ class SettingsActivity : AppCompatActivity() {
                         put("richContent", "")
                         put("categories", JSONArray())
                         put("tags", JSONArray())
-                        put("people", JSONArray())
                         put("placeName", "")
                         put("locations", JSONArray())
                         put("weather", JSONObject.NULL)
@@ -2751,7 +2608,7 @@ class SettingsActivity : AppCompatActivity() {
                         if (value.isEmpty()) continue
 
                         when (entryField) {
-                            "date" -> entry.put("date", parseDateWithFormat(value, misc))
+                            "date" -> entry.put("date", parseDateWithFormat(value, misc, year2000s))
                             "time" -> entry.put("time", parseTimeWithFormat(value, misc))
                             "title" -> entry.put("title", value)
                             "content" -> entry.put("content", value)
@@ -2760,17 +2617,6 @@ class SettingsActivity : AppCompatActivity() {
                             "tags" -> {
                                 val tagSep = if (tagsSpaceSep) Regex("\\s+") else Regex(Regex.escape(separator))
                                 entry.put("tags", JSONArray(value.split(tagSep).map { it.trim() }.filter { it.isNotEmpty() }))
-                            }
-                            "people" -> {
-                                val peopleArr = JSONArray()
-                                value.split(separator).map { it.trim() }.filter { it.isNotEmpty() }.forEach { name ->
-                                    val parts = name.split(Regex("\\s+"), limit = 2)
-                                    peopleArr.put(JSONObject().apply {
-                                        put("firstName", parts[0])
-                                        put("lastName", parts.getOrElse(1) { "" })
-                                    })
-                                }
-                                entry.put("people", peopleArr)
                             }
                             "placeName" -> csvPlaceName = value
                             "placeAddress" -> csvPlaceAddress = value
@@ -2811,16 +2657,6 @@ class SettingsActivity : AppCompatActivity() {
                             existingTags.add(t.lowercase())
                         }
                     }
-                    val people = entry.optJSONArray("people") ?: JSONArray()
-                    for (i in 0 until people.length()) {
-                        val p = people.optJSONObject(i) ?: continue
-                        val key = "${p.optString("firstName", "")} ${p.optString("lastName", "")}".trim().lowercase()
-                        if (key.isNotEmpty() && !existingPeople.contains(key)) {
-                            newPeople.add(p.optString("firstName", "") to p.optString("lastName", ""))
-                            existingPeople.add(key)
-                        }
-                    }
-
                     val title = entry.optString("title", "")
                     val content = entry.optString("content", "")
                     if (title.isEmpty() && content.isEmpty()) {
@@ -2854,20 +2690,22 @@ class SettingsActivity : AppCompatActivity() {
                     for (t in newTags) allTags.put(t)
                     db.setSettings(JSONObject().apply { put("tags", allTags) }.toString())
                 }
-                for ((first, last) in newPeople) {
-                    db.addPerson(first, last, "")
-                }
-
                 val msg = StringBuilder("Import complete: $imported entries imported.")
                 if (newCats.isNotEmpty()) msg.append(" ${newCats.size} new categories.")
                 if (newTags.isNotEmpty()) msg.append(" ${newTags.size} new tags.")
-                if (newPeople.isNotEmpty()) msg.append(" ${newPeople.size} new people.")
                 if (skipped > 0) msg.append(" $skipped rows skipped.")
                 if (duplicates > 0) msg.append(" $duplicates duplicates skipped.")
 
                 runOnUiThread {
-                    statusView.text = msg.toString()
-                    statusView.setTextColor(ThemeManager.color(C.ACCENT))
+                    AlertDialog.Builder(this@SettingsActivity)
+                        .setTitle("Import Complete")
+                        .setMessage(msg.toString())
+                        .setCancelable(false)
+                        .setPositiveButton("OK") { _, _ ->
+                            DashboardActivity.needsRefresh = true
+                            finish()
+                        }
+                        .show()
                 }
             } catch (e: Exception) {
                 runOnUiThread {
@@ -2922,9 +2760,9 @@ class SettingsActivity : AppCompatActivity() {
         return rows.filter { r -> r.any { it.isNotEmpty() } }
     }
 
-    private fun parseDateWithFormat(value: String, fmt: String): String {
+    private fun parseDateWithFormat(value: String, fmt: String, year2000s: Boolean = true): String {
         if (value.isEmpty()) return ""
-        if (fmt.isEmpty()) return normalizeDate(value)
+        if (fmt.isEmpty()) return normalizeDate(value, year2000s)
 
         val escaped = Regex("""[.*+?^${'$'}{}()\[\]\\|]""").replace(fmt) { "\\${it.value}" }
         val pattern = Regex("YYYY|YY|MM|DD|M|D").replace(escaped) { mr ->
@@ -2939,13 +2777,13 @@ class SettingsActivity : AppCompatActivity() {
 
         val match = Regex("^$pattern$").find(value)
         if (match != null) {
-            val y = match.groups["Y"]?.value ?: return normalizeDate(value)
-            val m = match.groups["M"]?.value ?: return normalizeDate(value)
-            val d = match.groups["D"]?.value ?: return normalizeDate(value)
-            val year = if (y.length == 2) (if (y.toInt() > 50) "19$y" else "20$y") else y
+            val y = match.groups["Y"]?.value ?: return normalizeDate(value, year2000s)
+            val m = match.groups["M"]?.value ?: return normalizeDate(value, year2000s)
+            val d = match.groups["D"]?.value ?: return normalizeDate(value, year2000s)
+            val year = if (y.length == 2) (if (year2000s) "20$y" else if (y.toInt() > 50) "19$y" else "20$y") else y
             return "$year-${m.padStart(2, '0')}-${d.padStart(2, '0')}"
         }
-        return normalizeDate(value)
+        return normalizeDate(value, year2000s)
     }
 
     private fun parseTimeWithFormat(value: String, fmt: String): String {
@@ -2977,11 +2815,17 @@ class SettingsActivity : AppCompatActivity() {
         return normalizeTime(value)
     }
 
-    private fun normalizeDate(value: String): String {
+    private fun normalizeDate(value: String, year2000s: Boolean = true): String {
         if (value.isEmpty()) return ""
         if (Regex("^\\d{4}-\\d{2}-\\d{2}$").matches(value)) return value
-        val m = Regex("^(\\d{1,2})[/\\-](\\d{1,2})[/\\-](\\d{4})$").find(value)
-        if (m != null) return "${m.groupValues[3]}-${m.groupValues[1].padStart(2, '0')}-${m.groupValues[2].padStart(2, '0')}"
+        val m4 = Regex("^(\\d{1,2})[/\\-](\\d{1,2})[/\\-](\\d{4})$").find(value)
+        if (m4 != null) return "${m4.groupValues[3]}-${m4.groupValues[1].padStart(2, '0')}-${m4.groupValues[2].padStart(2, '0')}"
+        val m2 = Regex("^(\\d{1,2})[/\\-](\\d{1,2})[/\\-](\\d{2})$").find(value)
+        if (m2 != null) {
+            val yy = m2.groupValues[3]
+            val year = if (year2000s) "20$yy" else if (yy.toInt() > 50) "19$yy" else "20$yy"
+            return "$year-${m2.groupValues[1].padStart(2, '0')}-${m2.groupValues[2].padStart(2, '0')}"
+        }
         return try {
             val d = java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.US)
             d.format(java.text.SimpleDateFormat("EEE MMM dd HH:mm:ss zzz yyyy", java.util.Locale.US).parse(value)!!)
@@ -3372,8 +3216,7 @@ class SettingsActivity : AppCompatActivity() {
         "today_history" to "Today in History",
         "tags" to "Top Tags",
         "categories" to "Top Categories",
-        "places" to "Top Places",
-        "people" to "People"
+        "places" to "Top Places"
     )
 
     private fun loadDashboardComponents(): MutableList<Pair<String, Boolean>> {

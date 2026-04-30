@@ -22,7 +22,6 @@ object DashboardDataBuilder {
         val tags = countArrayField(entryList, "tags")
         val categories = countArrayField(entryList, "categories")
         val places = countPlaces(entryList)
-        val people = countPeople(entryList)
         val streak = calculateStreak(entryList)
 
         val pinned = entryList.filter { it.optBoolean("pinned", false) }
@@ -63,7 +62,6 @@ object DashboardDataBuilder {
         result.put("topTags", toRankedArray(tags, 20))
         result.put("topCategories", toRankedArray(categories, 20))
         result.put("topPlaces", toRankedArray(places, 20))
-        result.put("topPeople", toRankedArray(people, 20))
         result.put("pinnedEntries", JSONArray().apply { pinned.forEach { put(it) } })
         result.put("recentEntries", JSONArray().apply { recent.forEach { put(it) } })
         result.put("pinnedViews", JSONArray())
@@ -145,19 +143,6 @@ object DashboardDataBuilder {
         for (e in entries) {
             val name = e.optString("placeName", "")
             if (name.isNotEmpty()) counts[name] = (counts[name] ?: 0) + 1
-        }
-        return counts.entries.sortedByDescending { it.value }.map { Pair(it.key, it.value) }
-    }
-
-    private fun countPeople(entries: List<JSONObject>): List<Pair<String, Int>> {
-        val counts = mutableMapOf<String, Int>()
-        for (e in entries) {
-            val arr = e.optJSONArray("people") ?: continue
-            for (i in 0 until arr.length()) {
-                val p = arr.optJSONObject(i) ?: continue
-                val name = "${p.optString("firstName", "")} ${p.optString("lastName", "")}".trim()
-                if (name.isNotEmpty()) counts[name] = (counts[name] ?: 0) + 1
-            }
         }
         return counts.entries.sortedByDescending { it.value }.map { Pair(it.key, it.value) }
     }
@@ -264,7 +249,7 @@ object DashboardDataBuilder {
     private fun matchesFilter(entry: JSONObject, field: String, op: String, value: String, value2: String): Boolean {
         val fieldType = when (field) {
             "date" -> "date"
-            "categories", "tags", "people" -> "array"
+            "categories", "tags" -> "array"
             else -> "text"
         }
 
@@ -313,7 +298,7 @@ object DashboardDataBuilder {
 
         if (field == "entries") return filtered.size
 
-        val isArray = field in setOf("tags", "categories", "people")
+        val isArray = field in setOf("tags", "categories")
 
         if (func == "Count") {
             val matchVal = fn.optString("value", "").lowercase()

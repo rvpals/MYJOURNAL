@@ -86,8 +86,7 @@ class DatabaseService(private val context: Context) {
                 pinned INTEGER DEFAULT 0,
                 locked INTEGER DEFAULT 0,
                 dtCreated TEXT,
-                dtUpdated TEXT,
-                people TEXT
+                dtUpdated TEXT
             )
         """)
         d.execSQL("CREATE INDEX IF NOT EXISTS idx_entries_date ON entries(date)")
@@ -116,14 +115,6 @@ class DatabaseService(private val context: Context) {
                 PRIMARY KEY (type, name)
             )
         """)
-        d.execSQL("""
-            CREATE TABLE IF NOT EXISTS people (
-                firstName TEXT NOT NULL,
-                lastName TEXT NOT NULL,
-                description TEXT DEFAULT '',
-                PRIMARY KEY (firstName, lastName)
-            )
-        """)
         d.execSQL("CREATE TABLE IF NOT EXISTS settings (key TEXT PRIMARY KEY, value TEXT)")
         d.execSQL("""
             CREATE TABLE IF NOT EXISTS widgets (
@@ -147,8 +138,6 @@ class DatabaseService(private val context: Context) {
     private fun upgradeSchema() {
         val d = db ?: return
         d.execSQL("CREATE TABLE IF NOT EXISTS icons (type TEXT NOT NULL, name TEXT NOT NULL, data TEXT, PRIMARY KEY (type, name))")
-        d.execSQL("CREATE TABLE IF NOT EXISTS people (firstName TEXT NOT NULL, lastName TEXT NOT NULL, description TEXT DEFAULT '', PRIMARY KEY (firstName, lastName))")
-        try { d.execSQL("ALTER TABLE entries ADD COLUMN people TEXT") } catch (_: Exception) {}
         try { d.execSQL("ALTER TABLE entries ADD COLUMN locked INTEGER DEFAULT 0") } catch (_: Exception) {}
         try { d.execSQL("ALTER TABLE categories ADD COLUMN description TEXT DEFAULT ''") } catch (_: Exception) {}
         d.execSQL("CREATE TABLE IF NOT EXISTS tags (name TEXT PRIMARY KEY, description TEXT DEFAULT '')")
@@ -214,7 +203,7 @@ class DatabaseService(private val context: Context) {
                 content TEXT, richContent TEXT, categories TEXT, tags TEXT,
                 placeName TEXT, locations TEXT, weather TEXT,
                 pinned INTEGER DEFAULT 0, locked INTEGER DEFAULT 0,
-                dtCreated TEXT, dtUpdated TEXT, people TEXT
+                dtCreated TEXT, dtUpdated TEXT
             )
         """)
         d.execSQL("CREATE INDEX IF NOT EXISTS idx_entries_date ON entries(date)")
@@ -230,7 +219,6 @@ class DatabaseService(private val context: Context) {
         d.execSQL("CREATE TABLE IF NOT EXISTS categories (name TEXT PRIMARY KEY, description TEXT DEFAULT '')")
         d.execSQL("CREATE TABLE IF NOT EXISTS tags (name TEXT PRIMARY KEY, description TEXT DEFAULT '')")
         d.execSQL("CREATE TABLE IF NOT EXISTS icons (type TEXT NOT NULL, name TEXT NOT NULL, data TEXT, PRIMARY KEY (type, name))")
-        d.execSQL("CREATE TABLE IF NOT EXISTS people (firstName TEXT NOT NULL, lastName TEXT NOT NULL, description TEXT DEFAULT '', PRIMARY KEY (firstName, lastName))")
         d.execSQL("CREATE TABLE IF NOT EXISTS settings (key TEXT PRIMARY KEY, value TEXT)")
         d.execSQL("""
             CREATE TABLE IF NOT EXISTS widgets (
@@ -246,7 +234,7 @@ class DatabaseService(private val context: Context) {
     }
 
     private fun copyAllData(src: SQLiteDatabase, dst: SQLiteDatabase) {
-        val tables = listOf("entries", "images", "categories", "tags", "icons", "people", "settings", "widgets")
+        val tables = listOf("entries", "images", "categories", "tags", "icons", "settings", "widgets")
         for (table in tables) {
             try {
                 val cursor = src.rawQuery("SELECT * FROM $table", null)
@@ -352,7 +340,6 @@ class DatabaseService(private val context: Context) {
         obj.put("locked", cursor.getInt(cursor.getColumnIndexOrThrow("locked")) == 1)
         obj.put("dtCreated", cursor.getString(cursor.getColumnIndexOrThrow("dtCreated")) ?: "")
         obj.put("dtUpdated", cursor.getString(cursor.getColumnIndexOrThrow("dtUpdated")) ?: "")
-        obj.put("people", safeParseArray(cursor.getString(cursor.getColumnIndexOrThrow("people"))))
         obj.put("images", JSONArray())
         return obj
     }
@@ -377,7 +364,7 @@ class DatabaseService(private val context: Context) {
             "content" to "content", "richContent" to "richContent",
             "placeName" to "placeName", "dtCreated" to "dtCreated", "dtUpdated" to "dtUpdated"
         )
-        val jsonFields = setOf("categories", "tags", "locations", "people")
+        val jsonFields = setOf("categories", "tags", "locations")
         val objectFields = setOf("weather")
         val boolFields = setOf("pinned", "locked")
 
@@ -409,6 +396,12 @@ class DatabaseService(private val context: Context) {
         val d = db ?: return
         d.delete("images", "entryId = ?", arrayOf(id))
         d.delete("entries", "id = ?", arrayOf(id))
+    }
+
+    fun eraseAllEntries() {
+        val d = db ?: return
+        d.execSQL("DELETE FROM images")
+        d.execSQL("DELETE FROM entries")
     }
 
     fun deleteEntriesByIds(idsJson: String) {
@@ -463,7 +456,6 @@ class DatabaseService(private val context: Context) {
         cv.put("locked", if (entry.optBoolean("locked")) 1 else 0)
         cv.put("dtCreated", entry.optString("dtCreated", ""))
         cv.put("dtUpdated", entry.optString("dtUpdated", ""))
-        cv.put("people", entry.optJSONArray("people")?.toString() ?: "[]")
         return cv
     }
 
@@ -547,64 +539,6 @@ class DatabaseService(private val context: Context) {
     fun removeIcon(type: String, name: String) {
         val d = db ?: return
         d.delete("icons", "type = ? AND name = ?", arrayOf(type, name))
-    }
-
-    // ========== People ==========
-
-    fun getPeople(): String {
-        val d = db ?: return "[]"
-        val arr = JSONArray()
-        val cursor = d.rawQuery("SELECT firstName, lastName, description FROM people ORDER BY firstName, lastName", null)
-        while (cursor.moveToNext()) {
-            val obj = JSONObject()
-            obj.put("firstName", cursor.getString(0))
-            obj.put("lastName", cursor.getString(1))
-            obj.put("description", cursor.getString(2) ?: "")
-            arr.put(obj)
-        }
-        cursor.close()
-        return arr.toString()
-    }
-
-    fun addPerson(first: String, last: String, desc: String) {
-        val d = db ?: return
-        d.execSQL("INSERT OR REPLACE INTO people VALUES (?, ?, ?)", arrayOf(first, last, desc))
-    }
-
-    fun updatePerson(oldFirst: String, oldLast: String, newFirst: String, newLast: String, desc: String) {
-        val d = db ?: return
-        if (oldFirst != newFirst || oldLast != newLast) {
-            d.delete("people", "firstName = ? AND lastName = ?", arrayOf(oldFirst, oldLast))
-            val cursor = d.rawQuery(
-                "SELECT id, people FROM entries WHERE people IS NOT NULL AND people != '[]'", null
-            )
-            while (cursor.moveToNext()) {
-                val entryId = cursor.getString(0)
-                val peopleStr = cursor.getString(1) ?: continue
-                val people = safeParseArray(peopleStr)
-                var changed = false
-                for (i in 0 until people.length()) {
-                    val p = people.getJSONObject(i)
-                    if (p.optString("firstName") == oldFirst && p.optString("lastName") == oldLast) {
-                        p.put("firstName", newFirst)
-                        p.put("lastName", newLast)
-                        changed = true
-                    }
-                }
-                if (changed) {
-                    val cv = ContentValues()
-                    cv.put("people", people.toString())
-                    d.update("entries", cv, "id = ?", arrayOf(entryId))
-                }
-            }
-            cursor.close()
-        }
-        d.execSQL("INSERT OR REPLACE INTO people VALUES (?, ?, ?)", arrayOf(newFirst, newLast, desc))
-    }
-
-    fun deletePerson(first: String, last: String) {
-        val d = db ?: return
-        d.delete("people", "firstName = ? AND lastName = ?", arrayOf(first, last))
     }
 
     // ========== Settings ==========
@@ -761,7 +695,6 @@ class DatabaseService(private val context: Context) {
         result.put("categories", JSONArray(getCategories()))
         result.put("settings", JSONObject(getSettings()))
         result.put("icons", JSONArray(getAllIcons()))
-        result.put("people", JSONArray(getPeople()))
         result.put("tags", JSONObject(getTagDescriptions()))
         result.put("widgets", JSONArray(getWidgets()))
         return result.toString(2)

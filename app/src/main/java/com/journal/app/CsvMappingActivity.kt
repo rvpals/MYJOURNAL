@@ -36,7 +36,6 @@ class CsvMappingActivity : AppCompatActivity() {
             "richContent" to "Rich Content (HTML)",
             "categories" to "Categories",
             "tags" to "Tags",
-            "people" to "People",
             "placeName" to "Place Name",
             "placeAddress" to "Place Address",
             "placeCoords" to "Place Coords (lat, lng)"
@@ -90,7 +89,7 @@ class CsvMappingActivity : AppCompatActivity() {
     private fun buildDefaultMappingUI() {
         val defaultFields = listOf(
             "Date", "Time", "Title", "Content", "Rich Content",
-            "Categories", "Tags", "People", "Place Name"
+            "Categories", "Tags", "Place Name"
         )
         val arr = JSONArray()
         for (field in defaultFields) {
@@ -113,7 +112,6 @@ class CsvMappingActivity : AppCompatActivity() {
             h.matches(Regex("^(richcontent|html|htmlcontent)$")) -> "richContent"
             h.startsWith("categor") -> "categories"
             h.startsWith("tag") -> "tags"
-            h.matches(Regex("^(people|person|persons)$")) -> "people"
             h.matches(Regex("^(place|placename|location|locationname)$")) -> "placeName"
             h.matches(Regex("^(address|placeaddress)$")) -> "placeAddress"
             h.matches(Regex("^(coord|gps|latl|placecoord).*")) -> "placeCoords"
@@ -258,6 +256,31 @@ class CsvMappingActivity : AppCompatActivity() {
             setOnClickListener { tagsSpaceCb.isChecked = !tagsSpaceCb.isChecked }
         })
         contentContainer.addView(tagsSpaceRow)
+
+        // 2-digit year in 2000s checkbox
+        val year2000Row = LinearLayout(this).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = Gravity.CENTER_VERTICAL
+            layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT
+            ).apply { bottomMargin = dp(6) }
+        }
+        val year2000Cb = CheckBox(this).apply {
+            tag = "csv_year_2000s"
+            isChecked = settings.optBoolean("csvYear2000s", true)
+            buttonTintList = ThemeManager.colorStateList(C.ACCENT)
+        }
+        year2000Row.addView(year2000Cb)
+        year2000Row.addView(TextView(this).apply {
+            text = "2-digit year in 2000s (e.g. 15 = 2015)"
+            setTextColor(ThemeManager.color(C.TEXT))
+            textSize = 13f
+            layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f).apply {
+                marginStart = dp(8)
+            }
+            setOnClickListener { year2000Cb.isChecked = !year2000Cb.isChecked }
+        })
+        contentContainer.addView(year2000Row)
     }
 
     private fun addMappingRow(csvField: String, entryField: String, misc: String) {
@@ -470,11 +493,14 @@ class CsvMappingActivity : AppCompatActivity() {
 
         val tagsSpaceCb = contentContainer.findViewWithTag<CheckBox>("csv_tags_space_sep")
         val tagsSpaceSep = tagsSpaceCb?.isChecked ?: false
+        val year2000Cb = contentContainer.findViewWithTag<CheckBox>("csv_year_2000s")
+        val year2000s = year2000Cb?.isChecked ?: true
 
         val settingsUpdate = JSONObject().apply {
             put("csvMapping", arr)
             put("csvSeparator", separator)
             put("csvTagsSpaceSep", tagsSpaceSep)
+            put("csvYear2000s", year2000s)
         }
         db.setSettings(settingsUpdate.toString())
 
@@ -603,6 +629,8 @@ class CsvMappingActivity : AppCompatActivity() {
         val separator = sepInput?.text?.toString()?.trim() ?: ","
         val tagsSpaceCb = contentContainer.findViewWithTag<CheckBox>("csv_tags_space_sep")
         val tagsSpaceSep = tagsSpaceCb?.isChecked ?: false
+        val year2000Cb = contentContainer.findViewWithTag<CheckBox>("csv_year_2000s")
+        val year2000s = year2000Cb?.isChecked ?: true
 
         val colMap = mutableListOf<Triple<Int, String, String>>()
         for (i in 0 until currentMapping.length()) {
@@ -629,24 +657,23 @@ class CsvMappingActivity : AppCompatActivity() {
         val mappedRows = sampleRows.map { row ->
             colMap.map { (colIdx, entryField, misc) ->
                 val value = row.getOrElse(colIdx) { "" }.trim()
-                formatPreviewValue(value, entryField, misc, separator, tagsSpaceSep)
+                formatPreviewValue(value, entryField, misc, separator, tagsSpaceSep, year2000s)
             }
         }
 
         showResultGrid(mappedHeaders, mappedRows, sampleRows.size, dataRows.size)
     }
 
-    private fun formatPreviewValue(value: String, entryField: String, misc: String, separator: String, tagsSpaceSep: Boolean): String {
+    private fun formatPreviewValue(value: String, entryField: String, misc: String, separator: String, tagsSpaceSep: Boolean, year2000s: Boolean = true): String {
         if (value.isEmpty()) return ""
         return when (entryField) {
-            "date" -> parseDateWithFormat(value, misc)
+            "date" -> parseDateWithFormat(value, misc, year2000s)
             "time" -> parseTimeWithFormat(value, misc)
             "categories" -> value.split(separator).map { it.trim() }.filter { it.isNotEmpty() }.joinToString(", ")
             "tags" -> {
                 val tagSep = if (tagsSpaceSep) Regex("\\s+") else Regex(Regex.escape(separator))
                 value.split(tagSep).map { it.trim() }.filter { it.isNotEmpty() }.joinToString(", ")
             }
-            "people" -> value.split(separator).map { it.trim() }.filter { it.isNotEmpty() }.joinToString(", ")
             else -> value
         }
     }
@@ -807,9 +834,9 @@ class CsvMappingActivity : AppCompatActivity() {
         return rows.filter { r -> r.any { it.isNotEmpty() } }
     }
 
-    private fun parseDateWithFormat(value: String, fmt: String): String {
+    private fun parseDateWithFormat(value: String, fmt: String, year2000s: Boolean = true): String {
         if (value.isEmpty()) return ""
-        if (fmt.isEmpty()) return normalizeDate(value)
+        if (fmt.isEmpty()) return normalizeDate(value, year2000s)
 
         val escaped = Regex("""[.*+?^${'$'}{}()\[\]\\|]""").replace(fmt) { "\\${it.value}" }
         val pattern = Regex("YYYY|YY|MM|DD|M|D").replace(escaped) { mr ->
@@ -824,13 +851,13 @@ class CsvMappingActivity : AppCompatActivity() {
 
         val match = Regex("^$pattern$").find(value)
         if (match != null) {
-            val y = match.groups["Y"]?.value ?: return normalizeDate(value)
-            val m = match.groups["M"]?.value ?: return normalizeDate(value)
-            val d = match.groups["D"]?.value ?: return normalizeDate(value)
-            val year = if (y.length == 2) (if (y.toInt() > 50) "19$y" else "20$y") else y
+            val y = match.groups["Y"]?.value ?: return normalizeDate(value, year2000s)
+            val m = match.groups["M"]?.value ?: return normalizeDate(value, year2000s)
+            val d = match.groups["D"]?.value ?: return normalizeDate(value, year2000s)
+            val year = if (y.length == 2) (if (year2000s) "20$y" else if (y.toInt() > 50) "19$y" else "20$y") else y
             return "$year-${m.padStart(2, '0')}-${d.padStart(2, '0')}"
         }
-        return normalizeDate(value)
+        return normalizeDate(value, year2000s)
     }
 
     private fun parseTimeWithFormat(value: String, fmt: String): String {
@@ -862,11 +889,17 @@ class CsvMappingActivity : AppCompatActivity() {
         return normalizeTime(value)
     }
 
-    private fun normalizeDate(value: String): String {
+    private fun normalizeDate(value: String, year2000s: Boolean = true): String {
         if (value.isEmpty()) return ""
         if (Regex("^\\d{4}-\\d{2}-\\d{2}$").matches(value)) return value
-        val m = Regex("^(\\d{1,2})[/\\-](\\d{1,2})[/\\-](\\d{4})$").find(value)
-        if (m != null) return "${m.groupValues[3]}-${m.groupValues[1].padStart(2, '0')}-${m.groupValues[2].padStart(2, '0')}"
+        val m4 = Regex("^(\\d{1,2})[/\\-](\\d{1,2})[/\\-](\\d{4})$").find(value)
+        if (m4 != null) return "${m4.groupValues[3]}-${m4.groupValues[1].padStart(2, '0')}-${m4.groupValues[2].padStart(2, '0')}"
+        val m2 = Regex("^(\\d{1,2})[/\\-](\\d{1,2})[/\\-](\\d{2})$").find(value)
+        if (m2 != null) {
+            val yy = m2.groupValues[3]
+            val year = if (year2000s) "20$yy" else if (yy.toInt() > 50) "19$yy" else "20$yy"
+            return "$year-${m2.groupValues[1].padStart(2, '0')}-${m2.groupValues[2].padStart(2, '0')}"
+        }
         return try {
             val d = java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.US)
             d.format(java.text.SimpleDateFormat("EEE MMM dd HH:mm:ss zzz yyyy", java.util.Locale.US).parse(value)!!)

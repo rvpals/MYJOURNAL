@@ -52,7 +52,7 @@ class WidgetEditorActivity : AppCompatActivity() {
     private val filterFields = listOf(
         "date" to "Date", "time" to "Time", "title" to "Title",
         "content" to "Content", "categories" to "Categories",
-        "tags" to "Tags", "people" to "People", "placeName" to "Place Name"
+        "tags" to "Tags", "placeName" to "Place Name"
     )
 
     private val dateOps = listOf(
@@ -72,7 +72,7 @@ class WidgetEditorActivity : AppCompatActivity() {
     private val aggFuncs = listOf("Count", "Sum", "Max", "Min", "Average")
     private val aggFields = listOf(
         "entries" to "Entries", "tags" to "Tags", "categories" to "Categories",
-        "people" to "People", "placeName" to "Place Name", "title" to "Title"
+        "placeName" to "Place Name", "title" to "Title"
     )
 
     // Header form references
@@ -596,7 +596,7 @@ class WidgetEditorActivity : AppCompatActivity() {
         val aggField = aggFields.find { it.first == field }
         val aggType = when (aggField?.first) {
             "entries" -> "count"
-            "tags", "categories", "people" -> "array"
+            "tags", "categories" -> "array"
             else -> "text"
         }
         if (aggType == "array" || aggType == "text") {
@@ -928,7 +928,7 @@ class WidgetEditorActivity : AppCompatActivity() {
         if (field == "entries") return filtered.size.toString()
 
         val aggType = when (field) {
-            "tags", "categories", "people" -> "array"
+            "tags", "categories" -> "array"
             else -> "text"
         }
 
@@ -1006,7 +1006,7 @@ class WidgetEditorActivity : AppCompatActivity() {
     private fun getFieldType(field: String): String {
         return when (field) {
             "date" -> "date"
-            "categories", "tags", "people" -> "array"
+            "categories", "tags" -> "array"
             else -> "text"
         }
     }
@@ -1014,7 +1014,7 @@ class WidgetEditorActivity : AppCompatActivity() {
     private fun opsForField(field: String): List<Pair<String, String>> {
         return when (field) {
             "date" -> dateOps
-            "categories", "tags", "people" -> arrayOps
+            "categories", "tags" -> arrayOps
             else -> textOps
         }
     }

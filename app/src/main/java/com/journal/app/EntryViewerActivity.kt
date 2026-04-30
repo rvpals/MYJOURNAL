@@ -22,6 +22,7 @@ import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
 import android.view.Window
+import android.webkit.WebView
 import android.widget.Button
 import android.widget.HorizontalScrollView
 import android.widget.ImageView
@@ -189,18 +190,31 @@ class EntryViewerActivity : AppCompatActivity() {
 
         // Rich content
         val richLabel = findViewById<TextView>(R.id.ev_rich_label)
-        val richView = findViewById<TextView>(R.id.ev_rich_content)
+        val richView = findViewById<WebView>(R.id.ev_rich_content)
         if (richContent.isNotEmpty() && richContent != "<p><br></p>") {
             richLabel.visibility = View.VISIBLE
             richView.visibility = View.VISIBLE
-            richView.text = if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.N) {
-                android.text.Html.fromHtml(richContent, android.text.Html.FROM_HTML_MODE_COMPACT)
-            } else {
-                @Suppress("DEPRECATION")
-                android.text.Html.fromHtml(richContent)
-            }
-            richView.movementMethod = android.text.method.LinkMovementMethod.getInstance()
-            applyFontToView(richView)
+            richView.settings.javaScriptEnabled = false
+            richView.setBackgroundColor(Color.TRANSPARENT)
+            val bg = colorToHex(ThemeManager.color(C.CARD_BG))
+            val text = colorToHex(ThemeManager.color(C.TEXT))
+            val accent = colorToHex(ThemeManager.color(C.ACCENT))
+            val border = colorToHex(ThemeManager.color(C.CARD_BORDER))
+            val fontCss = if (fontFamily.isNotEmpty()) "font-family: $fontFamily;" else ""
+            val sizeCss = if (fontSizeSp > 0f) "font-size: ${fontSizeSp}px;" else "font-size: 15px;"
+            val html = """
+                <html><head><meta name="viewport" content="width=device-width, initial-scale=1.0">
+                <style>
+                    body { background: $bg; color: $text; $fontCss $sizeCss line-height: 1.6;
+                           padding: 0; margin: 0; word-wrap: break-word; }
+                    a { color: $accent; }
+                    img { max-width: 100%; height: auto; border-radius: 4px; }
+                    table { border-collapse: collapse; width: 100%; margin: 8px 0; }
+                    td, th { border: 1px solid $border; padding: 6px 8px; }
+                    blockquote { border-left: 3px solid $accent; margin: 8px 0; padding-left: 10px; color: $text; }
+                </style></head><body>$richContent</body></html>
+            """.trimIndent()
+            richView.loadDataWithBaseURL(null, html, "text/html", "UTF-8", null)
         } else {
             richLabel.visibility = View.GONE
             richView.visibility = View.GONE
@@ -402,7 +416,6 @@ class EntryViewerActivity : AppCompatActivity() {
 
         val categories = jsonArrayToString(entry.optJSONArray("categories"))
         val tags = jsonArrayToString(entry.optJSONArray("tags"))
-        val people = jsonArrayToString(entry.optJSONArray("people"))
         val placeName = entry.optString("placeName", "")
         val locations = entry.optJSONArray("locations")
         val weather = entry.opt("weather")
@@ -417,10 +430,6 @@ class EntryViewerActivity : AppCompatActivity() {
         }
         if (tags.isNotEmpty()) {
             miscBody.addView(createMiscRow("🏷️ Tags", tags))
-            hasMisc = true
-        }
-        if (people.isNotEmpty()) {
-            miscBody.addView(createMiscRow("👤 People", people))
             hasMisc = true
         }
         if (placeName.isNotEmpty()) {
@@ -693,6 +702,10 @@ class EntryViewerActivity : AppCompatActivity() {
             val size = if (titleMode) fontSizeSp * 1.3f else fontSizeSp
             view.setTextSize(TypedValue.COMPLEX_UNIT_SP, size)
         }
+    }
+
+    private fun colorToHex(color: Int): String {
+        return String.format("#%06X", 0xFFFFFF and color)
     }
 
     private fun dp(value: Int): Int {

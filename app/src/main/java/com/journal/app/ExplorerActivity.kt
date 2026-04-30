@@ -98,7 +98,7 @@ class ExplorerActivity : AppCompatActivity() {
     private fun renderTableChips() {
         val container = findViewById<LinearLayout>(R.id.explorer_table_chips)
         container.removeAllViews()
-        var tables = listOf("entries", "images", "categories", "icons", "people", "settings", "schema_version")
+        var tables = listOf("entries", "images", "categories", "icons", "settings", "schema_version")
         try {
             val result = db.execRawSQL("SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%' ORDER BY name", "")
             val arr = JSONArray(result)

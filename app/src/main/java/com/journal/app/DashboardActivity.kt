@@ -29,6 +29,7 @@ class DashboardActivity : AppCompatActivity() {
 
     companion object {
         @JvmStatic var pendingData: String? = null
+        @JvmStatic var needsRefresh = false
     }
 
     private lateinit var dashboardData: JSONObject
@@ -66,7 +67,6 @@ class DashboardActivity : AppCompatActivity() {
         populateRankedPanel(R.id.tags_list, R.id.panel_tags, "topTags", "tags")
         populateRankedPanel(R.id.categories_list, R.id.panel_categories, "topCategories", "categories")
         populateRankedPanel(R.id.places_list, R.id.panel_places, "topPlaces", "placeName")
-        populateRankedPanel(R.id.people_list, R.id.panel_people, "topPeople", "people")
         applyDashboardComponentSettings()
     }
 
@@ -86,13 +86,12 @@ class DashboardActivity : AppCompatActivity() {
             "tags" to findViewById<View>(R.id.panel_tags),
             "categories" to findViewById<View>(R.id.panel_categories),
             "places" to findViewById<View>(R.id.panel_places),
-            "people" to findViewById<View>(R.id.panel_people),
             "today_history" to findViewById<View>(R.id.panel_today_history)
         )
 
         val defaultOrder = listOf(
             "weather_streak", "stats", "quick_actions", "widgets",
-            "pinned", "recent", "today_history", "tags", "categories", "places", "people"
+            "pinned", "recent", "today_history", "tags", "categories", "places"
         )
 
         val components = mutableListOf<Pair<String, Boolean>>()
@@ -873,7 +872,8 @@ class DashboardActivity : AppCompatActivity() {
 
     override fun onResume() {
         super.onResume()
-        if (lastThemeVersion != ThemeManager.themeVersion) {
+        if (lastThemeVersion != ThemeManager.themeVersion || needsRefresh) {
+            needsRefresh = false
             val db = ServiceProvider.databaseService ?: return
             val bs = ServiceProvider.bootstrapService ?: return
             Thread {

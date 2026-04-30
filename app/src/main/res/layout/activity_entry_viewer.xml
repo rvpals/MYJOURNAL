@@ -164,13 +164,10 @@
                     android:layout_marginBottom="4dp"
                     android:visibility="gone" />
 
-                <TextView
+                <WebView
                     android:id="@+id/ev_rich_content"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:textColor="@color/login_text"
-                    android:textSize="14sp"
-                    android:lineSpacingMultiplier="1.5"
                     android:layout_marginBottom="10dp"
                     android:visibility="gone" />
 

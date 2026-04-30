@@ -42,12 +42,11 @@ summary: "Complete functional requirements for all feature areas — authenticat
 - ~35 CRUD methods for all tables
 
 ### Schema
-- **entries**: id, date (YYYY-MM-DD), time (HH:MM), title, content (plain text), richContent (HTML), categories (JSON array), tags (JSON array), people (JSON array), placeName, locations (JSON array of {lat, lng, address, name?}), weather (JSON {temp, unit, description, code}), pinned (0/1), locked (0/1), dtCreated, dtUpdated
+- **entries**: id, date (YYYY-MM-DD), time (HH:MM), title, content (plain text), richContent (HTML), categories (JSON array), tags (JSON array), placeName, locations (JSON array of {lat, lng, address, name?}), weather (JSON {temp, unit, description, code}), pinned (0/1), locked (0/1), dtCreated, dtUpdated
 - **images**: id, entryId (FK), name, data (base64), thumb (base64), sortOrder
 - **categories**: name (PK), description
 - **tags**: name (PK), description
 - **icons**: type + name (composite PK), data (SVG/emoji)
-- **people**: firstName + lastName (composite PK), description
 - **widgets**: id (PK), name, description, bgColor, icon, filters (JSON), functions (JSON), enabledInDashboard, sortOrder, dtCreated, dtUpdated
 - **settings**: key (PK), value
 - **schema_version**: version (INT)
@@ -68,17 +67,16 @@ summary: "Complete functional requirements for all feature areas — authenticat
 
 ## 3. Journal Entries
 
-### Entry Form (EntryFormActivity.kt, ~1550 lines)
+### Entry Form (EntryFormActivity.kt)
 - 2 tabs: Main and Misc
 - Top navbar: Back (←), title, Save, Cancel, Delete (edit only) — no bottom action bar
 - Date: `DatePickerDialog`; Time: `TimePickerDialog`
 - Title: `EditText`
 - Content group box with 2 sub-tabs:
   - **Content tab**: large plain text editor (minLines 10, maxLines 20)
-  - **Rich Content tab**: formatting toolbar (B/I/U/S via `Spannable` — `StyleSpan`, `UnderlineSpan`, `StrikethroughSpan`), rich text editor (minLines 8, maxLines 16), "Copy Content → Rich Content" button; `Html.fromHtml()`/`Html.toHtml()` for persistence
+  - **Rich Content tab**: HTML preview of current rich content + "Edit Rich Content" button that launches full-screen RichEditorActivity; richContent stored as HTML string
 - Categories: checkboxes from managed list + quick-add inline
 - Tags: `AutoCompleteTextView` with chip display + quick-add inline
-- People: checkboxes from managed list + quick-add inline (first/last name + description)
 - Place name: `EditText`
 - Locations: geocoding search (Photon/Nominatim) via background thread, GPS via `LocationManager.requestSingleUpdate()`, manual lat/lng entry; results shown in `AlertDialog` picker
 - Weather: `WeatherService.fetchCurrent()` on background thread
@@ -89,16 +87,25 @@ summary: "Complete functional requirements for all feature areas — authenticat
 - Card view: entry cards with date, title, category badge, tag chips, content preview
 - Alternating row colors: even rows use `CARD_BG`, odd rows use `INPUT_BG`, with `CARD_BORDER` stroke
 - Collapsible "Filter Info" box: search bar, category/tag spinners, clear button, select mode, page size — collapsed by default, toggle via header tap
-- Search: across title, content, tags, categories, people, place
+- Search: across title, content, tags, categories, place
 - Filters: category and tag filter spinners
 - Pagination: 10, 20, 50, 100 entries per page
 - Sort: "Order by" dropdowns in Filter Info box — field selector (Date, Time, Title, Created, Updated, Categories, Tags) and direction (Desc/Asc), persisted to BootstrapService
 - Multi-select mode: checkbox per entry, batch delete with confirmation
 - Widget filter support: `matchesWidgetFilters()` with date/text/array operators
 
+### Rich Text Editor (RichEditorActivity.kt)
+- Full-screen Quill.js editor in a WebView (`assets/rich_editor.html`)
+- Toolbar: bold, italic, underline, strikethrough, headers (H1/H2/H3), font size (small/normal/large/huge), ordered/bullet lists, text/background color, alignment, links, inline images
+- "Copy Content" button: imports plain text content from the Content tab into the editor
+- Theme-aware: CSS variables set from ThemeManager colors (bg, card, text, accent, border, input)
+- Quill loaded from CDN (`cdn.quilljs.com/1.3.7`)
+- Returns HTML via `ActivityResult` intent extra `richContentHtml`
+- Paste from web pages preserves formatting and inline images (converted to base64 data URLs)
+
 ### Entry Viewer (EntryViewerActivity.kt)
 - Read-only display of all entry fields
-- Rich content rendered via `Html.fromHtml()` + `TextView`
+- Rich content rendered in a themed WebView (supports inline images, tables, all HTML formatting)
 - Image thumbnails displayed
 - Action buttons: Lock/Unlock, Pin/Unpin, Edit, Delete, Back
 - Lock/Unlock toggle with confirmation prompt; locked entries disable Edit button
@@ -111,7 +118,7 @@ summary: "Complete functional requirements for all feature areas — authenticat
 - `DashboardDataBuilder.build(db, bs)` computes all dashboard data natively:
   - Total entries, this week/month/year counts
   - Streak (consecutive days with entries)
-  - Top tags, categories, places, people (ranked by count, top 20)
+  - Top tags, categories, places (ranked by count, top 20)
   - Pinned entries (up to 20), recent entries (5)
   - Widget results (filtered + aggregated)
   - Journal name, theme
@@ -123,7 +130,7 @@ summary: "Complete functional requirements for all feature areas — authenticat
 - Stats grid wrapped in `stats_container` for reordering as a unit
 
 ### Ranked Panels
-- Top tags, categories, places, people — ranked by entry count
+- Top tags, categories, places — ranked by entry count
 - Clickable items open EntryListActivity with field-specific filter
 - 3D rank badges: vertical gradient (cyan→accent→dark teal), rounded corners (8dp), elevation shadow
 - 3D count badges: dark gradient, rounded corners (6dp), elevation shadow
@@ -171,7 +178,7 @@ summary: "Complete functional requirements for all feature areas — authenticat
 - Saved filter/sort/group combinations with a name
 - Condition builder: field, operator, value triplets
 - Logic: AND, OR, NOT combinations
-- Supported fields: date, time, title, content, categories, tags, placeName, locations, weather, people
+- Supported fields: date, time, title, content, categories, tags, placeName, locations, weather
 - Group by, sort by, display mode override
 - Pin to dashboard as quick action button
 
@@ -228,7 +235,6 @@ summary: "Complete functional requirements for all feature areas — authenticat
 ### Metadata Editing
 - Categories: add, rename, delete, color picker, description, icons
 - Tags: add, rename, delete, color picker, description
-- People: add, edit, delete (first/last name, description)
 - Icons: custom 64x64 (standard) and 128x128 (HD) PNG data URLs
 
 ### Data Management
@@ -247,7 +253,7 @@ summary: "Complete functional requirements for all feature areas — authenticat
 - Live preview in editor
 
 ### Dashboard Components
-- Toggle 11 dashboard components on/off: Weather & Streak, Stats Grid, Quick Actions, Widgets, Pinned Entries, Recent Entries, Today in History, Top Tags, Top Categories, Top Places, People
+- Toggle 10 dashboard components on/off: Weather & Streak, Stats Grid, Quick Actions, Widgets, Pinned Entries, Recent Entries, Today in History, Top Tags, Top Categories, Top Places
 - Reorder components via ▲/▼ arrow buttons
 - Config stored in BootstrapService as `dashboard_components` JSON array of `{id, enabled}` objects
 - DashboardActivity reads config and reorders/hides panels dynamically
@@ -262,21 +268,22 @@ summary: "Complete functional requirements for all feature areas — authenticat
 
 ## 10. Android Platform
 
-### Activities (all Kotlin — 14 total, no WebView)
+### Activities (all Kotlin — 15 total)
 1. **LoginActivity** (launcher) — Journal selection, password, biometric
 2. **DashboardActivity** — Native stats/entries/rankings/widgets
 3. **CalendarActivity** — Native monthly calendar with entry dots, day selection
 4. **AboutActivity** — App info, version, links
 5. **SearchActivity** — Native full-text search across all entries
-6. **EntryViewerActivity** — Native entry viewer with font customization
+6. **EntryViewerActivity** — Native entry viewer with font customization, rich content in WebView
 7. **SettingsActivity** — Full native settings (6 tabs: Prefs, Templates, Metadata, Data, Widgets, Dashboard)
 8. **EntryListActivity** — Native entry list with search, filter, sort, pagination, batch delete
 9. **ExplorerActivity** — Native SQL Explorer with table browser, query builder, results, exports
-10. **EntryFormActivity** — Native entry form with rich text, images, categories, tags, people, locations, weather
-11. **ReportsActivity** — Native reports with HTML/PDF/CSV generation
-12. **WidgetEditorActivity** — Native widget editor with tabs, live preview
-13. **CustomViewEditorActivity** — Native custom view editor
-14. **CsvMappingActivity** — Native CSV import column mapping with file picker, test preview (20 random rows), result grid
+10. **EntryFormActivity** — Native entry form with rich text (launches RichEditorActivity), images, categories, tags, locations, weather
+11. **RichEditorActivity** — Full-screen Quill.js rich text editor in WebView (headers, font size, lists, colors, inline images)
+12. **ReportsActivity** — Native reports with HTML/PDF/CSV generation
+13. **WidgetEditorActivity** — Native widget editor with tabs, live preview
+14. **CustomViewEditorActivity** — Native custom view editor
+15. **CsvMappingActivity** — Native CSV import column mapping with file picker, test preview (20 random rows), result grid
 
 ### Services (via ServiceProvider singleton)
 - **ServiceProvider.kt** — Singleton holding all 4 services, initialized in LoginActivity
