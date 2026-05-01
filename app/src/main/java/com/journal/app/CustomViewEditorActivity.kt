@@ -93,6 +93,10 @@ class CustomViewEditorActivity : AppCompatActivity() {
     private var groupByPos = 0
     private var displayModePos = 0
 
+    override fun attachBaseContext(newBase: android.content.Context) {
+        super.attachBaseContext(ThemeManager.fontScaledContext(newBase))
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_custom_view_editor)

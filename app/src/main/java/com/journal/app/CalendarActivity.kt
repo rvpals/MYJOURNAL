@@ -38,6 +38,10 @@ class CalendarActivity : AppCompatActivity() {
     private var selectedDate: String? = null
     private var selectedDayEntryIds = listOf<String>()
 
+    override fun attachBaseContext(newBase: android.content.Context) {
+        super.attachBaseContext(ThemeManager.fontScaledContext(newBase))
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_calendar)

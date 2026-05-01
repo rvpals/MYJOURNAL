@@ -69,6 +69,10 @@ class EntryListActivity : AppCompatActivity() {
     private var widgetFilters: JSONArray? = null
     private var widgetName: String? = null
 
+    override fun attachBaseContext(newBase: android.content.Context) {
+        super.attachBaseContext(ThemeManager.fontScaledContext(newBase))
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_entry_list)

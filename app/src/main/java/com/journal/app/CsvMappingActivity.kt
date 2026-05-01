@@ -52,6 +52,10 @@ class CsvMappingActivity : AppCompatActivity() {
 
     private val mappingRows = mutableListOf<MappingRow>()
 
+    override fun attachBaseContext(newBase: android.content.Context) {
+        super.attachBaseContext(ThemeManager.fontScaledContext(newBase))
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_csv_mapping)

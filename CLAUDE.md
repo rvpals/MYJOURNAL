@@ -34,7 +34,7 @@ MYJOURNAL/
 │   │   │   ├── EntryViewerActivity.kt   # Native entry viewer with font settings
 │   │   │   ├── EntryListActivity.kt     # Native entry list (collapsible filters, order-by dropdowns, alternating rows, search, sort, paginate, batch delete)
 │   │   │   ├── ExplorerActivity.kt      # Native SQL Explorer (table browser, query builder, raw SQL, CSV/iCal export)
-│   │   │   ├── SettingsActivity.kt      # Native settings (7 tabs in 3-row grid: Prefs, Templates, Metadata, Data, Widgets, Dashboard, Display)
+│   │   │   ├── SettingsActivity.kt      # Native settings (7 tabs in 3-row grid: Prefs, Templates, Metadata, Data, Widgets, Dashboard, Display incl. App Font)
 │   │   │   ├── EntryFormActivity.kt     # Native entry form (content, images, categories, tags, locations, weather)
 │   │   │   ├── ReportsActivity.kt       # Native reports (HTML export+browser open, PDF/CSV, filters, templates)
 │   │   │   ├── WidgetEditorActivity.kt  # Native widget editor (header/filters/functions tabs, preview)
@@ -46,7 +46,7 @@ MYJOURNAL/
 │   │   │   ├── CryptoService.kt         # AES-256-GCM + PBKDF2
 │   │   │   ├── WeatherService.kt        # Open-Meteo HTTP client
 │   │   │   └── DatabaseService.kt       # SQLCipher encrypted DB
-│   │   │   ├── ThemeManager.kt          # Runtime theme system (12 themes, view tree recoloring)
+│   │   │   ├── ThemeManager.kt          # Runtime theme system (12 themes, view tree recoloring, app font scale + typeface)
 │   │   ├── res/
 │   │   │   ├── drawable/           # Button ripples, input/card/search/stat backgrounds, 3D tab/search drawables (25+ XML files)
 │   │   │   ├── layout/            # 14 activity layouts + 2 spinner item layouts
@@ -119,19 +119,19 @@ Navigation between activities uses standard Android `startActivity()`.
 
 Light, Dark, Ocean, Midnight, Forest, Amethyst, Aurora, Lavender, Frost, Navy, Sunflower, Meadow — theme selection stored in settings DB.
 
-`ThemeManager.kt` singleton provides runtime theme colors. All activities call `ThemeManager.applyToActivity(this)` in `onCreate` to recolor XML-set backgrounds/text. Activities detect theme changes via `themeVersion` counter in `onResume`.
+`ThemeManager.kt` singleton provides runtime theme colors, app font scale, and typeface. All activities call `ThemeManager.applyToActivity(this)` in `onCreate` to recolor XML-set backgrounds/text and schedule typeface application. All 13 post-login activities override `attachBaseContext` with `ThemeManager.fontScaledContext()` for font size scaling. Activities detect theme/font changes via `themeVersion` counter in `onResume`.
 
 ## Key Conventions
 
 - **Fully native** — all 14 screens are Kotlin activities
 - **ServiceProvider singleton** — all activities access services via `ServiceProvider.xxxService`
-- **ThemeManager singleton** — runtime theme colors via `ThemeManager.color(C.*)`, replaces static `R.color.login_*` resources
+- **ThemeManager singleton** — runtime theme colors via `ThemeManager.color(C.*)`, app font scale via `fontScaledContext()`, typeface via `applyTypefaceToViewTree()`
 - **DashboardDataBuilder** — computes dashboard JSON natively from DatabaseService
 - **Encryption everywhere** — SQLCipher auto-encrypts DB files
 - **Bootstrap store** — all key-value storage uses BootstrapService (SharedPreferences wrapper)
 - **Large data to activities** — SearchActivity, CalendarActivity use static `companion object` holders for entry data (avoids TransactionTooLargeException)
 - **Dashboard component settings** — Settings > Dashboard tab allows toggling/reordering 11 components; stored in BootstrapService as `dashboard_components` JSON
-- **Dashboard auto-refresh** — `DashboardActivity.needsRefresh` static flag; set after erase all entries, CSV import completion, or widget save/delete; checked in `onResume()` to rebuild dashboard data
+- **Dashboard auto-refresh** — `DashboardActivity.needsRefresh` static flag; set after erase all entries, CSV import completion, widget save/delete, or category icon change; checked in `onResume()` to rebuild dashboard data
 - **DashboardActivity navigation** — hamburger menu (☰) in top navbar with PopupMenu (Entries, Calendar, Reports, Explorer, Settings, About); no bottom nav bar
 - **File exports** — `ServiceProvider.saveFileToDownloads()` via MediaStore scoped storage (API 29+)
 - **Entry form layout** — Plain text content input; all action buttons (Save/Cancel/Delete) in top navbar, no bottom bar

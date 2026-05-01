@@ -53,6 +53,10 @@ class ReportsActivity : AppCompatActivity() {
     private var tags = listOf<String>()
     private var templates = JSONArray()
 
+    override fun attachBaseContext(newBase: android.content.Context) {
+        super.attachBaseContext(ThemeManager.fontScaledContext(newBase))
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_reports)

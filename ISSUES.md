@@ -13,6 +13,10 @@ summary: "Known bugs, platform limitations, fixed issues, and architectural note
 
 ## Fixed Issues
 
+### 2026-05-01
+
+- **Dashboard not refreshing after category icon change** — `handleIconResult()` and icon remove button in SettingsActivity did not set `DashboardActivity.needsRefresh`. Icons assigned to categories wouldn't appear in the Top Categories dashboard panel until app restart. Added `needsRefresh = true` in both paths.
+
 ### 2026-04-30 (session 2)
 
 - **Category icon editing missing** — Edit category dialog only had description field. Added Change Icon / Remove buttons with image picker, saves 64px + 128px icons to DB.
@@ -77,7 +81,7 @@ summary: "Known bugs, platform limitations, fixed issues, and architectural note
 
 - All 14 screens are Kotlin activities. No WebView usage.
 - **ServiceProvider singleton**: Holds CryptoService, BootstrapService, WeatherService, DatabaseService. Initialized in LoginActivity, accessed by all activities.
-- **ThemeManager singleton**: Runtime theme system with 12 color maps. `ThemeManager.color(C.*)` replaces static XML resources. `applyToActivity()` recolors view tree. Theme changes detected via `themeVersion` counter.
+- **ThemeManager singleton**: Runtime theme system with 12 color maps. `ThemeManager.color(C.*)` replaces static XML resources. `applyToActivity()` recolors view tree and schedules typeface application. `fontScaledContext()` provides scaled context for `attachBaseContext`. Theme/font changes detected via `themeVersion` counter.
 - **DashboardDataBuilder**: Computes dashboard JSON natively from DatabaseService.
 - **Login flow**: LoginActivity -> ServiceProvider.init() -> DB open -> ThemeManager.init() -> DashboardDataBuilder.build() -> DashboardActivity.
 - **21 Kotlin source files**: 14 activities + 4 services + ServiceProvider + DashboardDataBuilder + ThemeManager.
@@ -89,7 +93,7 @@ summary: "Known bugs, platform limitations, fixed issues, and architectural note
 - **EntryFormActivity**: Plain text content input. Action buttons (Save/Cancel/Delete) in top navbar, no bottom bar.
 - **ReportsActivity**: HTML button exports to Downloads and opens in browser via ACTION_VIEW intent. Output area 600dp.
 - **EntryListActivity**: Collapsible "Filter Info" box with search, category/tag filters, "Order by" dropdowns (field + direction), select mode, page size. Alternating row colors (CARD_BG/INPUT_BG) with CARD_BORDER stroke.
-- **SettingsActivity**: 7 tabs in 3-row grid (3 per row, equal-width) instead of horizontal scroll. Display tab for theme, font, and alternate row color.
+- **SettingsActivity**: 7 tabs in 3-row grid (3 per row, equal-width) instead of horizontal scroll. Display tab for theme, app font (family + size), entry viewer font, and alternate row color.
 
 ### Dashboard Components (11 total)
 
@@ -97,7 +101,7 @@ Weather/streak, Stats, Quick actions, Widgets, Pinned entries, Recent entries, T
 
 ### Dashboard Auto-Refresh
 
-`DashboardActivity.needsRefresh` static flag triggers dashboard rebuild in `onResume()`. Set after: erase all entries (SettingsActivity), CSV import completion (SettingsActivity — shows AlertDialog, OK finishes back to dashboard), widget save/delete (WidgetEditorActivity).
+`DashboardActivity.needsRefresh` static flag triggers dashboard rebuild in `onResume()`. Set after: erase all entries (SettingsActivity), CSV import completion (SettingsActivity — shows AlertDialog, OK finishes back to dashboard), widget save/delete (WidgetEditorActivity), category icon change (SettingsActivity — icon upload or remove).
 
 ### Widgets
 

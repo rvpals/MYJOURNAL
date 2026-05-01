@@ -27,6 +27,12 @@ object ThemeManager {
         private set
     var themeVersion: Int = 0
         private set
+    var fontScale: Float = 1.0f
+        private set
+    var uiTypeface: android.graphics.Typeface = android.graphics.Typeface.DEFAULT
+        private set
+    var uiFontFamily: String = ""
+        private set
 
     private var colors: Map<C, Int> = mapOf()
 
@@ -170,12 +176,38 @@ object ThemeManager {
         val settings = try { org.json.JSONObject(settingsJson) } catch (_: Exception) { org.json.JSONObject() }
         val theme = settings.optString("theme", "dark").trim('"')
         setTheme(theme)
+        loadFontSettings()
     }
 
     fun setTheme(name: String) {
         currentTheme = if (themes.containsKey(name)) name else "dark"
         colors = themes[currentTheme] ?: themes["dark"]!!
         themeVersion++
+    }
+
+    fun loadFontSettings() {
+        val bs = ServiceProvider.bootstrapService ?: return
+        fontScale = bs.get("ui_font_scale")?.toFloatOrNull() ?: 1.0f
+        uiFontFamily = bs.get("ui_font_family") ?: ""
+        uiTypeface = resolveTypeface(uiFontFamily)
+        themeVersion++
+    }
+
+    private fun resolveTypeface(family: String): android.graphics.Typeface {
+        if (family.isEmpty()) return android.graphics.Typeface.DEFAULT
+        return when {
+            family.equals("serif", true) -> android.graphics.Typeface.SERIF
+            family.equals("monospace", true) -> android.graphics.Typeface.MONOSPACE
+            family.equals("sans-serif", true) -> android.graphics.Typeface.SANS_SERIF
+            else -> try { android.graphics.Typeface.create(family, android.graphics.Typeface.NORMAL) } catch (_: Exception) { android.graphics.Typeface.DEFAULT }
+        }
+    }
+
+    fun fontScaledContext(context: android.content.Context): android.content.Context {
+        if (fontScale == 1.0f) return context
+        val config = android.content.res.Configuration(context.resources.configuration)
+        config.fontScale = fontScale
+        return context.createConfigurationContext(config)
     }
 
     fun color(c: C): Int = colors[c] ?: 0xFF000000.toInt()
@@ -196,6 +228,9 @@ object ThemeManager {
         val contentView = activity.findViewById<View>(android.R.id.content)
         if (contentView is ViewGroup && contentView.childCount > 0) {
             recolorViewTree(contentView.getChildAt(0))
+        }
+        if (uiFontFamily.isNotEmpty()) {
+            contentView.post { applyTypefaceToViewTree(contentView) }
         }
         val isLight = isLightTheme()
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
@@ -253,6 +288,10 @@ object ThemeManager {
             val hintColor = view.currentHintTextColor
             val remappedHint = remapColor(hintColor)
             if (remappedHint != hintColor) view.setHintTextColor(remappedHint)
+            if (uiFontFamily.isNotEmpty()) {
+                val style = view.typeface?.style ?: android.graphics.Typeface.NORMAL
+                view.typeface = android.graphics.Typeface.create(uiTypeface, style)
+            }
         }
         if (view is ViewGroup) {
             for (i in 0 until view.childCount) {
@@ -350,5 +389,18 @@ object ThemeManager {
     fun accentButtonDrawable(radiusDp: Float = 8f): GradientDrawable = GradientDrawable().apply {
         setColor(color(C.ACCENT))
         cornerRadius = radiusDp
+    }
+
+    fun applyTypefaceToViewTree(view: View) {
+        if (uiFontFamily.isEmpty()) return
+        if (view is TextView) {
+            val style = view.typeface?.style ?: android.graphics.Typeface.NORMAL
+            view.typeface = android.graphics.Typeface.create(uiTypeface, style)
+        }
+        if (view is ViewGroup) {
+            for (i in 0 until view.childCount) {
+                applyTypefaceToViewTree(view.getChildAt(i))
+            }
+        }
     }
 }

@@ -52,6 +52,10 @@ class SettingsActivity : AppCompatActivity() {
 
     private var iconPickerTarget: Pair<String, String>? = null
 
+    override fun attachBaseContext(newBase: android.content.Context) {
+        super.attachBaseContext(ThemeManager.fontScaledContext(newBase))
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_settings)
@@ -165,6 +169,9 @@ class SettingsActivity : AppCompatActivity() {
             "widgets" -> buildWidgetsTab()
             "dashboard" -> buildDashboardTab()
             "display" -> buildDisplayTab()
+        }
+        if (ThemeManager.uiFontFamily.isNotEmpty()) {
+            ThemeManager.applyTypefaceToViewTree(contentContainer)
         }
     }
 
@@ -320,6 +327,19 @@ class SettingsActivity : AppCompatActivity() {
     }
 
     private var fontPreview: TextView? = null
+    private var uiFontPreview: TextView? = null
+
+    private fun updateUiFontPreview() {
+        val preview = uiFontPreview ?: return
+        val family = bs.get("ui_font_family") ?: ""
+        val scale = bs.get("ui_font_scale")?.toFloatOrNull() ?: 1.0f
+        if (family.isNotEmpty()) {
+            preview.typeface = try { android.graphics.Typeface.create(family, android.graphics.Typeface.NORMAL) } catch (_: Exception) { android.graphics.Typeface.DEFAULT }
+        } else {
+            preview.typeface = android.graphics.Typeface.DEFAULT
+        }
+        preview.setTextSize(TypedValue.COMPLEX_UNIT_SP, 14f * scale)
+    }
 
     private fun updateFontPreview() {
         val preview = fontPreview ?: return
@@ -1932,6 +1952,7 @@ class SettingsActivity : AppCompatActivity() {
                 db.removeIcon("category", name)
                 db.removeIcon("category_hd", name)
                 iconPreview.setImageBitmap(null)
+                DashboardActivity.needsRefresh = true
             }
         })
 
@@ -3028,6 +3049,7 @@ class SettingsActivity : AppCompatActivity() {
             val largeB64 = "data:image/png;base64," + Base64.encodeToString(largeStream.toByteArray(), Base64.NO_WRAP)
             db.setIcon(target.first + "_hd", target.second, largeB64)
 
+            DashboardActivity.needsRefresh = true
             showTab("cattags")
         } catch (_: Exception) {
             Toast.makeText(this, "Failed to load icon", Toast.LENGTH_SHORT).show()
@@ -3398,6 +3420,73 @@ class SettingsActivity : AppCompatActivity() {
             ThemeManager.setTheme(themes[idx])
             recreate()
         }
+
+        buildSpacer()
+
+        // UI Font
+        buildSectionHeader("🔠  App Font")
+        val uiFontFamilies = listOf(
+            "" to "Default (System)",
+            "sans-serif" to "Sans Serif",
+            "serif" to "Serif",
+            "monospace" to "Monospace",
+            "sans-serif-light" to "Sans Serif Light",
+            "sans-serif-medium" to "Sans Serif Medium",
+            "sans-serif-condensed" to "Sans Serif Condensed",
+            "casual" to "Casual",
+            "cursive" to "Cursive"
+        )
+        val currentUiFont = bs.get("ui_font_family") ?: ""
+        buildSpinner("Font Family", uiFontFamilies.map { it.second }, uiFontFamilies.indexOfFirst { it.first == currentUiFont }.coerceAtLeast(0)) { idx ->
+            bs.set("ui_font_family", uiFontFamilies[idx].first.ifEmpty { null })
+            ThemeManager.loadFontSettings()
+            updateUiFontPreview()
+        }
+
+        val uiFontScales = listOf(
+            "0.85" to "Small",
+            "0.92" to "Medium Small",
+            "1.0" to "Default",
+            "1.1" to "Large",
+            "1.2" to "X-Large",
+            "1.35" to "XX-Large"
+        )
+        val currentScale = bs.get("ui_font_scale") ?: "1.0"
+        buildSpinner("Font Size", uiFontScales.map { it.second }, uiFontScales.indexOfFirst { it.first == currentScale }.coerceAtLeast(2)) { idx ->
+            bs.set("ui_font_scale", uiFontScales[idx].first)
+            ThemeManager.loadFontSettings()
+            updateUiFontPreview()
+        }
+
+        uiFontPreview = TextView(this).apply {
+            text = "The quick brown fox jumps over the lazy dog."
+            setTextColor(ThemeManager.color(C.TEXT))
+            textSize = 14f
+            setPadding(dp(12), dp(10), dp(12), dp(10))
+            background = ContextCompat.getDrawable(this@SettingsActivity, R.drawable.input_bg)
+            layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            ).apply { bottomMargin = dp(4) }
+        }
+        contentContainer.addView(uiFontPreview)
+        updateUiFontPreview()
+
+        contentContainer.addView(Button(this).apply {
+            text = "Apply"
+            textSize = 13f
+            isAllCaps = false
+            setTextColor(ThemeManager.color(C.NAV_TEXT))
+            background = ThemeManager.accentButtonDrawable(dp(8).toFloat())
+            layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            ).apply { bottomMargin = dp(8) }
+            setPadding(dp(14), dp(10), dp(14), dp(10))
+            setOnClickListener {
+                recreate()
+            }
+        })
 
         buildSpacer()
 

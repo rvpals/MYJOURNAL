@@ -135,7 +135,7 @@ summary: "Remaining backlog, test checklist, version-by-version completion histo
 ### Settings
 
 - [ ] **Preferences tab** — Auto-open journal, confirm delete, biometric toggle, geocoding provider, date/time format, max pinned, sort order
-- [ ] **Display tab** — Theme picker, viewer font with live preview, alternate row background color picker
+- [ ] **Display tab** — Theme picker, app font (family + size with preview and Apply), entry viewer font with live preview, alternate row background color picker
 - [ ] **Theme picker** — All 12 themes apply correctly (ThemeManager recolors backgrounds, text, status bar)
 - [ ] **Theme persistence** — Selected theme survives app restart (saved in DB settings, loaded via ThemeManager.init())
 - [ ] **Theme propagation** — After theme change in Settings, Dashboard and other activities update colors on return
@@ -455,6 +455,16 @@ summary: "Remaining backlog, test checklist, version-by-version completion histo
 - [x] Daily Inspiration panel: always visible (empty state shows "No quotes yet" prompt), ✏️ edit button deep-links to Settings > Metadata
 - [x] Settings deep-link: `SettingsActivity.initialTab` allows opening to a specific tab
 - [x] Collapsible Categories and Tags lists in Metadata tab, state persisted in BootstrapService
+
+### v1.5.0+ (2026-05-01, App Font customization + icon refresh fix)
+- [x] App Font settings in Display tab: font family (9 options: System, Sans Serif, Serif, Monospace, etc.) and font size scale (Small/Medium Small/Default/Large/X-Large/XX-Large)
+- [x] Font scale uses Android `Configuration.fontScale` via `attachBaseContext` — all SP-based text sizes scale automatically across all 13 post-login activities
+- [x] Font family applied via `ThemeManager.applyTypefaceToViewTree()` — walks view tree to set typeface on all TextViews, including dynamically created views
+- [x] Live preview in Display tab shows selected font family and size
+- [x] Apply button recreates activity to apply font scale changes
+- [x] Settings stored in BootstrapService: `ui_font_family`, `ui_font_scale`
+- [x] `ThemeManager.loadFontSettings()` reads font preferences, called during `init()` and on Display tab changes
+- [x] Fix: Dashboard not refreshing after category icon change — `DashboardActivity.needsRefresh` now set in `handleIconResult()` and icon remove handler
 
 ## Kotlin Migration (complete)
 

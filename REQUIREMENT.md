@@ -219,6 +219,7 @@ summary: "Complete functional requirements for all feature areas — authenticat
 
 ### Display Preferences (Display tab)
 - Theme picker: 12 themes with instant apply
+- App Font: font family (9 options: System, Sans Serif, Serif, Monospace, Sans Serif Light/Medium/Condensed, Casual, Cursive) and font size scale (Small/Medium Small/Default/Large/X-Large/XX-Large) with live preview and Apply button; stored in BootstrapService (`ui_font_family`, `ui_font_scale`); font scale applied via Android `Configuration.fontScale` in `attachBaseContext` across all 13 post-login activities; font family applied via `ThemeManager.applyTypefaceToViewTree()`
 - Entry Viewer font: family + size with live preview
 - Alternate row background color: color picker with presets and hex input, reset to theme default
 
@@ -293,7 +294,7 @@ summary: "Complete functional requirements for all feature areas — authenticat
 
 ### Utilities
 - **DashboardDataBuilder.kt** — Computes dashboard JSON from DatabaseService
-- **ThemeManager.kt** — Runtime theme singleton with 12 theme color maps, view tree recoloring, light/dark status bar
+- **ThemeManager.kt** — Runtime theme singleton with 12 theme color maps, view tree recoloring, light/dark status bar, app font scale (`fontScaledContext`) and typeface (`applyTypefaceToViewTree`)
 
 ### Permissions
 - INTERNET — API access (weather, geocoding)

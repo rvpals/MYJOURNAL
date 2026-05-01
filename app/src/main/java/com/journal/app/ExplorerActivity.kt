@@ -70,6 +70,10 @@ class ExplorerActivity : AppCompatActivity() {
     private var lastRawCols: List<String>? = null
     private var lastIsEntryQuery = true
 
+    override fun attachBaseContext(newBase: android.content.Context) {
+        super.attachBaseContext(ThemeManager.fontScaledContext(newBase))
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_explorer)

@@ -106,6 +106,10 @@ class EntryFormActivity : AppCompatActivity() {
         if (granted) fetchGpsLocation()
     }
 
+    override fun attachBaseContext(newBase: android.content.Context) {
+        super.attachBaseContext(ThemeManager.fontScaledContext(newBase))
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_entry_form)

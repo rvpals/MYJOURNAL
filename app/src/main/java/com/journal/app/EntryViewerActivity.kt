@@ -63,6 +63,10 @@ class EntryViewerActivity : AppCompatActivity() {
     private var lightboxIndex = 0
     private var lightboxDialog: Dialog? = null
 
+    override fun attachBaseContext(newBase: android.content.Context) {
+        super.attachBaseContext(ThemeManager.fontScaledContext(newBase))
+    }
+
     @SuppressLint("ClickableViewAccessibility")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
