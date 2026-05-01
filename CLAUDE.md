@@ -4,6 +4,11 @@ related_files: [REQUIREMENT.md, TO_DO.md, README.md]
 summary: "Project architecture reference — directory structure, tech stack, database schema, ServiceProvider pattern, build instructions, and coding conventions."
 ---
 
+## Response Style
+- Keep responses minimal — 1-2 sentences max unless asked for detail.
+- No summaries, no explanations of what was changed unless asked.
+- Just make the change and confirm briefly.
+
 # MYJOURNAL — Project Guide
 
 ## Overview
@@ -29,7 +34,7 @@ MYJOURNAL/
 │   │   │   ├── EntryViewerActivity.kt   # Native entry viewer with font settings
 │   │   │   ├── EntryListActivity.kt     # Native entry list (collapsible filters, order-by dropdowns, alternating rows, search, sort, paginate, batch delete)
 │   │   │   ├── ExplorerActivity.kt      # Native SQL Explorer (table browser, query builder, raw SQL, CSV/iCal export)
-│   │   │   ├── SettingsActivity.kt      # Native settings (6 tabs in 2-row grid: Prefs, Templates, Metadata (categories/tags), Data, Widgets, Dashboard)
+│   │   │   ├── SettingsActivity.kt      # Native settings (7 tabs in 3-row grid: Prefs, Templates, Metadata, Data, Widgets, Dashboard, Display)
 │   │   │   ├── EntryFormActivity.kt     # Native entry form (content, images, categories, tags, locations, weather)
 │   │   │   ├── ReportsActivity.kt       # Native reports (HTML export+browser open, PDF/CSV, filters, templates)
 │   │   │   ├── WidgetEditorActivity.kt  # Native widget editor (header/filters/functions tabs, preview)
@@ -83,6 +88,7 @@ Output: `app/build/outputs/apk/debug/app-debug.apk`
 **tags** — name (PK), description
 **icons** — type + name (composite PK), data (PNG data URL). Types: category, tag (64x64), category_hd, tag_hd (128x128 for image buttons)
 **widgets** — id (PK), name, description, bgColor, icon, filters (JSON), functions (JSON), enabledInDashboard, sortOrder, dtCreated, dtUpdated
+**inspiration** — id (PK, autoincrement), quote (TEXT), source (TEXT)
 **settings** — key (PK), value
 **schema_version** — version (INT)
 
@@ -124,12 +130,14 @@ Light, Dark, Ocean, Midnight, Forest, Amethyst, Aurora, Lavender, Frost, Navy, S
 - **Encryption everywhere** — SQLCipher auto-encrypts DB files
 - **Bootstrap store** — all key-value storage uses BootstrapService (SharedPreferences wrapper)
 - **Large data to activities** — SearchActivity, CalendarActivity use static `companion object` holders for entry data (avoids TransactionTooLargeException)
-- **Dashboard component settings** — Settings > Dashboard tab allows toggling/reordering 10 components; stored in BootstrapService as `dashboard_components` JSON
-- **Dashboard auto-refresh** — `DashboardActivity.needsRefresh` static flag; set after erase all entries or CSV import completion; checked in `onResume()` to rebuild dashboard data
+- **Dashboard component settings** — Settings > Dashboard tab allows toggling/reordering 11 components; stored in BootstrapService as `dashboard_components` JSON
+- **Dashboard auto-refresh** — `DashboardActivity.needsRefresh` static flag; set after erase all entries, CSV import completion, or widget save/delete; checked in `onResume()` to rebuild dashboard data
 - **DashboardActivity navigation** — hamburger menu (☰) in top navbar with PopupMenu (Entries, Calendar, Reports, Explorer, Settings, About); no bottom nav bar
 - **File exports** — `ServiceProvider.saveFileToDownloads()` via MediaStore scoped storage (API 29+)
 - **Entry form layout** — Plain text content input; all action buttons (Save/Cancel/Delete) in top navbar, no bottom bar
-- **Entry list** — Collapsible "Filter Info" box with search/filter controls and Order by dropdowns (field + asc/desc); alternating row colors (`CARD_BG`/`INPUT_BG`) with `CARD_BORDER` stroke
-- **Settings tabs** — 2-row grid layout (3 tabs per row), equal-width buttons, no horizontal scrolling
+- **Entry list** — Collapsible "Filter Info" box with search/filter controls and Order by dropdowns (field + asc/desc); alternating row colors (`CARD_BG`/custom `alt_row_bg_color`) with `CARD_BORDER` stroke
+- **Settings tabs** — 3-row grid layout (3 tabs per row), equal-width buttons, no horizontal scrolling; 7 tabs: Prefs, Templates, Metadata, Data, Widgets, Dashboard, Display
 - **HTML reports** — Exported to Downloads and opened in browser via `ACTION_VIEW` intent
 - **CSV mapping** — CsvMappingActivity has Select CSV (file picker + auto-map headers), Test (20 random rows with mapping applied), and Save Mapping buttons; result grid with HorizontalScrollView and alternating row colors
+- **Settings deep-link** — `SettingsActivity.initialTab` static field allows opening Settings to a specific tab (e.g. "cattags" for Metadata)
+- **Collapsible metadata sections** — Categories and Tags lists in Metadata tab are collapsible; state persisted in BootstrapService

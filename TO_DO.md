@@ -35,8 +35,8 @@ summary: "Remaining backlog, test checklist, version-by-version completion histo
 - [ ] **CalendarActivity** — Monthly grid renders correctly, day selection shows entries, today/selected highlighting, prev/next month navigation, Today button, entry rows clickable
 - [ ] **SearchActivity** — Search icon button on dashboard opens native search screen, text input with search/clear, whole-word checkbox, results show title/date/content snippet/metadata, back button returns to dashboard
 - [ ] **EntryViewerActivity** — Font settings applied (reads ev_font_family/ev_font_size from BootstrapService), title bold at 1.3x
-- [ ] **SettingsActivity** — All 6 tabs load and function: Preferences (toggles, font, date/time, theme, wallpaper, weather), Templates (views/entry/report), Metadata (categories/tags CRUD with icons/colors), Data (export/import, password change), Widgets (list/editor with filters/functions), Dashboard (component toggle/reorder)
-- [ ] **Settings tab icons** — All 6 tabs show emoji icons with 3D active/inactive styling
+- [ ] **SettingsActivity** — All 7 tabs load and function: Preferences (toggles, date/time, weather), Templates (views/entry/report), Metadata (categories/tags/inspiration CRUD with icons/colors), Data (export/import, password change), Widgets (list/editor with filters/functions), Dashboard (component toggle/reorder), Display (theme, font, alt row color)
+- [ ] **Settings tab icons** — All 7 tabs show emoji icons with 3D active/inactive styling
 - [ ] **EntryListActivity** — Search across all fields, category/tag filter spinners, sort by configured field, pagination (10/20/50/100), card view with all entry metadata, select mode with batch delete, navigation to EntryViewerActivity
 - [ ] **ExplorerActivity** — Table browser (click chip shows schema + sample), SQL textarea (raw SQL on any table), condition builder (add/remove rows, field/op/value spinners), field chips (toggle columns), Run Query, results table (clickable rows → record detail dialog), CSV export, iCalendar export, Clear button
 - [ ] **EntryFormActivity** — New entry: date/time pickers, title, content, image add (gallery + camera), save. Edit entry: loads existing data, updates correctly. Categories checkboxes + quick-add, tags autocomplete + chips, place name, location search (Photon/Nominatim) + GPS, weather import, delete button on existing entries
@@ -71,7 +71,7 @@ summary: "Remaining backlog, test checklist, version-by-version completion histo
 - [ ] **Pagination** — 10/20/50/100 entries per page
 - [ ] **Multi-select** — Batch delete mode
 - [ ] **Entry viewer** — Read-only view with all fields, prev/next navigation, icon-only action buttons
-- [ ] **Date/Time format** — Verify all 6 date formats and 12h/24h time display
+- [ ] **Date/Time format** — Verify all 6 date formats (MMMM d, yyyy / MMM d, yyyy / yyyy-MM-dd / MM/dd/yyyy / dd/MM/yyyy / EEE, MMM d, yyyy) and 2 time formats (h:mm a / HH:mm) display correctly across EntryList, EntryViewer, Dashboard, Search, Reports
 
 ### Dashboard
 
@@ -82,8 +82,10 @@ summary: "Remaining backlog, test checklist, version-by-version completion histo
 - [x] **Dashboard weather** — Inset 3D styling, click to navigate to Settings > Weather Location (verified 2026-04-06)
 - [x] **Quick actions** — Pinned custom views on dashboard (verified 2026-04-06)
 - [ ] **Today in History** — Verify panel shows entries from same month/day in past years, displays title + 20-char content preview + "N year(s) ago" badge, hidden when no matches, entries clickable to viewer
-- [ ] **Dashboard component settings** — Toggle components on/off in Settings > Dashboard (10 components including Today in History), verify hidden components disappear from dashboard
+- [ ] **Dashboard component settings** — Toggle components on/off in Settings > Dashboard (11 components including Today in History, Daily Inspiration), verify hidden components disappear from dashboard
 - [ ] **Dashboard component reorder** — Reorder components via arrows in Settings > Dashboard, verify new order on dashboard
+- [ ] **Daily Inspiration panel** — Shows random quote from inspiration table, refresh button loads new quote, ✏️ edit button opens Settings > Metadata, empty state shows prompt
+- [ ] **Top Categories card view** — Toggle ☰/▦ icon switches between list and card view, card view shows category icons in 3-column grid
 - [ ] **Dashboard ranked badge 3D** — Rank badges show gradient + shadow, count badges show dark gradient + shadow
 - [ ] **Dashboard search button** — 3D icon button in navbar row (left of journal name) opens SearchActivity
 
@@ -132,14 +134,15 @@ summary: "Remaining backlog, test checklist, version-by-version completion histo
 
 ### Settings
 
-- [ ] **Preferences tab** — Auto-open journal, confirm delete, biometric toggle, geocoding provider, viewer font with live preview, date/time format, max pinned, sort order
+- [ ] **Preferences tab** — Auto-open journal, confirm delete, biometric toggle, geocoding provider, date/time format, max pinned, sort order
+- [ ] **Display tab** — Theme picker, viewer font with live preview, alternate row background color picker
 - [ ] **Theme picker** — All 12 themes apply correctly (ThemeManager recolors backgrounds, text, status bar)
 - [ ] **Theme persistence** — Selected theme survives app restart (saved in DB settings, loaded via ThemeManager.init())
 - [ ] **Theme propagation** — After theme change in Settings, Dashboard and other activities update colors on return
-- [ ] **Wallpaper** — Browse image, preview thumbnail, clear wallpaper
 - [ ] **Weather city search** — Search city, select from results, save location
-- [ ] **Categories editor** — Add, rename, delete, color picker, icon upload
+- [ ] **Categories editor** — Add, rename, delete, color picker, icon upload (Change Icon / Remove in edit dialog)
 - [ ] **Tags editor** — Add, rename, delete, color picker, description
+- [ ] **Inspiration quotes** — Add, edit, delete quotes with source attribution in Metadata tab
 - [ ] **Custom Views** — Create/edit/delete views
 - [ ] **Pre-fill templates** — Create, edit, delete entry templates
 - [ ] **Report templates** — CRUD for HTML templates
@@ -181,14 +184,6 @@ summary: "Remaining backlog, test checklist, version-by-version completion histo
 - [ ] **Export from Explorer** — iCalendar export button in results bar
 - [ ] **Entry-based only** — Shows alert for non-entry raw SQL results
 - [ ] **Valid .ics** — Valid iCalendar with VEVENT per entry
-
-### Wallpaper
-
-- [ ] **Browse image** — Select image in Settings > Preferences
-- [ ] **Dashboard background** — Wallpaper appears on dashboard
-- [ ] **Preview** — Thumbnail in settings after selection
-- [ ] **Clear wallpaper** — Restores theme defaults
-- [ ] **Persistence** — Survives app restart
 
 ### Calendar View
 
@@ -373,7 +368,7 @@ summary: "Remaining backlog, test checklist, version-by-version completion histo
 
 ### v1.5.0+ (2026-04-26, native activities)
 - [x] SearchActivity.kt — Native search screen
-- [x] SettingsActivity.kt (~2865 lines) — 5 tabs
+- [x] SettingsActivity.kt (~2865 lines) — 5 tabs (now 7 tabs)
 - [x] EntryListActivity.kt (~850 lines) — Full native entry list
 - [x] EntryViewerActivity.kt — Font settings
 
@@ -437,6 +432,29 @@ summary: "Remaining backlog, test checklist, version-by-version completion histo
 - [x] CSV import completion now shows AlertDialog with import count; OK closes Settings and refreshes dashboard
 - [x] Removed rich content / Quill.js editor: RichEditorActivity, rich_editor.html, richContent column, all related code (15→14 activities, 22→21 Kotlin files)
 - [x] Removed entire `/web/` directory (24 files) — browser-only SPA fallback no longer part of project
+
+### v1.5.0+ (2026-04-30, date/time format + widget refresh)
+- [x] Date/time format settings: replaced key-based system (short/long/12h/24h) with SimpleDateFormat pattern strings
+- [x] 6 date formats: MMMM d, yyyy | MMM d, yyyy | yyyy-MM-dd | MM/dd/yyyy | dd/MM/yyyy | EEE, MMM d, yyyy
+- [x] 2 time formats: h:mm a (12h) | HH:mm (24h)
+- [x] Format applied in 6 activities: SettingsActivity, EntryListActivity, ReportsActivity, EntryViewerActivity, DashboardActivity, SearchActivity
+- [x] Dashboard refreshes after widget save or delete (WidgetEditorActivity sets needsRefresh flag)
+
+### v1.5.0+ (2026-04-30, Display Preferences + Inspiration + UI)
+- [x] New "Display Preferences" settings tab: theme picker, entry viewer font (family + size with preview), alternate row background color picker
+- [x] Theme and font settings moved from Preferences tab to Display tab
+- [x] Wallpaper feature removed (browse/preview/clear)
+- [x] Alternate row background color: configurable via color picker with 28 presets + hex input, applied in EntryListActivity
+- [x] Category icon editing restored: Change Icon / Remove buttons in edit category dialog, saves 64px + 128px icons
+- [x] Top Categories card/list view toggle: ☰/▦ icon in panel header, card view shows 3-column grid with category icons
+- [x] Inspiration table: new DB table (id, quote, source) with CRUD methods + getRandomInspiration()
+- [x] Daily Inspiration dashboard panel: random quote in serif italic, source attribution, refresh button
+- [x] Inspiration quotes management: Settings > Metadata > Inspiration Quotes (add/edit/delete)
+- [x] Dashboard components increased from 10 to 11 (added Daily Inspiration)
+- [x] Settings tabs increased from 6 to 7 (added Display), grid now 3 rows
+- [x] Daily Inspiration panel: always visible (empty state shows "No quotes yet" prompt), ✏️ edit button deep-links to Settings > Metadata
+- [x] Settings deep-link: `SettingsActivity.initialTab` allows opening to a specific tab
+- [x] Collapsible Categories and Tags lists in Metadata tab, state persisted in BootstrapService
 
 ## Kotlin Migration (complete)
 

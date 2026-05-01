@@ -56,6 +56,8 @@ class EntryViewerActivity : AppCompatActivity() {
 
     private var fontFamily: String = ""
     private var fontSizeSp: Float = 0f
+    private var dateFormat: String = "MMMM d, yyyy"
+    private var timeFormat: String = "h:mm a"
 
     private var lightboxImages = JSONArray()
     private var lightboxIndex = 0
@@ -77,6 +79,8 @@ class EntryViewerActivity : AppCompatActivity() {
         bootstrapService = null
         fontFamily = bs?.get("ev_font_family") ?: ""
         fontSizeSp = remToPx(bs?.get("ev_font_size") ?: "")
+        dateFormat = bs?.get("ev_date_format") ?: "MMMM d, yyyy"
+        timeFormat = bs?.get("ev_time_format") ?: "h:mm a"
 
         if (currentEntryId.isEmpty()) { finish(); return }
 
@@ -155,8 +159,8 @@ class EntryViewerActivity : AppCompatActivity() {
         // Header chips
         val dateView = findViewById<TextView>(R.id.ev_date)
         val timeView = findViewById<TextView>(R.id.ev_time)
-        dateView.visibility = if (date.isNotEmpty()) { dateView.text = "📅 $date"; View.VISIBLE } else View.GONE
-        timeView.visibility = if (time.isNotEmpty()) { timeView.text = "🕐 $time"; View.VISIBLE } else View.GONE
+        dateView.visibility = if (date.isNotEmpty()) { dateView.text = "📅 ${formatDate(date)}"; View.VISIBLE } else View.GONE
+        timeView.visibility = if (time.isNotEmpty()) { timeView.text = "🕐 ${formatTime(time)}"; View.VISIBLE } else View.GONE
 
         // Title
         val titleView = findViewById<TextView>(R.id.ev_title)
@@ -418,11 +422,11 @@ class EntryViewerActivity : AppCompatActivity() {
             }
         }
         if (dtCreated.isNotEmpty()) {
-            miscBody.addView(createMiscRow("Created", dtCreated))
+            miscBody.addView(createMiscRow("Created", formatTimestamp(dtCreated)))
             hasMisc = true
         }
         if (dtUpdated.isNotEmpty()) {
-            miscBody.addView(createMiscRow("Updated", dtUpdated))
+            miscBody.addView(createMiscRow("Updated", formatTimestamp(dtUpdated)))
             hasMisc = true
         }
 
@@ -633,6 +637,29 @@ class EntryViewerActivity : AppCompatActivity() {
     override fun onDestroy() {
         super.onDestroy()
         lightboxDialog?.dismiss()
+    }
+
+    private fun formatDate(dateStr: String): String {
+        return try {
+            val d = java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.US).parse(dateStr) ?: return dateStr
+            java.text.SimpleDateFormat(dateFormat, java.util.Locale.US).format(d)
+        } catch (_: Exception) { dateStr }
+    }
+
+    private fun formatTime(timeStr: String): String {
+        return try {
+            val d = java.text.SimpleDateFormat("HH:mm", java.util.Locale.US).parse(timeStr) ?: return timeStr
+            java.text.SimpleDateFormat(timeFormat, java.util.Locale.US).format(d)
+        } catch (_: Exception) { timeStr }
+    }
+
+    private fun formatTimestamp(ts: String): String {
+        if (ts.isEmpty()) return ""
+        return try {
+            val sdf = java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", java.util.Locale.US)
+            val d = sdf.parse(ts) ?: return ts
+            java.text.SimpleDateFormat("$dateFormat $timeFormat", java.util.Locale.US).format(d)
+        } catch (_: Exception) { ts }
     }
 
     private fun remToPx(rem: String): Float {

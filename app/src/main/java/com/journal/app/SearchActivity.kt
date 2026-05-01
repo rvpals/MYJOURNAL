@@ -155,7 +155,7 @@ class SearchActivity : AppCompatActivity() {
 
         val date = entry.optString("date", "")
         val time = entry.optString("time", "")
-        val dateTime = listOf(date, time).filter { it.isNotEmpty() }.joinToString("  ")
+        val dateTime = listOf(formatDate(date), formatTime(time)).filter { it.isNotEmpty() }.joinToString("  ")
         if (dateTime.isNotEmpty()) {
             val dateView = TextView(this).apply {
                 text = dateTime
@@ -248,6 +248,24 @@ class SearchActivity : AppCompatActivity() {
     @Deprecated("Deprecated in Java")
     override fun onBackPressed() {
         finish()
+    }
+
+    private fun formatDate(dateStr: String): String {
+        if (dateStr.isEmpty()) return ""
+        val fmt = ServiceProvider.bootstrapService?.get("ev_date_format") ?: "MMMM d, yyyy"
+        return try {
+            val d = java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.US).parse(dateStr) ?: return dateStr
+            java.text.SimpleDateFormat(fmt, java.util.Locale.US).format(d)
+        } catch (_: Exception) { dateStr }
+    }
+
+    private fun formatTime(timeStr: String): String {
+        if (timeStr.isEmpty()) return ""
+        val fmt = ServiceProvider.bootstrapService?.get("ev_time_format") ?: "h:mm a"
+        return try {
+            val d = java.text.SimpleDateFormat("HH:mm", java.util.Locale.US).parse(timeStr) ?: return timeStr
+            java.text.SimpleDateFormat(fmt, java.util.Locale.US).format(d)
+        } catch (_: Exception) { timeStr }
     }
 
     private fun dp(value: Int): Int {

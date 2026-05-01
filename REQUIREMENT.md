@@ -48,6 +48,7 @@ summary: "Complete functional requirements for all feature areas — authenticat
 - **tags**: name (PK), description
 - **icons**: type + name (composite PK), data (SVG/emoji)
 - **widgets**: id (PK), name, description, bgColor, icon, filters (JSON), functions (JSON), enabledInDashboard, sortOrder, dtCreated, dtUpdated
+- **inspiration**: id (PK, autoincrement), quote (TEXT), source (TEXT) — stores inspirational quotes for Daily Inspiration dashboard panel
 - **settings**: key (PK), value
 - **schema_version**: version (INT)
 - Indices: idx_entries_date, idx_entries_pinned, idx_images_entry
@@ -83,7 +84,7 @@ summary: "Complete functional requirements for all feature areas — authenticat
 
 ### Entry List (EntryListActivity.kt)
 - Card view: entry cards with date, title, category badge, tag chips, content preview
-- Alternating row colors: even rows use `CARD_BG`, odd rows use `INPUT_BG`, with `CARD_BORDER` stroke
+- Alternating row colors: even rows use `CARD_BG`, odd rows use custom `alt_row_bg_color` (configurable in Settings > Display) or theme `INPUT_BG`, with `CARD_BORDER` stroke
 - Collapsible "Filter Info" box: search bar, category/tag spinners, clear button, select mode, page size — collapsed by default, toggle via header tap
 - Search: across title, content, tags, categories, place
 - Filters: category and tag filter spinners
@@ -124,6 +125,15 @@ summary: "Complete functional requirements for all feature areas — authenticat
 - 3D count badges: dark gradient, rounded corners (6dp), elevation shadow
 - Alternating row backgrounds for readability
 - Center-aligned panel captions (Top Tags, Top Categories)
+- Top Categories: list/card view toggle (☰/▦); card view shows category icons in 3-column grid
+
+### Daily Inspiration
+- Random quote from `inspiration` table displayed with serif italic formatting
+- Source attribution with accent color
+- Refresh button (🔄) to show a different random quote
+- Edit button (✏️) deep-links to Settings > Metadata tab for quote management
+- Panel always visible; empty state shows "No quotes yet" prompt
+- Quotes managed in Settings > Metadata > Inspiration Quotes (add/edit/delete)
 
 ### Dashboard Search
 - 3D icon button (🔍) in navbar row, left of journal name
@@ -196,21 +206,21 @@ summary: "Complete functional requirements for all feature areas — authenticat
 
 ## 8. Settings (SettingsActivity.kt, ~3000+ lines)
 
-### Tabs (6 total, in 2-row grid with emoji icons + 3D styling)
+### Tabs (7 total, in 3-row grid with emoji icons + 3D styling)
 - Row 1: ⚙️ Prefs | 📝 Templates | 🏷️ Metadata
 - Row 2: 💾 Data | 🧩 Widgets | 📊 Dashboard
+- Row 3: 🎨 Display
 
 ### Preferences
 - Auto-open last journal, confirm before delete, biometric toggle
 - Geocoding provider: Photon, Nominatim, or Google
-- Viewer font: family + size with live preview
-- Date/time format settings
+- Date/time format settings: SimpleDateFormat pattern strings (default: `MMMM d, yyyy` for date, `h:mm a` for time), applied across EntryList, EntryViewer, Dashboard, Search, Reports
 - Max pinned entries, default sort
 
-### Wallpaper
-- Browse and select background image, max 1920px, JPEG 85%
-- Stored as base64 in encrypted DB settings table
-- Preview thumbnail, clear button
+### Display Preferences (Display tab)
+- Theme picker: 12 themes with instant apply
+- Entry Viewer font: family + size with live preview
+- Alternate row background color: color picker with presets and hex input, reset to theme default
 
 ### Themes (12)
 - Light, Dark, Ocean, Midnight, Forest, Amethyst, Aurora, Lavender, Frost, Navy, Sunflower, Meadow
@@ -221,9 +231,11 @@ summary: "Complete functional requirements for all feature areas — authenticat
 - Light/dark status bar icons set automatically based on theme background luminance
 
 ### Metadata Editing
-- Categories: add, rename, delete, color picker, description, icons
-- Tags: add, rename, delete, color picker, description
+- Categories: add, rename, delete, color picker, description, icon upload (Change Icon / Remove in edit dialog) — collapsible list
+- Tags: add, rename, delete, color picker, description — collapsible list
 - Icons: custom 64x64 (standard) and 128x128 (HD) PNG data URLs
+- Inspiration quotes: add, edit, delete quotes with source attribution
+- Deep-link support: `SettingsActivity.initialTab` opens directly to a specific tab
 
 ### Data Management
 - Export: encrypted DB, CSV, metadata JSON
@@ -241,7 +253,7 @@ summary: "Complete functional requirements for all feature areas — authenticat
 - Live preview in editor
 
 ### Dashboard Components
-- Toggle 10 dashboard components on/off: Weather & Streak, Stats Grid, Quick Actions, Widgets, Pinned Entries, Recent Entries, Today in History, Top Tags, Top Categories, Top Places
+- Toggle 11 dashboard components on/off: Weather & Streak, Stats Grid, Quick Actions, Widgets, Pinned Entries, Recent Entries, Today in History, Top Tags, Top Categories, Top Places, Daily Inspiration
 - Reorder components via ▲/▼ arrow buttons
 - Config stored in BootstrapService as `dashboard_components` JSON array of `{id, enabled}` objects
 - DashboardActivity reads config and reorders/hides panels dynamically
@@ -263,7 +275,7 @@ summary: "Complete functional requirements for all feature areas — authenticat
 4. **AboutActivity** — App info, version, links
 5. **SearchActivity** — Native full-text search across all entries
 6. **EntryViewerActivity** — Native entry viewer with font customization
-7. **SettingsActivity** — Full native settings (6 tabs: Prefs, Templates, Metadata, Data, Widgets, Dashboard)
+7. **SettingsActivity** — Full native settings (7 tabs: Prefs, Templates, Metadata, Data, Widgets, Dashboard, Display)
 8. **EntryListActivity** — Native entry list with search, filter, sort, pagination, batch delete
 9. **ExplorerActivity** — Native SQL Explorer with table browser, query builder, results, exports
 10. **EntryFormActivity** — Native entry form with images, categories, tags, locations, weather

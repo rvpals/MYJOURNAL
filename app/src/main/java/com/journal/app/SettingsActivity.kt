@@ -7,6 +7,7 @@ import android.content.Intent
 import android.graphics.BitmapFactory
 import android.graphics.Color
 import android.graphics.Typeface
+import android.graphics.drawable.GradientDrawable
 import android.net.Uri
 import android.os.Bundle
 import android.text.InputType
@@ -34,8 +35,8 @@ class SettingsActivity : AppCompatActivity() {
         @JvmStatic var cryptoService: CryptoService? = null
         @JvmStatic var weatherService: WeatherService? = null
         @JvmStatic var currentJournalId: String? = null
+        @JvmStatic var initialTab: String? = null
 
-        private const val WALLPAPER_PICK = 2001
         private const val ICON_PICK = 2002
         private const val CSV_PICK = 2003
     }
@@ -68,13 +69,15 @@ class SettingsActivity : AppCompatActivity() {
         cryptoService = null
         weatherService = null
         currentJournalId = null
+        val startTab = initialTab ?: "prefs"
+        initialTab = null
 
         contentContainer = findViewById(R.id.settings_content)
 
         findViewById<Button>(R.id.btn_back).setOnClickListener { finish() }
 
         setupTabs()
-        showTab("prefs")
+        showTab(startTab)
     }
 
     // ========== Tabs ==========
@@ -85,7 +88,8 @@ class SettingsActivity : AppCompatActivity() {
         Triple("cattags", "🏷️", "Metadata"),
         Triple("data", "💾", "Data"),
         Triple("widgets", "🧩", "Widgets"),
-        Triple("dashboard", "📊", "Dashboard")
+        Triple("dashboard", "📊", "Dashboard"),
+        Triple("display", "🎨", "Display")
     )
 
     private val tabButtons = mutableMapOf<String, Button>()
@@ -160,6 +164,7 @@ class SettingsActivity : AppCompatActivity() {
             "data" -> buildDataTab()
             "widgets" -> buildWidgetsTab()
             "dashboard" -> buildDashboardTab()
+            "display" -> buildDisplayTab()
         }
     }
 
@@ -206,76 +211,23 @@ class SettingsActivity : AppCompatActivity() {
 
         buildSpacer()
 
-        // Font
-        val fontFamilies = listOf(
-            "" to "Default (Quicksand)",
-            "'Georgia', serif" to "Georgia",
-            "'Times New Roman', serif" to "Times New Roman",
-            "'Garamond', serif" to "Garamond",
-            "'Palatino Linotype', serif" to "Palatino",
-            "'Arial', sans-serif" to "Arial",
-            "'Verdana', sans-serif" to "Verdana",
-            "'Trebuchet MS', sans-serif" to "Trebuchet MS",
-            "'Segoe UI', sans-serif" to "Segoe UI",
-            "'Roboto', sans-serif" to "Roboto",
-            "'Courier New', monospace" to "Courier New",
-            "'Consolas', monospace" to "Consolas"
-        )
-        val currentFont = bs.get("ev_font_family") ?: ""
-        buildSectionHeader("🔤  Entry Viewer Font")
-        buildSpinner("Font Family", fontFamilies.map { it.second }, fontFamilies.indexOfFirst { it.first == currentFont }.coerceAtLeast(0)) { idx ->
-            bs.set("ev_font_family", fontFamilies[idx].first)
-            updateFontPreview()
-        }
-
-        val fontSizes = listOf(
-            "" to "Default",
-            "0.8rem" to "Small",
-            "0.95rem" to "Medium",
-            "1.1rem" to "Large",
-            "1.25rem" to "X-Large",
-            "1.4rem" to "XX-Large"
-        )
-        val currentSize = bs.get("ev_font_size") ?: ""
-        buildSpinner("Font Size", fontSizes.map { it.second }, fontSizes.indexOfFirst { it.first == currentSize }.coerceAtLeast(0)) { idx ->
-            bs.set("ev_font_size", fontSizes[idx].first)
-            updateFontPreview()
-        }
-
-        // Font preview
-        fontPreview = TextView(this).apply {
-            text = "The quick brown fox jumps over the lazy dog."
-            setTextColor(ThemeManager.color(C.TEXT))
-            textSize = 14f
-            setPadding(dp(12), dp(10), dp(12), dp(10))
-            background = ContextCompat.getDrawable(this@SettingsActivity, R.drawable.input_bg)
-            layoutParams = LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT,
-                LinearLayout.LayoutParams.WRAP_CONTENT
-            ).apply { bottomMargin = dp(8) }
-        }
-        contentContainer.addView(fontPreview)
-        updateFontPreview()
-
-        buildSpacer()
-
         // Date & Time format
         buildSectionHeader("📅  Date & Time Display")
         val dateFmts = listOf(
-            "short" to "Mar 27, 2026",
-            "long" to "March 27, 2026",
-            "iso" to "2026-03-27",
-            "us" to "03/27/2026",
-            "eu" to "27/03/2026",
-            "weekday" to "Thu, Mar 27, 2026"
+            "MMMM d, yyyy" to "April 27, 2026",
+            "MMM d, yyyy" to "Apr 27, 2026",
+            "yyyy-MM-dd" to "2026-04-27",
+            "MM/dd/yyyy" to "04/27/2026",
+            "dd/MM/yyyy" to "27/04/2026",
+            "EEE, MMM d, yyyy" to "Sun, Apr 27, 2026"
         )
-        val currentDateFmt = bs.get("ev_date_format") ?: "short"
+        val currentDateFmt = bs.get("ev_date_format") ?: "MMMM d, yyyy"
         buildSpinner("Date Format", dateFmts.map { it.second }, dateFmts.indexOfFirst { it.first == currentDateFmt }.coerceAtLeast(0)) { idx ->
             bs.set("ev_date_format", dateFmts[idx].first)
         }
 
-        val timeFmts = listOf("12h" to "2:30 PM", "24h" to "14:30")
-        val currentTimeFmt = bs.get("ev_time_format") ?: "12h"
+        val timeFmts = listOf("h:mm a" to "2:30 PM", "HH:mm" to "14:30")
+        val currentTimeFmt = bs.get("ev_time_format") ?: "h:mm a"
         buildSpinner("Time Format", timeFmts.map { it.second }, timeFmts.indexOfFirst { it.first == currentTimeFmt }.coerceAtLeast(0)) { idx ->
             bs.set("ev_time_format", timeFmts[idx].first)
         }
@@ -365,70 +317,9 @@ class SettingsActivity : AppCompatActivity() {
             bs.set("weather_temp_unit", tempUnits[idx].first)
         }
 
-        buildSpacer()
-
-        // Theme
-        buildLabel("Theme")
-        val themes = listOf(
-            "light", "dark", "ocean", "midnight", "forest", "amethyst",
-            "aurora", "lavender", "frost", "navy", "sunflower", "meadow"
-        )
-        val currentTheme = settings.optString("theme", "dark")
-        buildSpinner("Theme", themes.map { it.replaceFirstChar { c -> c.uppercase() } }, themes.indexOf(currentTheme).coerceAtLeast(0)) { idx ->
-            db.setSettings(JSONObject().apply { put("theme", themes[idx]) }.toString())
-            ThemeManager.setTheme(themes[idx])
-            recreate()
-        }
-
-        buildSpacer()
-
-        // Wallpaper
-        buildLabel("Wallpaper")
-        val wallpaper = settings.optString("wallpaper", "")
-        wallpaperPreview = ImageView(this).apply {
-            layoutParams = LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT, dp(120)
-            ).apply { bottomMargin = dp(8) }
-            scaleType = ImageView.ScaleType.CENTER_CROP
-            background = ContextCompat.getDrawable(this@SettingsActivity, R.drawable.input_bg)
-            visibility = if (wallpaper.isNotEmpty()) View.VISIBLE else View.GONE
-        }
-        if (wallpaper.isNotEmpty()) loadBase64Image(wallpaperPreview!!, wallpaper)
-        contentContainer.addView(wallpaperPreview)
-
-        val wallRow = LinearLayout(this).apply {
-            orientation = LinearLayout.HORIZONTAL
-            layoutParams = LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT,
-                LinearLayout.LayoutParams.WRAP_CONTENT
-            ).apply { bottomMargin = dp(12) }
-        }
-        wallRow.addView(Button(this).apply {
-            text = "Browse"
-            textSize = 13f
-            isAllCaps = false
-            setTextColor(ThemeManager.color(C.TEXT))
-            background = ContextCompat.getDrawable(this@SettingsActivity, R.drawable.btn_secondary)
-            layoutParams = LinearLayout.LayoutParams(0, dp(38), 1f).apply { marginEnd = dp(6) }
-            setOnClickListener { pickWallpaper() }
-        })
-        wallRow.addView(Button(this).apply {
-            text = "Clear"
-            textSize = 13f
-            isAllCaps = false
-            setTextColor(ThemeManager.color(C.TEXT_SECONDARY))
-            background = ContextCompat.getDrawable(this@SettingsActivity, R.drawable.btn_secondary)
-            layoutParams = LinearLayout.LayoutParams(0, dp(38), 1f)
-            setOnClickListener {
-                db.setSettings(JSONObject().apply { put("wallpaper", "") }.toString())
-                wallpaperPreview?.visibility = View.GONE
-            }
-        })
-        contentContainer.addView(wallRow)
     }
 
     private var fontPreview: TextView? = null
-    private var wallpaperPreview: ImageView? = null
 
     private fun updateFontPreview() {
         val preview = fontPreview ?: return
@@ -1778,15 +1669,76 @@ class SettingsActivity : AppCompatActivity() {
         val settings = try { JSONObject(db.getSettings()) } catch (_: Exception) { JSONObject() }
 
         // Categories
-        buildSectionHeader("📁  Categories")
+        val catContainer = buildCollapsibleSection("📁  Categories", bs.get("meta_categories_collapsed") != "1") {
+            bs.set("meta_categories_collapsed", if (it) "0" else "1")
+        }
+        val prevContainer = contentContainer
+        contentContainer = catContainer
         buildCategoriesList(settings)
+        contentContainer = prevContainer
 
         buildSpacer()
 
         // Tags
-        buildSectionHeader("🏷️  Tags")
+        val tagContainer = buildCollapsibleSection("🏷️  Tags", bs.get("meta_tags_collapsed") != "1") {
+            bs.set("meta_tags_collapsed", if (it) "0" else "1")
+        }
+        contentContainer = tagContainer
         buildTagsList(settings)
+        contentContainer = prevContainer
 
+        buildSpacer()
+
+        // Inspiration
+        buildSectionHeader("✨  Inspiration Quotes")
+        buildInspirationList()
+    }
+
+    private fun buildCollapsibleSection(title: String, expanded: Boolean, onToggle: (Boolean) -> Unit): LinearLayout {
+        val arrow = TextView(this).apply {
+            text = if (expanded) "▼" else "▶"
+            setTextColor(ThemeManager.color(C.ACCENT))
+            setTextSize(android.util.TypedValue.COMPLEX_UNIT_SP, 13f)
+            setPadding(0, 0, dp(6), 0)
+        }
+        val header = LinearLayout(this).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = Gravity.CENTER_VERTICAL
+            setPadding(dp(4), dp(8), dp(4), dp(8))
+            layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            ).apply { bottomMargin = dp(4) }
+            isClickable = true
+            isFocusable = true
+        }
+        header.addView(arrow)
+        header.addView(TextView(this).apply {
+            text = title
+            setTextColor(ThemeManager.color(C.ACCENT))
+            textSize = 15f
+            setTypeface(null, Typeface.BOLD)
+        })
+        contentContainer.addView(header)
+
+        val body = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            )
+            visibility = if (expanded) View.VISIBLE else View.GONE
+        }
+        contentContainer.addView(body)
+
+        header.setOnClickListener {
+            val nowExpanded = body.visibility != View.VISIBLE
+            body.visibility = if (nowExpanded) View.VISIBLE else View.GONE
+            arrow.text = if (nowExpanded) "▼" else "▶"
+            onToggle(nowExpanded)
+        }
+
+        return body
     }
 
     private fun buildCategoriesList(settings: JSONObject) {
@@ -1934,10 +1886,60 @@ class SettingsActivity : AppCompatActivity() {
             inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_FLAG_MULTI_LINE
             minLines = 2
         }
+
+        val iconRow = LinearLayout(this).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = Gravity.CENTER_VERTICAL
+            layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            ).apply { topMargin = dp(12) }
+        }
+
+        val iconPreview = ImageView(this).apply {
+            layoutParams = LinearLayout.LayoutParams(dp(48), dp(48)).apply { marginEnd = dp(10) }
+            scaleType = ImageView.ScaleType.CENTER_CROP
+            background = ContextCompat.getDrawable(this@SettingsActivity, R.drawable.input_bg)
+        }
+        val existing = loadIconSync("category", name)
+        if (existing != null) iconPreview.setImageBitmap(existing)
+        iconRow.addView(iconPreview)
+
+        iconRow.addView(Button(this).apply {
+            text = "Change Icon"
+            textSize = 13f
+            isAllCaps = false
+            setTextColor(ThemeManager.color(C.TEXT))
+            background = ContextCompat.getDrawable(this@SettingsActivity, R.drawable.btn_secondary)
+            layoutParams = LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, dp(38)).apply { marginEnd = dp(6) }
+            setPadding(dp(14), dp(6), dp(14), dp(6))
+            setOnClickListener {
+                iconPickerTarget = "category" to name
+                @Suppress("DEPRECATION")
+                startActivityForResult(Intent(Intent.ACTION_GET_CONTENT).apply { type = "image/*" }, ICON_PICK)
+            }
+        })
+
+        iconRow.addView(Button(this).apply {
+            text = "Remove"
+            textSize = 13f
+            isAllCaps = false
+            setTextColor(ThemeManager.color(C.ERROR))
+            background = ContextCompat.getDrawable(this@SettingsActivity, R.drawable.btn_secondary)
+            layoutParams = LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, dp(38))
+            setPadding(dp(14), dp(6), dp(14), dp(6))
+            setOnClickListener {
+                db.removeIcon("category", name)
+                db.removeIcon("category_hd", name)
+                iconPreview.setImageBitmap(null)
+            }
+        })
+
         val container = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
             setPadding(dp(16), dp(12), dp(16), dp(4))
             addView(input)
+            addView(iconRow)
         }
 
         AlertDialog.Builder(this)
@@ -2065,6 +2067,150 @@ class SettingsActivity : AppCompatActivity() {
             })
             .setPositiveButton("Save") { _, _ ->
                 db.setTagDescription(name, input.text.toString().trim())
+                showTab("cattags")
+            }
+            .setNegativeButton("Cancel", null)
+            .show()
+    }
+
+    // ========== Inspiration ==========
+
+    private fun buildInspirationList() {
+        val items = try { JSONArray(db.getInspirations()) } catch (_: Exception) { JSONArray() }
+
+        // Add new quote
+        val addRow = LinearLayout(this).apply {
+            orientation = LinearLayout.HORIZONTAL
+            layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            ).apply { bottomMargin = dp(8) }
+        }
+        addRow.addView(Button(this).apply {
+            text = "+ Add Quote"
+            textSize = 13f
+            isAllCaps = false
+            setTextColor(ThemeManager.color(C.CARD_BG))
+            background = ContextCompat.getDrawable(this@SettingsActivity, R.drawable.btn_accent)
+            layoutParams = LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, dp(38))
+            setPadding(dp(14), dp(6), dp(14), dp(6))
+            setOnClickListener { editInspirationDialog(null, "", "") }
+        })
+        contentContainer.addView(addRow)
+
+        for (i in 0 until items.length()) {
+            val item = items.optJSONObject(i) ?: continue
+            val id = item.optInt("id")
+            val quote = item.optString("quote", "")
+            val source = item.optString("source", "")
+
+            val row = LinearLayout(this).apply {
+                orientation = LinearLayout.HORIZONTAL
+                gravity = Gravity.CENTER_VERTICAL
+                setPadding(dp(10), dp(8), dp(10), dp(8))
+                background = ContextCompat.getDrawable(this@SettingsActivity, R.drawable.entry_row_bg)
+                layoutParams = LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.MATCH_PARENT,
+                    LinearLayout.LayoutParams.WRAP_CONTENT
+                ).apply { bottomMargin = dp(4) }
+            }
+
+            val textCol = LinearLayout(this).apply {
+                orientation = LinearLayout.VERTICAL
+                layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
+            }
+            textCol.addView(TextView(this).apply {
+                text = if (quote.length > 80) quote.substring(0, 80) + "…" else quote
+                setTextColor(ThemeManager.color(C.TEXT))
+                textSize = 13f
+                maxLines = 2
+            })
+            if (source.isNotEmpty()) {
+                textCol.addView(TextView(this).apply {
+                    text = "— $source"
+                    setTextColor(ThemeManager.color(C.TEXT_SECONDARY))
+                    textSize = 11f
+                })
+            }
+            row.addView(textCol)
+
+            row.addView(Button(this).apply {
+                text = "✏️"
+                textSize = 14f
+                setBackgroundColor(Color.TRANSPARENT)
+                layoutParams = LinearLayout.LayoutParams(dp(36), dp(36))
+                setOnClickListener { editInspirationDialog(id, quote, source) }
+            })
+
+            row.addView(Button(this).apply {
+                text = "✕"
+                textSize = 14f
+                setTextColor(ThemeManager.color(C.ERROR))
+                setBackgroundColor(Color.TRANSPARENT)
+                layoutParams = LinearLayout.LayoutParams(dp(36), dp(36))
+                setOnClickListener {
+                    AlertDialog.Builder(this@SettingsActivity)
+                        .setMessage("Delete this quote?")
+                        .setPositiveButton("Delete") { _, _ ->
+                            db.deleteInspiration(id)
+                            showTab("cattags")
+                        }
+                        .setNegativeButton("Cancel", null)
+                        .show()
+                }
+            })
+
+            contentContainer.addView(row)
+        }
+    }
+
+    private fun editInspirationDialog(id: Int?, currentQuote: String, currentSource: String) {
+        val container = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            setPadding(dp(16), dp(12), dp(16), dp(4))
+        }
+
+        val quoteInput = EditText(this).apply {
+            setText(currentQuote)
+            hint = "Quote text..."
+            textSize = 14f
+            setTextColor(ThemeManager.color(C.TEXT))
+            setHintTextColor(ThemeManager.color(C.TEXT_SECONDARY))
+            background = ContextCompat.getDrawable(this@SettingsActivity, R.drawable.input_bg)
+            setPadding(dp(12), dp(10), dp(12), dp(10))
+            inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_FLAG_MULTI_LINE
+            minLines = 3
+            layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT
+            ).apply { bottomMargin = dp(8) }
+        }
+        container.addView(quoteInput)
+
+        val sourceInput = EditText(this).apply {
+            setText(currentSource)
+            hint = "Source (e.g. Albert Einstein)"
+            textSize = 14f
+            setTextColor(ThemeManager.color(C.TEXT))
+            setHintTextColor(ThemeManager.color(C.TEXT_SECONDARY))
+            background = ContextCompat.getDrawable(this@SettingsActivity, R.drawable.input_bg)
+            setPadding(dp(12), dp(10), dp(12), dp(10))
+            inputType = InputType.TYPE_CLASS_TEXT
+            isSingleLine = true
+        }
+        container.addView(sourceInput)
+
+        AlertDialog.Builder(this)
+            .setTitle(if (id == null) "Add Quote" else "Edit Quote")
+            .setView(container)
+            .setPositiveButton("Save") { _, _ ->
+                val q = quoteInput.text.toString().trim()
+                val s = sourceInput.text.toString().trim()
+                if (q.isEmpty()) return@setPositiveButton
+                if (id == null) {
+                    db.addInspiration(q, s)
+                } else {
+                    db.updateInspiration(id, q, s)
+                }
                 showTab("cattags")
             }
             .setNegativeButton("Cancel", null)
@@ -2848,51 +2994,43 @@ class SettingsActivity : AppCompatActivity() {
         return value
     }
 
-    // ========== Wallpaper ==========
-
-    @Suppress("DEPRECATION")
-    private fun pickWallpaper() {
-        val intent = Intent(Intent.ACTION_GET_CONTENT).apply {
-            type = "image/*"
-        }
-        startActivityForResult(intent, WALLPAPER_PICK)
-    }
-
     @Suppress("DEPRECATION")
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
         if (resultCode != Activity.RESULT_OK || data?.data == null) return
 
         when (requestCode) {
-            WALLPAPER_PICK -> handleWallpaperResult(data.data!!)
+            ICON_PICK -> handleIconResult(data.data!!)
             CSV_PICK -> handleCsvImport(data.data!!)
         }
     }
 
-    private fun handleWallpaperResult(uri: Uri) {
+    private fun handleIconResult(uri: Uri) {
+        val target = iconPickerTarget ?: return
+        iconPickerTarget = null
         try {
             val inputStream = contentResolver.openInputStream(uri) ?: return
             val bitmap = BitmapFactory.decodeStream(inputStream)
             inputStream.close()
             if (bitmap == null) return
 
-            val maxW = 1920
-            val scale = if (bitmap.width > maxW) maxW.toFloat() / bitmap.width else 1f
-            val w = (bitmap.width * scale).toInt()
-            val h = (bitmap.height * scale).toInt()
-            val scaled = android.graphics.Bitmap.createScaledBitmap(bitmap, w, h, true)
+            val sd = 64
+            val small = android.graphics.Bitmap.createScaledBitmap(bitmap, sd, sd, true)
+            val smallStream = java.io.ByteArrayOutputStream()
+            small.compress(android.graphics.Bitmap.CompressFormat.PNG, 100, smallStream)
+            val smallB64 = "data:image/png;base64," + Base64.encodeToString(smallStream.toByteArray(), Base64.NO_WRAP)
+            db.setIcon(target.first, target.second, smallB64)
 
-            val stream = java.io.ByteArrayOutputStream()
-            scaled.compress(android.graphics.Bitmap.CompressFormat.JPEG, 85, stream)
-            val base64 = "data:image/jpeg;base64," + Base64.encodeToString(stream.toByteArray(), Base64.NO_WRAP)
+            val hd = 128
+            val large = android.graphics.Bitmap.createScaledBitmap(bitmap, hd, hd, true)
+            val largeStream = java.io.ByteArrayOutputStream()
+            large.compress(android.graphics.Bitmap.CompressFormat.PNG, 100, largeStream)
+            val largeB64 = "data:image/png;base64," + Base64.encodeToString(largeStream.toByteArray(), Base64.NO_WRAP)
+            db.setIcon(target.first + "_hd", target.second, largeB64)
 
-            db.setSettings(JSONObject().apply { put("wallpaper", base64) }.toString())
-            wallpaperPreview?.let {
-                loadBase64Image(it, base64)
-                it.visibility = View.VISIBLE
-            }
+            showTab("cattags")
         } catch (_: Exception) {
-            Toast.makeText(this, "Failed to load image", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, "Failed to load icon", Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -3097,16 +3235,6 @@ class SettingsActivity : AppCompatActivity() {
         }
     }
 
-    private fun loadBase64Image(imageView: ImageView, dataUrl: String) {
-        try {
-            val base64 = if (dataUrl.contains(",")) dataUrl.substringAfter(",") else dataUrl
-            if (base64.isEmpty()) return
-            val bytes = Base64.decode(base64, Base64.DEFAULT)
-            val bmp = BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
-            if (bmp != null) imageView.setImageBitmap(bmp)
-        } catch (_: Exception) {}
-    }
-
     private fun jsonArrayToStr(arr: JSONArray?): String {
         arr ?: return ""
         val items = mutableListOf<String>()
@@ -3214,7 +3342,8 @@ class SettingsActivity : AppCompatActivity() {
         "today_history" to "Today in History",
         "tags" to "Top Tags",
         "categories" to "Top Categories",
-        "places" to "Top Places"
+        "places" to "Top Places",
+        "inspiration" to "Daily Inspiration"
     )
 
     private fun loadDashboardComponents(): MutableList<Pair<String, Boolean>> {
@@ -3250,6 +3379,245 @@ class SettingsActivity : AppCompatActivity() {
 
     private fun getComponentLabel(id: String): String {
         return defaultDashboardComponents.firstOrNull { it.first == id }?.second ?: id
+    }
+
+    // ========== Display Preferences Tab ==========
+
+    private fun buildDisplayTab() {
+        val settings = try { JSONObject(db.getSettings()) } catch (_: Exception) { JSONObject() }
+
+        // Theme
+        buildSectionHeader("🎨  Theme")
+        val themes = listOf(
+            "light", "dark", "ocean", "midnight", "forest", "amethyst",
+            "aurora", "lavender", "frost", "navy", "sunflower", "meadow"
+        )
+        val currentTheme = settings.optString("theme", "dark")
+        buildSpinner("Theme", themes.map { it.replaceFirstChar { c -> c.uppercase() } }, themes.indexOf(currentTheme).coerceAtLeast(0)) { idx ->
+            db.setSettings(JSONObject().apply { put("theme", themes[idx]) }.toString())
+            ThemeManager.setTheme(themes[idx])
+            recreate()
+        }
+
+        buildSpacer()
+
+        // Entry Viewer Font
+        val fontFamilies = listOf(
+            "" to "Default (Quicksand)",
+            "'Georgia', serif" to "Georgia",
+            "'Times New Roman', serif" to "Times New Roman",
+            "'Garamond', serif" to "Garamond",
+            "'Palatino Linotype', serif" to "Palatino",
+            "'Arial', sans-serif" to "Arial",
+            "'Verdana', sans-serif" to "Verdana",
+            "'Trebuchet MS', sans-serif" to "Trebuchet MS",
+            "'Segoe UI', sans-serif" to "Segoe UI",
+            "'Roboto', sans-serif" to "Roboto",
+            "'Courier New', monospace" to "Courier New",
+            "'Consolas', monospace" to "Consolas"
+        )
+        val currentFont = bs.get("ev_font_family") ?: ""
+        buildSectionHeader("🔤  Entry Viewer Font")
+        buildSpinner("Font Family", fontFamilies.map { it.second }, fontFamilies.indexOfFirst { it.first == currentFont }.coerceAtLeast(0)) { idx ->
+            bs.set("ev_font_family", fontFamilies[idx].first)
+            updateFontPreview()
+        }
+
+        val fontSizes = listOf(
+            "" to "Default",
+            "0.8rem" to "Small",
+            "0.95rem" to "Medium",
+            "1.1rem" to "Large",
+            "1.25rem" to "X-Large",
+            "1.4rem" to "XX-Large"
+        )
+        val currentSize = bs.get("ev_font_size") ?: ""
+        buildSpinner("Font Size", fontSizes.map { it.second }, fontSizes.indexOfFirst { it.first == currentSize }.coerceAtLeast(0)) { idx ->
+            bs.set("ev_font_size", fontSizes[idx].first)
+            updateFontPreview()
+        }
+
+        fontPreview = TextView(this).apply {
+            text = "The quick brown fox jumps over the lazy dog."
+            setTextColor(ThemeManager.color(C.TEXT))
+            textSize = 14f
+            setPadding(dp(12), dp(10), dp(12), dp(10))
+            background = ContextCompat.getDrawable(this@SettingsActivity, R.drawable.input_bg)
+            layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            ).apply { bottomMargin = dp(8) }
+        }
+        contentContainer.addView(fontPreview)
+        updateFontPreview()
+
+        buildSpacer()
+
+        // Alternate row background color
+        buildSectionHeader("📋  List Appearance")
+        buildLabel("Alternate Row Background Color")
+
+        val currentAltColor = bs.get("alt_row_bg_color") ?: ""
+        val defaultColor = String.format("#%06X", 0xFFFFFF and ThemeManager.color(C.INPUT_BG))
+
+        val colorRow = LinearLayout(this).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = Gravity.CENTER_VERTICAL
+            layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            ).apply { bottomMargin = dp(8) }
+        }
+
+        val altRowSwatch = View(this).apply {
+            layoutParams = LinearLayout.LayoutParams(dp(40), dp(40)).apply { marginEnd = dp(10) }
+            background = GradientDrawable().apply {
+                cornerRadius = dp(6).toFloat()
+                setColor(parseColorSafe(currentAltColor.ifEmpty { defaultColor }, ThemeManager.color(C.INPUT_BG)))
+                setStroke(dp(1), ThemeManager.color(C.CARD_BORDER))
+            }
+        }
+        colorRow.addView(altRowSwatch)
+
+        val altRowLabel = TextView(this).apply {
+            text = if (currentAltColor.isEmpty()) "Default (theme)" else currentAltColor
+            setTextColor(ThemeManager.color(C.TEXT))
+            textSize = 14f
+            layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
+        }
+        colorRow.addView(altRowLabel)
+
+        val pickBtn = Button(this).apply {
+            text = "Pick"
+            textSize = 13f
+            isAllCaps = false
+            setTextColor(ThemeManager.color(C.TEXT))
+            background = ContextCompat.getDrawable(this@SettingsActivity, R.drawable.btn_secondary)
+            layoutParams = LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, dp(38)).apply { marginEnd = dp(6) }
+            setPadding(dp(14), dp(6), dp(14), dp(6))
+            setOnClickListener {
+                showColorPickerDialog(currentAltColor.ifEmpty { defaultColor }) { hex ->
+                    bs.set("alt_row_bg_color", hex)
+                    showTab("display")
+                }
+            }
+        }
+        colorRow.addView(pickBtn)
+
+        val resetBtn = Button(this).apply {
+            text = "Reset"
+            textSize = 13f
+            isAllCaps = false
+            setTextColor(ThemeManager.color(C.TEXT_SECONDARY))
+            background = ContextCompat.getDrawable(this@SettingsActivity, R.drawable.btn_secondary)
+            layoutParams = LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, dp(38))
+            setPadding(dp(14), dp(6), dp(14), dp(6))
+            setOnClickListener {
+                bs.set("alt_row_bg_color", null)
+                showTab("display")
+            }
+        }
+        colorRow.addView(resetBtn)
+
+        contentContainer.addView(colorRow)
+    }
+
+    private fun parseColorSafe(hex: String, fallback: Int): Int {
+        return try { Color.parseColor(hex) } catch (_: Exception) { fallback }
+    }
+
+    private fun showColorPickerDialog(currentHex: String, onColorSelected: (String) -> Unit) {
+        val presetColors = listOf(
+            "#e74c3c", "#e91e63", "#9b59b6", "#8e44ad",
+            "#3498db", "#2196f3", "#1abc9c", "#009688",
+            "#2ecc71", "#4caf50", "#8bc34a", "#cddc39",
+            "#f1c40f", "#ffeb3b", "#ff9800", "#ff5722",
+            "#795548", "#9e9e9e", "#607d8b", "#34495e",
+            "#1a1a2e", "#16213e", "#0f3460", "#4a90d9",
+            "#f7f8fa", "#e8ecf0", "#d0d4dc", "#3a3f5c",
+        )
+
+        val container = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            setPadding(dp(16), dp(16), dp(16), dp(8))
+        }
+
+        val previewSwatch = View(this).apply {
+            layoutParams = LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, dp(40)).apply {
+                bottomMargin = dp(12)
+            }
+            background = GradientDrawable().apply {
+                cornerRadius = dp(6).toFloat()
+                setColor(parseColorSafe(currentHex, ThemeManager.color(C.INPUT_BG)))
+            }
+        }
+        container.addView(previewSwatch)
+
+        val hexInput = EditText(this).apply {
+            setText(currentHex)
+            hint = "#4a90d9"
+            textSize = 14f
+            setTextColor(ThemeManager.color(C.TEXT))
+            setHintTextColor(ThemeManager.color(C.TEXT_SECONDARY))
+            background = ContextCompat.getDrawable(this@SettingsActivity, R.drawable.input_bg)
+            setPadding(dp(12), dp(8), dp(12), dp(8))
+            layoutParams = LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT).apply {
+                bottomMargin = dp(12)
+            }
+            isSingleLine = true
+            inputType = InputType.TYPE_CLASS_TEXT
+        }
+
+        hexInput.addTextChangedListener(object : android.text.TextWatcher {
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
+            override fun afterTextChanged(s: android.text.Editable?) {
+                val c = parseColorSafe(s.toString(), ThemeManager.color(C.INPUT_BG))
+                (previewSwatch.background as? GradientDrawable)?.setColor(c)
+            }
+        })
+        container.addView(hexInput)
+
+        val columns = 4
+        val grid = GridLayout(this).apply {
+            columnCount = columns
+            layoutParams = LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT)
+        }
+
+        for (hex in presetColors) {
+            val cell = View(this).apply {
+                val size = dp(48)
+                layoutParams = GridLayout.LayoutParams().apply {
+                    width = size
+                    height = size
+                    setMargins(dp(4), dp(4), dp(4), dp(4))
+                }
+                background = GradientDrawable().apply {
+                    cornerRadius = dp(6).toFloat()
+                    setColor(Color.parseColor(hex))
+                }
+                isClickable = true
+                isFocusable = true
+                setOnClickListener { hexInput.setText(hex) }
+            }
+            grid.addView(cell)
+        }
+
+        val scroll = ScrollView(this).apply {
+            layoutParams = LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT)
+        }
+        scroll.addView(grid)
+        container.addView(scroll)
+
+        AlertDialog.Builder(this)
+            .setTitle("Pick a Color")
+            .setView(container)
+            .setPositiveButton("OK") { _, _ ->
+                val result = hexInput.text.toString().trim()
+                if (result.isNotEmpty()) onColorSelected(result)
+            }
+            .setNegativeButton("Cancel", null)
+            .show()
     }
 
     private fun buildDashboardTab() {

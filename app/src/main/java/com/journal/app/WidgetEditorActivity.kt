@@ -685,6 +685,7 @@ class WidgetEditorActivity : AppCompatActivity() {
         widget.put("name", name)
         widget.put("dtUpdated", SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.US).format(Date()))
         db.saveWidget(widget.toString())
+        DashboardActivity.needsRefresh = true
         finish()
     }
 
@@ -694,6 +695,7 @@ class WidgetEditorActivity : AppCompatActivity() {
             .setMessage("Delete widget \"$name\"?")
             .setPositiveButton("Delete") { _, _ ->
                 db.deleteWidget(widget.optString("id"))
+                DashboardActivity.needsRefresh = true
                 finish()
             }
             .setNegativeButton("Cancel", null)

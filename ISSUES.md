@@ -13,8 +13,17 @@ summary: "Known bugs, platform limitations, fixed issues, and architectural note
 
 ## Fixed Issues
 
+### 2026-04-30 (session 2)
+
+- **Category icon editing missing** — Edit category dialog only had description field. Added Change Icon / Remove buttons with image picker, saves 64px + 128px icons to DB.
+- **Wallpaper feature removed** — Removed wallpaper settings from Preferences tab, pickWallpaper/handleWallpaperResult methods, WALLPAPER_PICK constant, and loadBase64Image (unused after removal).
+- **Daily Inspiration panel had no edit access** — Panel was hidden when no quotes existed, making it impossible to add quotes from dashboard. Now always visible with empty state prompt and ✏️ button that deep-links to Settings > Metadata tab.
+- **Metadata tab hard to navigate** — Categories and Tags lists could get long. Made both sections collapsible with persisted state.
+
 ### 2026-04-30
 
+- **Date/time format used key-based system** — Settings stored keys like `short`/`long`/`12h`/`24h` that each activity had to interpret via `when` blocks. Replaced with actual `SimpleDateFormat` pattern strings (e.g., `MMMM d, yyyy`, `h:mm a`) stored directly in BootstrapService. Applied formatting consistently across 6 activities: SettingsActivity, EntryListActivity, ReportsActivity, EntryViewerActivity, DashboardActivity, SearchActivity.
+- **Dashboard not refreshing after widget save/delete** — WidgetEditorActivity did not set `DashboardActivity.needsRefresh` flag on save or delete. Added `needsRefresh = true` before `finish()` in both `saveWidget()` and `confirmDelete()`.
 - **Dashboard not refreshing after data changes** — `onResume()` only checked for theme changes. Added `DashboardActivity.needsRefresh` static flag, set after erase all entries and CSV import completion. CSV import now shows AlertDialog with count; OK closes Settings and triggers dashboard rebuild.
 - **People feature removed** — Deleted people table, people column from entries, all people CRUD functions, people UI in form/viewer/settings/dashboard/CSV/widgets. Simplifies schema and reduces form complexity.
 - **Rich content / Quill.js editor removed** — Deleted RichEditorActivity, rich_editor.html asset, activity_rich_editor.xml layout, richContent column from entries, and all related code across EntryForm, EntryViewer, Search, Reports, CsvMapping, Settings. App goes from 15 to 14 activities, 22 to 21 Kotlin files. Content editing is now plain text only.
@@ -72,6 +81,7 @@ summary: "Known bugs, platform limitations, fixed issues, and architectural note
 - **DashboardDataBuilder**: Computes dashboard JSON natively from DatabaseService.
 - **Login flow**: LoginActivity -> ServiceProvider.init() -> DB open -> ThemeManager.init() -> DashboardDataBuilder.build() -> DashboardActivity.
 - **21 Kotlin source files**: 14 activities + 4 services + ServiceProvider + DashboardDataBuilder + ThemeManager.
+- **Database tables**: entries, images, categories, tags, icons, widgets, inspiration, settings, schema_version.
 
 ### UI Patterns (2026-04-29)
 
@@ -79,15 +89,15 @@ summary: "Known bugs, platform limitations, fixed issues, and architectural note
 - **EntryFormActivity**: Plain text content input. Action buttons (Save/Cancel/Delete) in top navbar, no bottom bar.
 - **ReportsActivity**: HTML button exports to Downloads and opens in browser via ACTION_VIEW intent. Output area 600dp.
 - **EntryListActivity**: Collapsible "Filter Info" box with search, category/tag filters, "Order by" dropdowns (field + direction), select mode, page size. Alternating row colors (CARD_BG/INPUT_BG) with CARD_BORDER stroke.
-- **SettingsActivity**: 6 tabs in 2-row grid (3 per row, equal-width) instead of horizontal scroll.
+- **SettingsActivity**: 7 tabs in 3-row grid (3 per row, equal-width) instead of horizontal scroll. Display tab for theme, font, and alternate row color.
 
-### Dashboard Components (10 total)
+### Dashboard Components (11 total)
 
-Weather/streak, Stats, Quick actions, Widgets, Pinned entries, Recent entries, Today in History, Top Tags, Top Categories, Top Places. Configurable via Settings > Dashboard tab. Order/visibility stored in BootstrapService as `dashboard_components` JSON.
+Weather/streak, Stats, Quick actions, Widgets, Pinned entries, Recent entries, Today in History, Top Tags, Top Categories, Top Places, Daily Inspiration. Configurable via Settings > Dashboard tab. Order/visibility stored in BootstrapService as `dashboard_components` JSON.
 
 ### Dashboard Auto-Refresh
 
-`DashboardActivity.needsRefresh` static flag triggers dashboard rebuild in `onResume()`. Set after: erase all entries (SettingsActivity), CSV import completion (SettingsActivity — shows AlertDialog, OK finishes back to dashboard).
+`DashboardActivity.needsRefresh` static flag triggers dashboard rebuild in `onResume()`. Set after: erase all entries (SettingsActivity), CSV import completion (SettingsActivity — shows AlertDialog, OK finishes back to dashboard), widget save/delete (WidgetEditorActivity).
 
 ### Widgets
 

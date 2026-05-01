@@ -65,8 +65,9 @@ class DashboardActivity : AppCompatActivity() {
         populateRecentEntries()
         populateTodayInHistory()
         populateRankedPanel(R.id.tags_list, R.id.panel_tags, "topTags", "tags")
-        populateRankedPanel(R.id.categories_list, R.id.panel_categories, "topCategories", "categories")
+        populateCategoriesPanel()
         populateRankedPanel(R.id.places_list, R.id.panel_places, "topPlaces", "placeName")
+        populateInspiration()
         applyDashboardComponentSettings()
     }
 
@@ -86,12 +87,13 @@ class DashboardActivity : AppCompatActivity() {
             "tags" to findViewById<View>(R.id.panel_tags),
             "categories" to findViewById<View>(R.id.panel_categories),
             "places" to findViewById<View>(R.id.panel_places),
-            "today_history" to findViewById<View>(R.id.panel_today_history)
+            "today_history" to findViewById<View>(R.id.panel_today_history),
+            "inspiration" to findViewById<View>(R.id.panel_inspiration)
         )
 
         val defaultOrder = listOf(
             "weather_streak", "stats", "quick_actions", "widgets",
-            "pinned", "recent", "today_history", "tags", "categories", "places"
+            "pinned", "recent", "today_history", "tags", "categories", "places", "inspiration"
         )
 
         val components = mutableListOf<Pair<String, Boolean>>()
@@ -612,7 +614,7 @@ class DashboardActivity : AppCompatActivity() {
         val date = entry.optString("date", "")
         if (date.isNotEmpty()) {
             val dateText = TextView(this).apply {
-                text = date
+                text = formatDate(date)
                 setTextColor(ThemeManager.color(C.ACCENT))
                 setTextSize(TypedValue.COMPLEX_UNIT_SP, 11f)
                 setPadding(dp(8), 0, 0, 0)
@@ -624,7 +626,7 @@ class DashboardActivity : AppCompatActivity() {
 
         val preview = entry.optString("contentPreview", "")
         val time = entry.optString("time", "")
-        var subtitle = time
+        var subtitle = formatTime(time)
         if (preview.isNotEmpty()) {
             if (subtitle.isNotEmpty()) subtitle += " — "
             subtitle += preview
@@ -660,7 +662,286 @@ class DashboardActivity : AppCompatActivity() {
         return row
     }
 
-    // ========== Ranked Panels (Tags, Categories, Places, People) ==========
+    // ========== Daily Inspiration ==========
+
+    private fun populateInspiration() {
+        val db = ServiceProvider.databaseService ?: return
+        val panel = findViewById<LinearLayout>(R.id.panel_inspiration)
+        val content = findViewById<LinearLayout>(R.id.inspiration_content)
+
+        panel.visibility = View.VISIBLE
+        content.removeAllViews()
+
+        val json = db.getRandomInspiration()
+        val obj = if (json.isNotEmpty()) try { JSONObject(json) } catch (_: Exception) { null } else null
+        val quote = obj?.optString("quote", "") ?: ""
+        val source = obj?.optString("source", "") ?: ""
+
+        if (quote.isNotEmpty()) {
+            content.addView(TextView(this).apply {
+                text = "“$quote”"
+                setTextColor(ThemeManager.color(C.TEXT))
+                setTextSize(TypedValue.COMPLEX_UNIT_SP, 16f)
+                setTypeface(Typeface.SERIF, Typeface.ITALIC)
+                gravity = Gravity.CENTER
+                setPadding(dp(12), dp(8), dp(12), dp(4))
+                setLineSpacing(dp(4).toFloat(), 1f)
+            })
+
+            if (source.isNotEmpty()) {
+                content.addView(TextView(this).apply {
+                    text = "— $source"
+                    setTextColor(ThemeManager.color(C.ACCENT))
+                    setTextSize(TypedValue.COMPLEX_UNIT_SP, 13f)
+                    setTypeface(null, Typeface.BOLD)
+                    gravity = Gravity.CENTER_HORIZONTAL or Gravity.END
+                    setPadding(dp(12), dp(4), dp(16), dp(4))
+                })
+            }
+        } else {
+            content.addView(TextView(this).apply {
+                text = "No quotes yet. Tap ✏️ to add some!"
+                setTextColor(ThemeManager.color(C.TEXT_SECONDARY))
+                setTextSize(TypedValue.COMPLEX_UNIT_SP, 13f)
+                gravity = Gravity.CENTER
+                setPadding(dp(12), dp(8), dp(12), dp(8))
+            })
+        }
+
+        val btnRow = LinearLayout(this).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = Gravity.CENTER
+            setPadding(dp(4), dp(6), dp(4), dp(2))
+        }
+
+        if (quote.isNotEmpty()) {
+            btnRow.addView(TextView(this).apply {
+                text = "🔄"
+                setTextSize(TypedValue.COMPLEX_UNIT_SP, 18f)
+                setPadding(dp(12), dp(4), dp(12), dp(4))
+                isClickable = true
+                isFocusable = true
+                setOnClickListener { populateInspiration() }
+            })
+        }
+
+        btnRow.addView(TextView(this).apply {
+            text = "✏️"
+            setTextSize(TypedValue.COMPLEX_UNIT_SP, 18f)
+            setPadding(dp(12), dp(4), dp(12), dp(4))
+            isClickable = true
+            isFocusable = true
+            setOnClickListener { openInspirationSettings() }
+        })
+
+        content.addView(btnRow)
+    }
+
+    private fun openInspirationSettings() {
+        SettingsActivity.databaseService = ServiceProvider.databaseService
+        SettingsActivity.bootstrapService = ServiceProvider.bootstrapService
+        SettingsActivity.cryptoService = ServiceProvider.cryptoService
+        SettingsActivity.weatherService = ServiceProvider.weatherService
+        SettingsActivity.currentJournalId = ServiceProvider.bootstrapService?.get("last_journal_id")
+        SettingsActivity.initialTab = "cattags"
+        startActivity(Intent(this, SettingsActivity::class.java))
+    }
+
+    // ========== Ranked Panels (Tags, Categories, Places) ==========
+
+    private fun populateCategoriesPanel() {
+        val items = dashboardData.optJSONArray("topCategories")
+        val panel = findViewById<LinearLayout>(R.id.panel_categories)
+        val list = findViewById<LinearLayout>(R.id.categories_list)
+
+        if (items == null || items.length() == 0) {
+            panel.visibility = View.GONE
+            return
+        }
+
+        panel.visibility = View.VISIBLE
+
+        val bs = ServiceProvider.bootstrapService
+        val isCardView = bs?.get("categories_view_mode") == "card"
+
+        // Replace the static title TextView with a row containing title + toggle
+        val titleView = panel.getChildAt(0)
+        if (titleView is TextView) {
+            panel.removeViewAt(0)
+            val titleRow = LinearLayout(this).apply {
+                orientation = LinearLayout.HORIZONTAL
+                gravity = Gravity.CENTER_VERTICAL
+                layoutParams = LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.MATCH_PARENT,
+                    LinearLayout.LayoutParams.WRAP_CONTENT
+                ).apply { bottomMargin = dp(8) }
+            }
+            titleRow.addView(TextView(this).apply {
+                text = "📁 Top Categories"
+                setTextColor(ThemeManager.color(C.TEXT))
+                setTextSize(TypedValue.COMPLEX_UNIT_SP, 15f)
+                setTypeface(null, Typeface.BOLD)
+                gravity = Gravity.CENTER
+                layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
+            })
+            titleRow.addView(TextView(this).apply {
+                tag = "cat_view_toggle"
+                text = if (isCardView) "☰" else "▦"
+                setTextSize(TypedValue.COMPLEX_UNIT_SP, 20f)
+                setTextColor(ThemeManager.color(C.TEXT_SECONDARY))
+                setPadding(dp(8), dp(2), dp(4), dp(2))
+                isClickable = true
+                isFocusable = true
+                setOnClickListener {
+                    val newMode = if (isCardView) "list" else "card"
+                    bs?.set("categories_view_mode", newMode)
+                    populateCategoriesPanel()
+                }
+            })
+            panel.addView(titleRow, 0)
+        } else if (titleView is LinearLayout) {
+            val toggle = titleView.findViewWithTag<TextView>("cat_view_toggle")
+            toggle?.text = if (isCardView) "☰" else "▦"
+            toggle?.setOnClickListener {
+                val newMode = if (isCardView) "list" else "card"
+                bs?.set("categories_view_mode", newMode)
+                populateCategoriesPanel()
+            }
+        }
+
+        list.removeAllViews()
+
+        if (isCardView) {
+            buildCategoryCardView(list, items)
+        } else {
+            val limit = minOf(items.length(), 10)
+            for (i in 0 until limit) {
+                val item = items.optJSONObject(i) ?: continue
+                val name = item.optString("name", "")
+                val count = item.optInt("count", 0)
+                val color: String? = if (item.has("color")) item.optString("color") else null
+                list.addView(createRankedRow(name, count, color, i + 1, "categories"))
+            }
+            if (items.length() > 10) {
+                list.addView(TextView(this).apply {
+                    text = "+${items.length() - 10} more"
+                    setTextColor(ThemeManager.color(C.ACCENT))
+                    setTextSize(TypedValue.COMPLEX_UNIT_SP, 12f)
+                    setPadding(dp(6), dp(6), dp(6), dp(2))
+                    setOnClickListener { openFilteredEntryList(null, null) }
+                })
+            }
+        }
+    }
+
+    private fun buildCategoryCardView(container: LinearLayout, items: JSONArray) {
+        val db = ServiceProvider.databaseService ?: return
+        val columns = 3
+        val limit = minOf(items.length(), 10)
+        var currentRow: LinearLayout? = null
+
+        for (i in 0 until limit) {
+            val item = items.optJSONObject(i) ?: continue
+            val name = item.optString("name", "")
+            val count = item.optInt("count", 0)
+
+            if (i % columns == 0) {
+                currentRow = LinearLayout(this).apply {
+                    orientation = LinearLayout.HORIZONTAL
+                    layoutParams = LinearLayout.LayoutParams(
+                        LinearLayout.LayoutParams.MATCH_PARENT,
+                        LinearLayout.LayoutParams.WRAP_CONTENT
+                    ).apply { bottomMargin = dp(6) }
+                }
+                container.addView(currentRow)
+            }
+
+            val card = LinearLayout(this).apply {
+                orientation = LinearLayout.VERTICAL
+                gravity = Gravity.CENTER_HORIZONTAL
+                setPadding(dp(6), dp(8), dp(6), dp(8))
+                val bg = GradientDrawable().apply {
+                    cornerRadius = dp(8).toFloat()
+                    setColor(ThemeManager.color(C.CARD_BG))
+                    setStroke(dp(1), ThemeManager.color(C.CARD_BORDER))
+                }
+                background = bg
+                elevation = dp(2).toFloat()
+                layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f).apply {
+                    marginEnd = if ((i % columns) < columns - 1) dp(6) else 0
+                }
+                isClickable = true
+                isFocusable = true
+                setOnClickListener {
+                    val filter = JSONArray().put(JSONObject().apply {
+                        put("field", "categories")
+                        put("op", "includes")
+                        put("value", name)
+                        put("value2", "")
+                    })
+                    openFilteredEntryList(filter.toString(), name)
+                }
+            }
+
+            // Icon
+            val iconData = try { db.getIcon("category_hd", name).ifEmpty { db.getIcon("category", name) } } catch (_: Exception) { "" }
+            if (iconData.isNotEmpty() && iconData != "null") {
+                val iv = ImageView(this).apply {
+                    layoutParams = LinearLayout.LayoutParams(dp(48), dp(48)).apply { bottomMargin = dp(4) }
+                    scaleType = ImageView.ScaleType.CENTER_CROP
+                }
+                try {
+                    val dataUrl = iconData.removeSurrounding("\"")
+                    val b64 = if (dataUrl.contains(",")) dataUrl.substringAfter(",") else dataUrl
+                    if (b64.isNotEmpty()) {
+                        val bytes = Base64.decode(b64, Base64.DEFAULT)
+                        val bmp = BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
+                        if (bmp != null) iv.setImageBitmap(bmp)
+                    }
+                } catch (_: Exception) {}
+                card.addView(iv)
+            } else {
+                card.addView(TextView(this).apply {
+                    text = "📁"
+                    setTextSize(TypedValue.COMPLEX_UNIT_SP, 28f)
+                    gravity = Gravity.CENTER
+                    layoutParams = LinearLayout.LayoutParams(dp(48), dp(48)).apply { bottomMargin = dp(4) }
+                })
+            }
+
+            // Name
+            card.addView(TextView(this).apply {
+                text = name
+                setTextColor(ThemeManager.color(C.TEXT))
+                setTextSize(TypedValue.COMPLEX_UNIT_SP, 12f)
+                gravity = Gravity.CENTER
+                maxLines = 2
+                ellipsize = TextUtils.TruncateAt.END
+            })
+
+            // Count
+            card.addView(TextView(this).apply {
+                text = "$count"
+                setTextColor(ThemeManager.color(C.TEXT_SECONDARY))
+                setTextSize(TypedValue.COMPLEX_UNIT_SP, 11f)
+                gravity = Gravity.CENTER
+            })
+
+            currentRow?.addView(card)
+        }
+
+        // Fill remaining cells in last row
+        val remainder = limit % columns
+        if (remainder != 0) {
+            for (j in remainder until columns) {
+                currentRow?.addView(View(this).apply {
+                    layoutParams = LinearLayout.LayoutParams(0, 0, 1f).apply {
+                        marginEnd = if (j < columns - 1) dp(6) else 0
+                    }
+                })
+            }
+        }
+    }
 
     private fun populateRankedPanel(listId: Int, panelId: Int, dataKey: String, filterField: String) {
         val items = dashboardData.optJSONArray(dataKey)
@@ -861,6 +1142,24 @@ class DashboardActivity : AppCompatActivity() {
             val bmp = BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
             if (bmp != null) imageView.setImageBitmap(bmp)
         } catch (_: Exception) {}
+    }
+
+    private fun formatDate(dateStr: String): String {
+        if (dateStr.isEmpty()) return ""
+        val fmt = ServiceProvider.bootstrapService?.get("ev_date_format") ?: "MMMM d, yyyy"
+        return try {
+            val d = java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.US).parse(dateStr) ?: return dateStr
+            java.text.SimpleDateFormat(fmt, java.util.Locale.US).format(d)
+        } catch (_: Exception) { dateStr }
+    }
+
+    private fun formatTime(timeStr: String): String {
+        if (timeStr.isEmpty()) return ""
+        val fmt = ServiceProvider.bootstrapService?.get("ev_time_format") ?: "h:mm a"
+        return try {
+            val d = java.text.SimpleDateFormat("HH:mm", java.util.Locale.US).parse(timeStr) ?: return timeStr
+            java.text.SimpleDateFormat(fmt, java.util.Locale.US).format(d)
+        } catch (_: Exception) { timeStr }
     }
 
     private fun dp(value: Int): Int {

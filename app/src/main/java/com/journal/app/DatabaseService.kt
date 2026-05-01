@@ -130,6 +130,7 @@ class DatabaseService(private val context: Context) {
                 dtUpdated TEXT
             )
         """)
+        d.execSQL("CREATE TABLE IF NOT EXISTS inspiration (id INTEGER PRIMARY KEY AUTOINCREMENT, quote TEXT NOT NULL, source TEXT DEFAULT '')")
         d.execSQL("CREATE TABLE IF NOT EXISTS schema_version (version INTEGER PRIMARY KEY)")
         d.execSQL("INSERT OR REPLACE INTO schema_version VALUES ($SCHEMA_VERSION)")
     }
@@ -149,6 +150,7 @@ class DatabaseService(private val context: Context) {
                 dtCreated TEXT, dtUpdated TEXT
             )
         """)
+        d.execSQL("CREATE TABLE IF NOT EXISTS inspiration (id INTEGER PRIMARY KEY AUTOINCREMENT, quote TEXT NOT NULL, source TEXT DEFAULT '')")
     }
 
     private fun insertDefaults() {
@@ -228,12 +230,13 @@ class DatabaseService(private val context: Context) {
                 dtCreated TEXT, dtUpdated TEXT
             )
         """)
+        d.execSQL("CREATE TABLE IF NOT EXISTS inspiration (id INTEGER PRIMARY KEY AUTOINCREMENT, quote TEXT NOT NULL, source TEXT DEFAULT '')")
         d.execSQL("CREATE TABLE IF NOT EXISTS schema_version (version INTEGER PRIMARY KEY)")
         d.execSQL("INSERT OR REPLACE INTO schema_version VALUES ($SCHEMA_VERSION)")
     }
 
     private fun copyAllData(src: SQLiteDatabase, dst: SQLiteDatabase) {
-        val tables = listOf("entries", "images", "categories", "tags", "icons", "settings", "widgets")
+        val tables = listOf("entries", "images", "categories", "tags", "icons", "settings", "widgets", "inspiration")
         for (table in tables) {
             try {
                 val cursor = src.rawQuery("SELECT * FROM $table", null)
@@ -536,6 +539,52 @@ class DatabaseService(private val context: Context) {
     fun removeIcon(type: String, name: String) {
         val d = db ?: return
         d.delete("icons", "type = ? AND name = ?", arrayOf(type, name))
+    }
+
+    // ========== Inspiration ==========
+
+    fun getInspirations(): String {
+        val d = db ?: return "[]"
+        val arr = JSONArray()
+        val cursor = d.rawQuery("SELECT id, quote, source FROM inspiration ORDER BY id", null)
+        while (cursor.moveToNext()) {
+            arr.put(JSONObject().apply {
+                put("id", cursor.getInt(0))
+                put("quote", cursor.getString(1) ?: "")
+                put("source", cursor.getString(2) ?: "")
+            })
+        }
+        cursor.close()
+        return arr.toString()
+    }
+
+    fun addInspiration(quote: String, source: String) {
+        val d = db ?: return
+        d.execSQL("INSERT INTO inspiration (quote, source) VALUES (?, ?)", arrayOf(quote, source))
+    }
+
+    fun updateInspiration(id: Int, quote: String, source: String) {
+        val d = db ?: return
+        d.execSQL("UPDATE inspiration SET quote = ?, source = ? WHERE id = ?", arrayOf(quote, source, id))
+    }
+
+    fun deleteInspiration(id: Int) {
+        val d = db ?: return
+        d.execSQL("DELETE FROM inspiration WHERE id = ?", arrayOf(id))
+    }
+
+    fun getRandomInspiration(): String {
+        val d = db ?: return ""
+        val cursor = d.rawQuery("SELECT id, quote, source FROM inspiration ORDER BY RANDOM() LIMIT 1", null)
+        val result = if (cursor.moveToFirst()) {
+            JSONObject().apply {
+                put("id", cursor.getInt(0))
+                put("quote", cursor.getString(1) ?: "")
+                put("source", cursor.getString(2) ?: "")
+            }.toString()
+        } else ""
+        cursor.close()
+        return result
     }
 
     // ========== Settings ==========

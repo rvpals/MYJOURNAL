@@ -282,7 +282,7 @@ class ReportsActivity : AppCompatActivity() {
 
             sb.append("<tr>")
             sb.append("<td>${formatDateDisplay(e.optString("date"))}</td>")
-            sb.append("<td>${escapeHtml(e.optString("time", ""))}</td>")
+            sb.append("<td>${escapeHtml(formatTimeDisplay(e.optString("time", "")))}</td>")
             sb.append("<td>${escapeHtml(e.optString("title", ""))}</td>")
             sb.append("<td>$truncated</td>")
             sb.append("<td>${escapeHtml(cats)}</td>")
@@ -583,7 +583,7 @@ class ReportsActivity : AppCompatActivity() {
         }
 
         // Date/Time
-        val dateTime = "${formatDateDisplay(entry.optString("date", ""))}${if (entry.optString("time", "").isNotEmpty()) " " + entry.optString("time") else ""}"
+        val dateTime = "${formatDateDisplay(entry.optString("date", ""))}${if (entry.optString("time", "").isNotEmpty()) " " + formatTimeDisplay(entry.optString("time")) else ""}"
         if (dateTime.trim().isNotEmpty()) {
             canvas.drawText(dateTime.trim(), margin, y, datePaint)
             y += 14f
@@ -777,7 +777,7 @@ class ReportsActivity : AppCompatActivity() {
             "<%ID%>" to (entry.optString("id", "")),
             "<%TITLE%>" to escapeHtml(entry.optString("title", "")),
             "<%DATE%>" to formatDateDisplay(entry.optString("date", "")),
-            "<%TIME%>" to (entry.optString("time", "")),
+            "<%TIME%>" to formatTimeDisplay(entry.optString("time", "")),
             "<%CONTENT%>" to escapeHtml(entry.optString("content", "")).replace("\n", "<br>"),
 
             "<%CATEGORIES%>" to jsonArrayToStringList(entry.optJSONArray("categories")).joinToString(", "),
@@ -835,26 +835,30 @@ class ReportsActivity : AppCompatActivity() {
 
     private fun formatDateDisplay(dateStr: String): String {
         if (dateStr.isEmpty()) return ""
+        val fmt = bs.get("ev_date_format") ?: "MMMM d, yyyy"
         return try {
-            val fmt = bs.get("ev_date_format") ?: "short"
             val d = SimpleDateFormat("yyyy-MM-dd", Locale.US).parse(dateStr) ?: return dateStr
-            when (fmt) {
-                "long" -> SimpleDateFormat("MMMM d, yyyy", Locale.US).format(d)
-                "iso" -> dateStr
-                "us" -> SimpleDateFormat("MM/dd/yyyy", Locale.US).format(d)
-                "eu" -> SimpleDateFormat("dd/MM/yyyy", Locale.US).format(d)
-                "weekday" -> SimpleDateFormat("EEE, MMM d, yyyy", Locale.US).format(d)
-                else -> SimpleDateFormat("MMM d, yyyy", Locale.US).format(d)
-            }
+            SimpleDateFormat(fmt, Locale.US).format(d)
         } catch (_: Exception) { dateStr }
+    }
+
+    private fun formatTimeDisplay(timeStr: String): String {
+        if (timeStr.isEmpty()) return ""
+        val fmt = bs.get("ev_time_format") ?: "h:mm a"
+        return try {
+            val d = SimpleDateFormat("HH:mm", Locale.US).parse(timeStr) ?: return timeStr
+            SimpleDateFormat(fmt, Locale.US).format(d)
+        } catch (_: Exception) { timeStr }
     }
 
     private fun formatTimestamp(ts: String): String {
         if (ts.isEmpty()) return ""
+        val dateFmt = bs.get("ev_date_format") ?: "MMMM d, yyyy"
+        val timeFmt = bs.get("ev_time_format") ?: "h:mm a"
         return try {
             val sdf = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.US)
             val d = sdf.parse(ts) ?: return ts
-            SimpleDateFormat("MMM d, yyyy h:mm a", Locale.US).format(d)
+            SimpleDateFormat("$dateFmt $timeFmt", Locale.US).format(d)
         } catch (_: Exception) { ts }
     }
 

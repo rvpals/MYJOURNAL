@@ -534,7 +534,10 @@ class EntryListActivity : AppCompatActivity() {
         val locked = entry.optBoolean("locked", false)
 
         val isEvenRow = displayIdx % 2 == 0
-        val rowBgColor = if (isEvenRow) ThemeManager.color(C.CARD_BG) else ThemeManager.color(C.INPUT_BG)
+        val altColor = bs.get("alt_row_bg_color")?.let {
+            try { android.graphics.Color.parseColor(it) } catch (_: Exception) { null }
+        }
+        val rowBgColor = if (isEvenRow) ThemeManager.color(C.CARD_BG) else (altColor ?: ThemeManager.color(C.INPUT_BG))
 
         val card = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
@@ -951,29 +954,19 @@ class EntryListActivity : AppCompatActivity() {
 
     private fun formatDate(dateStr: String): String {
         if (dateStr.isEmpty()) return ""
-        val fmt = bs.get("ev_date_format") ?: "short"
+        val fmt = bs.get("ev_date_format") ?: "MMMM d, yyyy"
         return try {
-            val sdf = SimpleDateFormat("yyyy-MM-dd", Locale.US)
-            val d = sdf.parse(dateStr) ?: return dateStr
-            when (fmt) {
-                "long" -> SimpleDateFormat("MMMM d, yyyy", Locale.US).format(d)
-                "iso" -> dateStr
-                "us" -> SimpleDateFormat("MM/dd/yyyy", Locale.US).format(d)
-                "eu" -> SimpleDateFormat("dd/MM/yyyy", Locale.US).format(d)
-                "weekday" -> SimpleDateFormat("EEE, MMM d, yyyy", Locale.US).format(d)
-                else -> SimpleDateFormat("MMM d, yyyy", Locale.US).format(d)
-            }
+            val d = SimpleDateFormat("yyyy-MM-dd", Locale.US).parse(dateStr) ?: return dateStr
+            SimpleDateFormat(fmt, Locale.US).format(d)
         } catch (_: Exception) { dateStr }
     }
 
     private fun formatTime(timeStr: String): String {
         if (timeStr.isEmpty()) return ""
-        val fmt = bs.get("ev_time_format") ?: "12h"
-        if (fmt == "24h") return timeStr
+        val fmt = bs.get("ev_time_format") ?: "h:mm a"
         return try {
-            val sdf = SimpleDateFormat("HH:mm", Locale.US)
-            val d = sdf.parse(timeStr) ?: return timeStr
-            SimpleDateFormat("h:mm a", Locale.US).format(d)
+            val d = SimpleDateFormat("HH:mm", Locale.US).parse(timeStr) ?: return timeStr
+            SimpleDateFormat(fmt, Locale.US).format(d)
         } catch (_: Exception) { timeStr }
     }
 
