@@ -43,6 +43,7 @@ summary: "Complete functional requirements for all feature areas — authenticat
 
 ### Schema
 - **entries**: id, date (YYYY-MM-DD), time (HH:MM), title, content (plain text), categories (JSON array), tags (JSON array), placeName, locations (JSON array of {lat, lng, address, name?}), weather (JSON {temp, unit, description, code}), pinned (0/1), locked (0/1), dtCreated, dtUpdated
+- **sql_library**: id (autoincrement), name, description, sql_statement, dtCreated, dtUpdated — saved SQL queries for the Explorer
 - **images**: id, entryId (FK), name, data (base64), thumb (base64), sortOrder
 - **categories**: name (PK), description
 - **tags**: name (PK), description
@@ -189,6 +190,7 @@ summary: "Complete functional requirements for all feature areas — authenticat
 - Results: HorizontalScrollView table, clickable rows → AlertDialog record detail with prev/next + "View Entry"
 - CSV export: saved to Downloads via MediaStore scoped storage
 - iCalendar export: .ics VEVENT per entry (entry queries only)
+- SQL Library: save queries with name/description, load/edit/delete from library dialog; stored in `sql_library` table
 
 ## 7. Reports (ReportsActivity.kt)
 

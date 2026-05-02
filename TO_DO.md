@@ -38,7 +38,7 @@ summary: "Remaining backlog, test checklist, version-by-version completion histo
 - [ ] **SettingsActivity** — All 7 tabs load and function: Preferences (toggles, date/time, weather), Templates (views/entry/report), Metadata (categories/tags/inspiration CRUD with icons/colors), Data (export/import, password change), Widgets (list/editor with filters/functions), Dashboard (component toggle/reorder), Display (theme, font, alt row color)
 - [ ] **Settings tab icons** — All 7 tabs show emoji icons with 3D active/inactive styling
 - [ ] **EntryListActivity** — Search across all fields, category/tag filter spinners, sort by configured field, pagination (10/20/50/100), card view with all entry metadata, select mode with batch delete, navigation to EntryViewerActivity
-- [ ] **ExplorerActivity** — Table browser (click chip shows schema + sample), SQL textarea (raw SQL on any table), condition builder (add/remove rows, field/op/value spinners), field chips (toggle columns), Run Query, results table (clickable rows → record detail dialog), CSV export, iCalendar export, Clear button
+- [ ] **ExplorerActivity** — Table browser (click chip shows schema + sample), SQL textarea (raw SQL on any table), condition builder (add/remove rows, field/op/value spinners), field chips (toggle columns), Run Query, results table (clickable rows → record detail dialog), CSV export, iCalendar export, Clear button, SQL Library (Save/Load/Edit/Delete queries)
 - [ ] **EntryFormActivity** — New entry: date/time pickers, title, content, image add (gallery + camera), save. Edit entry: loads existing data, updates correctly. Categories checkboxes + quick-add, tags autocomplete + chips, place name, location search (Photon/Nominatim) + GPS, weather import, delete button on existing entries
 - [ ] **EntryFormActivity images** — Gallery picker adds images with thumbnails, camera capture works, remove button on each image, images saved as base64 with thumb
 - [ ] **EntryFormActivity tabs** — Main/Misc tab switching, all fields accessible, scroll position preserved
@@ -465,6 +465,13 @@ summary: "Remaining backlog, test checklist, version-by-version completion histo
 - [x] Settings stored in BootstrapService: `ui_font_family`, `ui_font_scale`
 - [x] `ThemeManager.loadFontSettings()` reads font preferences, called during `init()` and on Display tab changes
 - [x] Fix: Dashboard not refreshing after category icon change — `DashboardActivity.needsRefresh` now set in `handleIconResult()` and icon remove handler
+
+### v1.5.0+ (2026-05-02, SQL Library + auto GPS & weather)
+- [x] SQL Library: new `sql_library` table (id, name, description, sql_statement, dtCreated, dtUpdated)
+- [x] DatabaseService CRUD: getSqlLibrary, addSqlLibraryEntry, updateSqlLibraryEntry, deleteSqlLibraryEntry
+- [x] SQL Explorer Save button: prompts for name/description, captures current SQL (from input or builder conditions)
+- [x] SQL Explorer Library button: dialog showing all saved queries as cards with Load/Edit/Delete actions
+- [x] Table included in schema creation, upgrade, and data migration
 
 ### v1.5.0+ (2026-05-02, auto GPS & weather on new entry)
 - [x] Auto populate GPS & weather setting: toggle in Settings > Preferences (`auto_gps_weather` in BootstrapService)

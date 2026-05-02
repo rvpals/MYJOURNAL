@@ -86,7 +86,7 @@ summary: "Known bugs, platform limitations, fixed issues, and architectural note
 - **DashboardDataBuilder**: Computes dashboard JSON natively from DatabaseService.
 - **Login flow**: LoginActivity -> ServiceProvider.init() -> DB open -> ThemeManager.init() -> DashboardDataBuilder.build() -> DashboardActivity.
 - **21 Kotlin source files**: 14 activities + 4 services + ServiceProvider + DashboardDataBuilder + ThemeManager.
-- **Database tables**: entries, images, categories, tags, icons, widgets, inspiration, settings, schema_version.
+- **Database tables**: entries, images, categories, tags, icons, widgets, inspiration, sql_library, settings, schema_version.
 
 ### UI Patterns (2026-04-29)
 

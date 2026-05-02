@@ -208,6 +208,30 @@
                     android:paddingHorizontal="14dp"
                     android:layout_marginEnd="6dp" />
 
+                <Button
+                    android:id="@+id/btn_save_query"
+                    android:layout_width="wrap_content"
+                    android:layout_height="38dp"
+                    android:text="Save"
+                    android:textSize="13sp"
+                    android:textAllCaps="false"
+                    android:textColor="@color/login_text"
+                    android:background="@drawable/btn_secondary"
+                    android:paddingHorizontal="14dp"
+                    android:layout_marginEnd="6dp" />
+
+                <Button
+                    android:id="@+id/btn_load_query"
+                    android:layout_width="wrap_content"
+                    android:layout_height="38dp"
+                    android:text="Library"
+                    android:textSize="13sp"
+                    android:textAllCaps="false"
+                    android:textColor="@color/login_text"
+                    android:background="@drawable/btn_secondary"
+                    android:paddingHorizontal="14dp"
+                    android:layout_marginEnd="6dp" />
+
                 <TextView
                     android:id="@+id/explorer_result_count"
                     android:layout_width="0dp"

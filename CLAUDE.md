@@ -33,7 +33,7 @@ MYJOURNAL/
 │   │   │   ├── SearchActivity.kt        # Native full-text search screen
 │   │   │   ├── EntryViewerActivity.kt   # Native entry viewer with font settings
 │   │   │   ├── EntryListActivity.kt     # Native entry list (collapsible filters, order-by dropdowns, alternating rows, search, sort, paginate, batch delete)
-│   │   │   ├── ExplorerActivity.kt      # Native SQL Explorer (table browser, query builder, raw SQL, CSV/iCal export)
+│   │   │   ├── ExplorerActivity.kt      # Native SQL Explorer (table browser, query builder, raw SQL, CSV/iCal export, SQL Library save/load)
 │   │   │   ├── SettingsActivity.kt      # Native settings (7 tabs in 3-row grid: Prefs, Templates, Metadata, Data, Widgets, Dashboard, Display incl. App Font)
 │   │   │   ├── EntryFormActivity.kt     # Native entry form (content, images, categories, tags, locations, weather)
 │   │   │   ├── ReportsActivity.kt       # Native reports (HTML export+browser open, PDF/CSV, filters, templates)
@@ -89,6 +89,7 @@ Output: `app/build/outputs/apk/debug/app-debug.apk`
 **icons** — type + name (composite PK), data (PNG data URL). Types: category, tag (64x64), category_hd, tag_hd (128x128 for image buttons)
 **widgets** — id (PK), name, description, bgColor, icon, filters (JSON), functions (JSON), enabledInDashboard, sortOrder, dtCreated, dtUpdated
 **inspiration** — id (PK, autoincrement), quote (TEXT), source (TEXT)
+**sql_library** — id (PK, autoincrement), name (TEXT), description (TEXT), sql_statement (TEXT), dtCreated, dtUpdated
 **settings** — key (PK), value
 **schema_version** — version (INT)
 

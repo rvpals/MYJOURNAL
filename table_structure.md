@@ -117,6 +117,21 @@ Stores inspirational quotes for the Daily Inspiration dashboard panel.
 
 ---
 
+### sql_library
+
+Saved SQL queries for the SQL Explorer.
+
+| Column | Type | Constraints | Description |
+|--------|------|-------------|-------------|
+| id | INTEGER | PRIMARY KEY AUTOINCREMENT | Unique query identifier |
+| name | TEXT | NOT NULL | Query display name |
+| description | TEXT | DEFAULT '' | Optional description of what the query does |
+| sql_statement | TEXT | NOT NULL | The SQL query text |
+| dtCreated | TEXT | | ISO 8601 creation timestamp |
+| dtUpdated | TEXT | | ISO 8601 last-updated timestamp |
+
+---
+
 ### settings
 
 Key-value store for all application settings.
@@ -154,6 +169,7 @@ icons(type, name) ...> categories.name         (logical, type='category'/'catego
 
 widgets                (standalone, references entries via filter criteria at runtime)
 inspiration            (standalone, quotes for Daily Inspiration panel)
+sql_library            (standalone, saved SQL queries for Explorer)
 settings               (standalone key-value store)
 schema_version         (standalone, single row)
 ```

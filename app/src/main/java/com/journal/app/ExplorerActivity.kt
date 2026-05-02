@@ -395,6 +395,8 @@ class ExplorerActivity : AppCompatActivity() {
 
         findViewById<Button>(R.id.btn_run_query).setOnClickListener { runQuery() }
         findViewById<Button>(R.id.btn_clear).setOnClickListener { clearQuery() }
+        findViewById<Button>(R.id.btn_save_query).setOnClickListener { showSaveQueryDialog() }
+        findViewById<Button>(R.id.btn_load_query).setOnClickListener { showSqlLibrary() }
         findViewById<Button>(R.id.btn_export_csv).setOnClickListener { exportCSV() }
         findViewById<Button>(R.id.btn_export_ical).setOnClickListener { exportICalendar() }
     }
@@ -1040,6 +1042,275 @@ class ExplorerActivity : AppCompatActivity() {
         } catch (e: Exception) {
             Toast.makeText(this, "Save failed: ${e.message}", Toast.LENGTH_SHORT).show()
         }
+    }
+
+    // ========== SQL Library ==========
+
+    private fun getCurrentQueryText(): String {
+        val sqlInput = findViewById<EditText>(R.id.explorer_sql_input)
+        val sqlText = sqlInput.text.toString().trim()
+        if (sqlText.isNotEmpty()) return sqlText
+        commitConditionValues()
+        if (conditions.isEmpty() || (conditions.size == 1 && conditions[0].value.isEmpty() && conditions[0].op !in listOf("is empty", "is not empty", "has data", "no data"))) return ""
+        val colPart = if (selectedCols == fields.map { it.key }) "*" else selectedCols.joinToString(", ")
+        val whereParts = conditions.map { cond ->
+            val field = cond.field
+            when (cond.op) {
+                "between" -> "$field BETWEEN '${cond.value}' AND '${cond.value2}'"
+                "is empty", "is not empty", "has data", "no data" -> "$field ${cond.op.uppercase()}"
+                else -> "$field ${cond.op.uppercase()} '${cond.value}'"
+            }
+        }
+        val where = if (whereParts.isNotEmpty()) " WHERE ${whereParts.joinToString(" AND ")}" else ""
+        return "SELECT $colPart FROM entries$where"
+    }
+
+    private fun showSaveQueryDialog(editId: Int? = null, prefillName: String = "", prefillDesc: String = "", prefillSql: String? = null) {
+        val sql = prefillSql ?: getCurrentQueryText()
+        if (sql.isEmpty() && editId == null) {
+            Toast.makeText(this, "No query to save. Enter SQL or build conditions first.", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        val layout = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            setPadding(dp(20), dp(16), dp(20), dp(4))
+        }
+
+        layout.addView(TextView(this).apply {
+            text = "Name"
+            setTextColor(ThemeManager.color(C.TEXT_SECONDARY))
+            textSize = 12f
+        })
+        val nameInput = EditText(this).apply {
+            hint = "Query name"
+            setText(prefillName)
+            textSize = 14f
+            setTextColor(ThemeManager.color(C.TEXT))
+            setHintTextColor(ThemeManager.color(C.TEXT_SECONDARY))
+            background = ContextCompat.getDrawable(this@ExplorerActivity, R.drawable.input_bg)
+            setPadding(dp(10), dp(8), dp(10), dp(8))
+            isSingleLine = true
+        }
+        layout.addView(nameInput)
+
+        layout.addView(View(this).apply {
+            layoutParams = LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, dp(8))
+        })
+
+        layout.addView(TextView(this).apply {
+            text = "Description (optional)"
+            setTextColor(ThemeManager.color(C.TEXT_SECONDARY))
+            textSize = 12f
+        })
+        val descInput = EditText(this).apply {
+            hint = "What does this query do?"
+            setText(prefillDesc)
+            textSize = 14f
+            setTextColor(ThemeManager.color(C.TEXT))
+            setHintTextColor(ThemeManager.color(C.TEXT_SECONDARY))
+            background = ContextCompat.getDrawable(this@ExplorerActivity, R.drawable.input_bg)
+            setPadding(dp(10), dp(8), dp(10), dp(8))
+            isSingleLine = true
+        }
+        layout.addView(descInput)
+
+        layout.addView(View(this).apply {
+            layoutParams = LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, dp(8))
+        })
+
+        layout.addView(TextView(this).apply {
+            text = "SQL"
+            setTextColor(ThemeManager.color(C.TEXT_SECONDARY))
+            textSize = 12f
+        })
+        val sqlInput = EditText(this).apply {
+            setText(sql)
+            textSize = 12f
+            setTextColor(ThemeManager.color(C.TEXT))
+            background = ContextCompat.getDrawable(this@ExplorerActivity, R.drawable.input_bg)
+            setPadding(dp(10), dp(8), dp(10), dp(8))
+            minLines = 2
+            maxLines = 5
+            inputType = android.text.InputType.TYPE_CLASS_TEXT or android.text.InputType.TYPE_TEXT_FLAG_MULTI_LINE
+            gravity = Gravity.TOP
+        }
+        layout.addView(sqlInput)
+
+        AlertDialog.Builder(this)
+            .setTitle(if (editId != null) "Edit Saved Query" else "Save Query")
+            .setView(layout)
+            .setPositiveButton("Save") { _, _ ->
+                val name = nameInput.text.toString().trim()
+                val desc = descInput.text.toString().trim()
+                val statement = sqlInput.text.toString().trim()
+                if (name.isEmpty()) {
+                    Toast.makeText(this, "Name is required.", Toast.LENGTH_SHORT).show()
+                    return@setPositiveButton
+                }
+                if (statement.isEmpty()) {
+                    Toast.makeText(this, "SQL statement is required.", Toast.LENGTH_SHORT).show()
+                    return@setPositiveButton
+                }
+                if (editId != null) {
+                    db.updateSqlLibraryEntry(editId, name, desc, statement)
+                    Toast.makeText(this, "Query updated.", Toast.LENGTH_SHORT).show()
+                } else {
+                    db.addSqlLibraryEntry(name, desc, statement)
+                    Toast.makeText(this, "Query saved.", Toast.LENGTH_SHORT).show()
+                }
+            }
+            .setNegativeButton("Cancel", null)
+            .show()
+    }
+
+    private fun showSqlLibrary() {
+        val libraryJson = db.getSqlLibrary()
+        val library = try { JSONArray(libraryJson) } catch (_: Exception) { JSONArray() }
+
+        if (library.length() == 0) {
+            Toast.makeText(this, "No saved queries. Use Save to store a query first.", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        val scrollView = ScrollView(this)
+        val content = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            setPadding(dp(16), dp(12), dp(16), dp(12))
+        }
+
+        for (i in 0 until library.length()) {
+            val item = library.getJSONObject(i)
+            val id = item.getInt("id")
+            val name = item.optString("name", "")
+            val desc = item.optString("description", "")
+            val sql = item.optString("sql_statement", "")
+
+            val card = LinearLayout(this).apply {
+                orientation = LinearLayout.VERTICAL
+                background = ContextCompat.getDrawable(this@ExplorerActivity, R.drawable.input_bg)
+                setPadding(dp(12), dp(10), dp(12), dp(10))
+                layoutParams = LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.MATCH_PARENT,
+                    LinearLayout.LayoutParams.WRAP_CONTENT
+                ).apply { bottomMargin = dp(8) }
+            }
+
+            card.addView(TextView(this).apply {
+                text = name
+                setTextColor(ThemeManager.color(C.ACCENT))
+                textSize = 15f
+                setTypeface(null, Typeface.BOLD)
+            })
+
+            if (desc.isNotEmpty()) {
+                card.addView(TextView(this).apply {
+                    text = desc
+                    setTextColor(ThemeManager.color(C.TEXT_SECONDARY))
+                    textSize = 12f
+                    setPadding(0, dp(2), 0, 0)
+                })
+            }
+
+            card.addView(TextView(this).apply {
+                text = sql
+                setTextColor(ThemeManager.color(C.TEXT))
+                textSize = 11f
+                typeface = Typeface.MONOSPACE
+                maxLines = 3
+                ellipsize = TextUtils.TruncateAt.END
+                setPadding(0, dp(4), 0, dp(6))
+            })
+
+            val btnRow = LinearLayout(this).apply {
+                orientation = LinearLayout.HORIZONTAL
+                gravity = Gravity.END
+            }
+
+            btnRow.addView(Button(this).apply {
+                text = "Load"
+                textSize = 12f
+                isAllCaps = false
+                background = ContextCompat.getDrawable(this@ExplorerActivity, R.drawable.btn_accent)
+                setTextColor(ThemeManager.color(C.CARD_BG))
+                setPadding(dp(12), dp(4), dp(12), dp(4))
+                layoutParams = LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, dp(32)).apply { marginEnd = dp(6) }
+                val dialogRef = arrayOfNulls<AlertDialog>(1)
+                setOnClickListener {
+                    dialogRef[0]?.dismiss()
+                    findViewById<EditText>(R.id.explorer_sql_input).setText(sql)
+                }
+                tag = dialogRef
+            })
+
+            btnRow.addView(Button(this).apply {
+                text = "Edit"
+                textSize = 12f
+                isAllCaps = false
+                setTextColor(ThemeManager.color(C.TEXT))
+                background = ContextCompat.getDrawable(this@ExplorerActivity, R.drawable.btn_secondary)
+                setPadding(dp(12), dp(4), dp(12), dp(4))
+                layoutParams = LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, dp(32)).apply { marginEnd = dp(6) }
+                val dialogRef = arrayOfNulls<AlertDialog>(1)
+                setOnClickListener {
+                    dialogRef[0]?.dismiss()
+                    showSaveQueryDialog(editId = id, prefillName = name, prefillDesc = desc, prefillSql = sql)
+                }
+                tag = dialogRef
+            })
+
+            btnRow.addView(Button(this).apply {
+                text = "Delete"
+                textSize = 12f
+                isAllCaps = false
+                setTextColor(ThemeManager.color(C.ERROR))
+                background = ContextCompat.getDrawable(this@ExplorerActivity, R.drawable.btn_secondary)
+                setPadding(dp(12), dp(4), dp(12), dp(4))
+                layoutParams = LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, dp(32))
+                val dialogRef = arrayOfNulls<AlertDialog>(1)
+                setOnClickListener {
+                    AlertDialog.Builder(this@ExplorerActivity)
+                        .setMessage("Delete \"$name\"?")
+                        .setPositiveButton("Delete") { _, _ ->
+                            db.deleteSqlLibraryEntry(id)
+                            dialogRef[0]?.dismiss()
+                            showSqlLibrary()
+                        }
+                        .setNegativeButton("Cancel", null)
+                        .show()
+                }
+                tag = dialogRef
+            })
+
+            card.addView(btnRow)
+            content.addView(card)
+        }
+
+        scrollView.addView(content)
+
+        val dialog = AlertDialog.Builder(this)
+            .setTitle("SQL Library (${library.length()})")
+            .setView(scrollView)
+            .setNegativeButton("Close", null)
+            .create()
+
+        fun setDialogRefs(parent: LinearLayout) {
+            for (i in 0 until parent.childCount) {
+                val card = parent.getChildAt(i) as? LinearLayout ?: continue
+                for (j in 0 until card.childCount) {
+                    val row = card.getChildAt(j) as? LinearLayout ?: continue
+                    for (k in 0 until row.childCount) {
+                        val btn = row.getChildAt(k) as? Button ?: continue
+                        val ref = btn.tag as? Array<*> ?: continue
+                        @Suppress("UNCHECKED_CAST")
+                        (ref as Array<AlertDialog?>)[0] = dialog
+                    }
+                }
+            }
+        }
+        setDialogRefs(content)
+
+        dialog.show()
     }
 
     // ========== Clear ==========

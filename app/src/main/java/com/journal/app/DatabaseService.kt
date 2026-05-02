@@ -131,6 +131,7 @@ class DatabaseService(private val context: Context) {
             )
         """)
         d.execSQL("CREATE TABLE IF NOT EXISTS inspiration (id INTEGER PRIMARY KEY AUTOINCREMENT, quote TEXT NOT NULL, source TEXT DEFAULT '')")
+        d.execSQL("CREATE TABLE IF NOT EXISTS sql_library (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL, description TEXT DEFAULT '', sql_statement TEXT NOT NULL, dtCreated TEXT, dtUpdated TEXT)")
         d.execSQL("CREATE TABLE IF NOT EXISTS schema_version (version INTEGER PRIMARY KEY)")
         d.execSQL("INSERT OR REPLACE INTO schema_version VALUES ($SCHEMA_VERSION)")
     }
@@ -151,6 +152,7 @@ class DatabaseService(private val context: Context) {
             )
         """)
         d.execSQL("CREATE TABLE IF NOT EXISTS inspiration (id INTEGER PRIMARY KEY AUTOINCREMENT, quote TEXT NOT NULL, source TEXT DEFAULT '')")
+        d.execSQL("CREATE TABLE IF NOT EXISTS sql_library (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL, description TEXT DEFAULT '', sql_statement TEXT NOT NULL, dtCreated TEXT, dtUpdated TEXT)")
     }
 
     private fun insertDefaults() {
@@ -231,12 +233,13 @@ class DatabaseService(private val context: Context) {
             )
         """)
         d.execSQL("CREATE TABLE IF NOT EXISTS inspiration (id INTEGER PRIMARY KEY AUTOINCREMENT, quote TEXT NOT NULL, source TEXT DEFAULT '')")
+        d.execSQL("CREATE TABLE IF NOT EXISTS sql_library (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL, description TEXT DEFAULT '', sql_statement TEXT NOT NULL, dtCreated TEXT, dtUpdated TEXT)")
         d.execSQL("CREATE TABLE IF NOT EXISTS schema_version (version INTEGER PRIMARY KEY)")
         d.execSQL("INSERT OR REPLACE INTO schema_version VALUES ($SCHEMA_VERSION)")
     }
 
     private fun copyAllData(src: SQLiteDatabase, dst: SQLiteDatabase) {
-        val tables = listOf("entries", "images", "categories", "tags", "icons", "settings", "widgets", "inspiration")
+        val tables = listOf("entries", "images", "categories", "tags", "icons", "settings", "widgets", "inspiration", "sql_library")
         for (table in tables) {
             try {
                 val cursor = src.rawQuery("SELECT * FROM $table", null)
@@ -585,6 +588,45 @@ class DatabaseService(private val context: Context) {
         } else ""
         cursor.close()
         return result
+    }
+
+    // ========== SQL Library ==========
+
+    fun getSqlLibrary(): String {
+        val d = db ?: return "[]"
+        val arr = JSONArray()
+        val cursor = d.rawQuery("SELECT id, name, description, sql_statement, dtCreated, dtUpdated FROM sql_library ORDER BY name", null)
+        while (cursor.moveToNext()) {
+            arr.put(JSONObject().apply {
+                put("id", cursor.getInt(0))
+                put("name", cursor.getString(1) ?: "")
+                put("description", cursor.getString(2) ?: "")
+                put("sql_statement", cursor.getString(3) ?: "")
+                put("dtCreated", cursor.getString(4) ?: "")
+                put("dtUpdated", cursor.getString(5) ?: "")
+            })
+        }
+        cursor.close()
+        return arr.toString()
+    }
+
+    fun addSqlLibraryEntry(name: String, description: String, sqlStatement: String) {
+        val d = db ?: return
+        val now = java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", java.util.Locale.US).format(java.util.Date())
+        d.execSQL("INSERT INTO sql_library (name, description, sql_statement, dtCreated, dtUpdated) VALUES (?, ?, ?, ?, ?)",
+            arrayOf(name, description, sqlStatement, now, now))
+    }
+
+    fun updateSqlLibraryEntry(id: Int, name: String, description: String, sqlStatement: String) {
+        val d = db ?: return
+        val now = java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", java.util.Locale.US).format(java.util.Date())
+        d.execSQL("UPDATE sql_library SET name = ?, description = ?, sql_statement = ?, dtUpdated = ? WHERE id = ?",
+            arrayOf(name, description, sqlStatement, now, id))
+    }
+
+    fun deleteSqlLibraryEntry(id: Int) {
+        val d = db ?: return
+        d.execSQL("DELETE FROM sql_library WHERE id = ?", arrayOf(id))
     }
 
     // ========== Settings ==========

@@ -22,7 +22,7 @@ A fully native Kotlin Android app for keeping a personal journal with rich text 
 - **Dashboard** — Stats, pinned entries, search, ranked panels, configurable widgets, Today in History, Daily Inspiration
 - **App font customization** — Font family (9 options) and size scale across all screens
 - **Custom views** — Saved filter/sort/group combinations
-- **SQL Explorer** — Query builder, raw SQL, CSV and iCalendar export
+- **SQL Explorer** — Query builder, raw SQL, CSV and iCalendar export, SQL Library (save/load/edit/delete queries)
 - **Reports** — HTML (exports to browser), PDF (native PdfDocument), CSV
 - **Calendar view** — Monthly grid with entry dots, day selection
 - **Entry locking** — Prevent accidental edits
