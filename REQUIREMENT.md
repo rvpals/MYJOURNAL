@@ -78,7 +78,7 @@ summary: "Complete functional requirements for all feature areas — authenticat
 - Tags: `AutoCompleteTextView` with chip display + quick-add inline
 - Place name: `EditText`
 - Locations: geocoding search (Photon/Nominatim) via background thread, GPS via `LocationManager.requestSingleUpdate()`, manual lat/lng entry; results shown in `AlertDialog` picker
-- Weather: `WeatherService.fetchCurrent()` on background thread
+- Weather: `WeatherService.fetchCurrent()` on background thread; auto-populated on new entry if `auto_gps_weather` setting enabled and GPS available
 - Images: `GetMultipleContents()` for gallery, `TakePicturePreview()` for camera; `resizeBitmap()` creates full (1920px) and thumb (150px) as JPEG base64
 - Save: constructs `JSONObject` with all fields, calls `db.addEntry()` or `db.updateEntry()`
 
@@ -213,6 +213,7 @@ summary: "Complete functional requirements for all feature areas — authenticat
 
 ### Preferences
 - Auto-open last journal, confirm before delete, biometric toggle
+- Auto populate GPS & weather on new entry: when enabled and GPS permission granted and GPS provider enabled, automatically fetches GPS location and weather when opening a new entry form; silently skips if permission not granted or GPS disabled
 - Geocoding provider: Photon, Nominatim, or Google
 - Date/time format settings: SimpleDateFormat pattern strings (default: `MMMM d, yyyy` for date, `h:mm a` for time), applied across EntryList, EntryViewer, Dashboard, Search, Reports
 - Max pinned entries, default sort

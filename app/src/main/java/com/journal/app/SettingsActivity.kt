@@ -193,6 +193,9 @@ class SettingsActivity : AppCompatActivity() {
         buildToggle("Collapse Misc Info by default", bs.get("ev_misc_collapsed") == "1") { checked ->
             bs.set("ev_misc_collapsed", if (checked) "1" else "0")
         }
+        buildToggle("Auto populate GPS & weather on new entry", bs.get("auto_gps_weather") == "true") { checked ->
+            bs.set("auto_gps_weather", if (checked) "true" else "false")
+        }
 
         // Biometric toggles
         if (isBiometricSupported()) {

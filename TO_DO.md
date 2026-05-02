@@ -134,7 +134,7 @@ summary: "Remaining backlog, test checklist, version-by-version completion histo
 
 ### Settings
 
-- [ ] **Preferences tab** — Auto-open journal, confirm delete, biometric toggle, geocoding provider, date/time format, max pinned, sort order
+- [ ] **Preferences tab** — Auto-open journal, confirm delete, biometric toggle, auto GPS & weather on new entry, geocoding provider, date/time format, max pinned, sort order
 - [ ] **Display tab** — Theme picker, app font (family + size with preview and Apply), entry viewer font with live preview, alternate row background color picker
 - [ ] **Theme picker** — All 12 themes apply correctly (ThemeManager recolors backgrounds, text, status bar)
 - [ ] **Theme persistence** — Selected theme survives app restart (saved in DB settings, loaded via ThemeManager.init())
@@ -465,6 +465,11 @@ summary: "Remaining backlog, test checklist, version-by-version completion histo
 - [x] Settings stored in BootstrapService: `ui_font_family`, `ui_font_scale`
 - [x] `ThemeManager.loadFontSettings()` reads font preferences, called during `init()` and on Display tab changes
 - [x] Fix: Dashboard not refreshing after category icon change — `DashboardActivity.needsRefresh` now set in `handleIconResult()` and icon remove handler
+
+### v1.5.0+ (2026-05-02, auto GPS & weather on new entry)
+- [x] Auto populate GPS & weather setting: toggle in Settings > Preferences (`auto_gps_weather` in BootstrapService)
+- [x] EntryFormActivity auto-populates GPS location and weather on new entry when setting enabled
+- [x] Silently skips if location permission not granted or GPS provider disabled (no prompts)
 
 ### v1.5.0+ (2026-05-01, dashboard category icons + settings refresh)
 - [x] Category icons in dashboard ranked panel: Top Categories rows now show 24x24 category icons inline (base64 PNG decoded from icons table)

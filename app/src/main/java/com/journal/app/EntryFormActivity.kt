@@ -102,8 +102,17 @@ class EntryFormActivity : AppCompatActivity() {
         }
     }
 
+    private var pendingAutoPopulate = false
+
     private val locationPermission = registerForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
-        if (granted) fetchGpsLocation()
+        if (granted) {
+            if (pendingAutoPopulate) {
+                pendingAutoPopulate = false
+                autoPopulateGpsWeather()
+            } else {
+                fetchGpsLocation()
+            }
+        }
     }
 
     override fun attachBaseContext(newBase: android.content.Context) {
@@ -158,6 +167,10 @@ class EntryFormActivity : AppCompatActivity() {
 
         setupTabs()
         showTab("main")
+
+        if (isNew && bs.get("auto_gps_weather") == "true") {
+            autoPopulateGpsWeather()
+        }
     }
 
     private fun loadMetadata() {
@@ -990,6 +1003,40 @@ class EntryFormActivity : AppCompatActivity() {
                                     weatherDisplay.setText(formatWeather(w))
                                     showTab("misc")
                                 }
+                            }
+                        } catch (_: Exception) {}
+                    }.start()
+                }
+                @Deprecated("Deprecated in Java") override fun onStatusChanged(provider: String?, status: Int, extras: Bundle?) {}
+                override fun onProviderEnabled(provider: String) {}
+                override fun onProviderDisabled(provider: String) {}
+            }, mainLooper)
+        } catch (_: Exception) {}
+    }
+
+    private fun autoPopulateGpsWeather() {
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) return
+        val lm = getSystemService(android.location.LocationManager::class.java) ?: return
+        if (!lm.isProviderEnabled(android.location.LocationManager.GPS_PROVIDER)) return
+        try {
+            lm.requestSingleUpdate(android.location.LocationManager.GPS_PROVIDER, object : android.location.LocationListener {
+                override fun onLocationChanged(location: android.location.Location) {
+                    val lat = String.format(Locale.US, "%.6f", location.latitude).toDouble()
+                    val lng = String.format(Locale.US, "%.6f", location.longitude).toDouble()
+                    runOnUiThread {
+                        currentLocations.add(JSONObject().apply {
+                            put("name", ""); put("address", "$lat, $lng"); put("lat", lat); put("lng", lng)
+                        })
+                    }
+                    Thread {
+                        try {
+                            val unit = bs.get("temp_unit") ?: "celsius"
+                            val result = ws?.fetchCurrent(lat, lng, unit)
+                            if (result != null) {
+                                val w = JSONObject(result)
+                                w.put("locationName", "$lat, $lng")
+                                w.put("fetchedAt", SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.US).format(Date()))
+                                runOnUiThread { currentWeather = w }
                             }
                         } catch (_: Exception) {}
                     }.start()

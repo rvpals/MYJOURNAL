@@ -134,6 +134,7 @@ Light, Dark, Ocean, Midnight, Forest, Amethyst, Aurora, Lavender, Frost, Navy, S
 - **Dashboard auto-refresh** — `DashboardActivity.needsRefresh` static flag; set after erase all entries, CSV import completion, widget save/delete, or category icon change; checked in `onResume()` to rebuild dashboard data
 - **DashboardActivity navigation** — hamburger menu (☰) in top navbar with PopupMenu (Entries, Calendar, Reports, Explorer, Settings, About); no bottom nav bar
 - **File exports** — `ServiceProvider.saveFileToDownloads()` via MediaStore scoped storage (API 29+)
+- **Auto GPS & weather** — Optional setting (`auto_gps_weather` in BootstrapService) to auto-populate GPS location and weather when creating a new entry; silently skips if location permission not granted or GPS disabled
 - **Entry form layout** — Plain text content input; all action buttons (Save/Cancel/Delete) in top navbar, no bottom bar
 - **Entry list** — Collapsible "Filter Info" box with search/filter controls and Order by dropdowns (field + asc/desc); alternating row colors (`CARD_BG`/custom `alt_row_bg_color`) with `CARD_BORDER` stroke
 - **Settings tabs** — 3-row grid layout (3 tabs per row), equal-width buttons, no horizontal scrolling; 7 tabs: Prefs, Templates, Metadata, Data, Widgets, Dashboard, Display

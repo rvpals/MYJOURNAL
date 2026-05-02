@@ -18,7 +18,7 @@ A fully native Kotlin Android app for keeping a personal journal with rich text 
 - **Multiple journals** — Each with its own password
 - **Biometric login** — Fingerprint/face unlock via AndroidX BiometricPrompt
 - **Image attachments** — Camera capture, gallery picker, base64 storage with thumbnails
-- **Weather tracking** — Open-Meteo API integration, GPS-based
+- **Weather tracking** — Open-Meteo API integration, GPS-based, optional auto-populate on new entry
 - **Dashboard** — Stats, pinned entries, search, ranked panels, configurable widgets, Today in History, Daily Inspiration
 - **App font customization** — Font family (9 options) and size scale across all screens
 - **Custom views** — Saved filter/sort/group combinations
