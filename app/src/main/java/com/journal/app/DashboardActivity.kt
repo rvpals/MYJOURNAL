@@ -1018,6 +1018,27 @@ class DashboardActivity : AppCompatActivity() {
         }
         row.addView(spacer)
 
+        if (filterField == "categories") {
+            val db = ServiceProvider.databaseService
+            val iconData = try { db?.getIcon("category", name) ?: "" } catch (_: Exception) { "" }
+            if (iconData.isNotEmpty() && iconData != "null") {
+                val iv = ImageView(this).apply {
+                    layoutParams = LinearLayout.LayoutParams(dp(24), dp(24)).apply { marginEnd = dp(8) }
+                    scaleType = ImageView.ScaleType.CENTER_CROP
+                }
+                try {
+                    val dataUrl = iconData.removeSurrounding("\"")
+                    val b64 = if (dataUrl.contains(",")) dataUrl.substringAfter(",") else dataUrl
+                    if (b64.isNotEmpty()) {
+                        val bytes = Base64.decode(b64, Base64.DEFAULT)
+                        val bmp = BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
+                        if (bmp != null) iv.setImageBitmap(bmp)
+                    }
+                } catch (_: Exception) {}
+                row.addView(iv)
+            }
+        }
+
         val nameText = TextView(this).apply {
             text = name
             setTextSize(TypedValue.COMPLEX_UNIT_SP, 14f)

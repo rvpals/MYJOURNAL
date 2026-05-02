@@ -466,6 +466,10 @@ summary: "Remaining backlog, test checklist, version-by-version completion histo
 - [x] `ThemeManager.loadFontSettings()` reads font preferences, called during `init()` and on Display tab changes
 - [x] Fix: Dashboard not refreshing after category icon change — `DashboardActivity.needsRefresh` now set in `handleIconResult()` and icon remove handler
 
+### v1.5.0+ (2026-05-01, dashboard category icons + settings refresh)
+- [x] Category icons in dashboard ranked panel: Top Categories rows now show 24x24 category icons inline (base64 PNG decoded from icons table)
+- [x] Fix: Dashboard not refreshing after dashboard component settings change — toggle, move up, move down actions in Settings > Dashboard tab now set `DashboardActivity.needsRefresh = true`
+
 ## Kotlin Migration (complete)
 
 All original Java activities were converted to Kotlin (2026-04-17/18). MainActivity was later removed entirely when WebView was eliminated (2026-04-28). The app is now 100% Kotlin with 21 source files: 14 activities + 4 services + ServiceProvider + DashboardDataBuilder + ThemeManager.

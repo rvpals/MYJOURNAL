@@ -16,6 +16,7 @@ summary: "Known bugs, platform limitations, fixed issues, and architectural note
 ### 2026-05-01
 
 - **Dashboard not refreshing after category icon change** — `handleIconResult()` and icon remove button in SettingsActivity did not set `DashboardActivity.needsRefresh`. Icons assigned to categories wouldn't appear in the Top Categories dashboard panel until app restart. Added `needsRefresh = true` in both paths.
+- **Dashboard not refreshing after dashboard component settings change** — Toggle, move up, and move down actions in Settings > Dashboard tab called `saveDashboardComponents()` but did not set `DashboardActivity.needsRefresh`. Changes to component visibility or order required app restart to take effect. Added `needsRefresh = true` after each `saveDashboardComponents()` call.
 
 ### 2026-04-30 (session 2)
 
@@ -101,7 +102,7 @@ Weather/streak, Stats, Quick actions, Widgets, Pinned entries, Recent entries, T
 
 ### Dashboard Auto-Refresh
 
-`DashboardActivity.needsRefresh` static flag triggers dashboard rebuild in `onResume()`. Set after: erase all entries (SettingsActivity), CSV import completion (SettingsActivity — shows AlertDialog, OK finishes back to dashboard), widget save/delete (WidgetEditorActivity), category icon change (SettingsActivity — icon upload or remove).
+`DashboardActivity.needsRefresh` static flag triggers dashboard rebuild in `onResume()`. Set after: erase all entries (SettingsActivity), CSV import completion (SettingsActivity — shows AlertDialog, OK finishes back to dashboard), widget save/delete (WidgetEditorActivity), category icon change (SettingsActivity — icon upload or remove), dashboard component settings change (SettingsActivity — toggle/reorder in Dashboard tab).
 
 ### Widgets
 

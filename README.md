@@ -15,12 +15,12 @@ A fully native Kotlin Android app for keeping a personal journal with rich text 
 ## Features
 
 - **Encrypted storage** — AES-256-GCM encrypted SQLCipher database
-- **Rich text editing** — Bold/Italic/Underline/Strikethrough via Spannable + Html.fromHtml()/toHtml()
 - **Multiple journals** — Each with its own password
 - **Biometric login** — Fingerprint/face unlock via AndroidX BiometricPrompt
 - **Image attachments** — Camera capture, gallery picker, base64 storage with thumbnails
 - **Weather tracking** — Open-Meteo API integration, GPS-based
-- **Dashboard** — Stats, pinned entries, search, ranked panels, configurable widgets, Today in History
+- **Dashboard** — Stats, pinned entries, search, ranked panels, configurable widgets, Today in History, Daily Inspiration
+- **App font customization** — Font family (9 options) and size scale across all screens
 - **Custom views** — Saved filter/sort/group combinations
 - **SQL Explorer** — Query builder, raw SQL, CSV and iCalendar export
 - **Reports** — HTML (exports to browser), PDF (native PdfDocument), CSV
@@ -47,7 +47,6 @@ Output: `app/build/outputs/apk/debug/app-debug.apk`
 - **Android** — Kotlin, SDK 34, fully native activities (no WebView)
 - **Database** — SQLCipher 4.5.6 (encrypted SQLite)
 - **Encryption** — AES-256-GCM, PBKDF2-SHA256 (100k iterations) via javax.crypto
-- **Rich text** — Spannable + Html.fromHtml()/toHtml()
 - **PDF** — Native Android PdfDocument API
 - **Weather** — Open-Meteo API (free, no key required)
 - **Geocoding** — Photon / Nominatim / Google (configurable)

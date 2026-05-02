@@ -3733,6 +3733,7 @@ class SettingsActivity : AppCompatActivity() {
                         "toggle" -> {
                             components[i] = id to !components[i].second
                             saveDashboardComponents(components)
+                            DashboardActivity.needsRefresh = true
                             rebuildList()
                         }
                         "up" -> if (i > 0) {
@@ -3740,6 +3741,7 @@ class SettingsActivity : AppCompatActivity() {
                             components[i - 1] = components[i]
                             components[i] = tmp
                             saveDashboardComponents(components)
+                            DashboardActivity.needsRefresh = true
                             rebuildList()
                         }
                         "down" -> if (i < components.size - 1) {
@@ -3747,6 +3749,7 @@ class SettingsActivity : AppCompatActivity() {
                             components[i + 1] = components[i]
                             components[i] = tmp
                             saveDashboardComponents(components)
+                            DashboardActivity.needsRefresh = true
                             rebuildList()
                         }
                     }

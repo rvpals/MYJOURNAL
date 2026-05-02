@@ -19,7 +19,6 @@ Primary table storing all journal entries.
 | content | TEXT | | Plain text content |
 | categories | TEXT | | JSON array of category names, e.g. `["Work","Travel"]` |
 | tags | TEXT | | JSON array of tag names, e.g. `["daily","personal"]` |
-| people | TEXT | | JSON array of `{firstName, lastName}` objects |
 | placeName | TEXT | | Free-text place name, e.g. "NYC Trip" |
 | locations | TEXT | | JSON array of `{lat, lng, address, name?}` objects |
 | weather | TEXT | | JSON object `{temp, unit, description, code}` or null |
@@ -76,25 +75,13 @@ Managed list of tag descriptions. Tags can also be created inline in entries.
 
 ### icons
 
-Custom icons for categories, tags, and people. Supports standard (64x64) and HD (128x128) variants.
+Custom icons for categories and tags. Supports standard (64x64) and HD (128x128) variants.
 
 | Column | Type | Constraints | Description |
 |--------|------|-------------|-------------|
-| type | TEXT | NOT NULL, PK (composite) | Icon type: `category`, `tag`, `person`, `category_hd`, `tag_hd`, `person_hd` |
+| type | TEXT | NOT NULL, PK (composite) | Icon type: `category`, `tag`, `category_hd`, `tag_hd` |
 | name | TEXT | NOT NULL, PK (composite) | Name of the category/tag/person |
 | data | TEXT | | PNG image as data URL |
-
----
-
-### people
-
-Managed list of people that can be associated with entries.
-
-| Column | Type | Constraints | Description |
-|--------|------|-------------|-------------|
-| firstName | TEXT | NOT NULL, PK (composite) | First name |
-| lastName | TEXT | NOT NULL, PK (composite) | Last name |
-| description | TEXT | DEFAULT '' | Optional description |
 
 ---
 
@@ -118,6 +105,18 @@ Dashboard widgets with configurable filters and aggregate functions.
 
 ---
 
+### inspiration
+
+Stores inspirational quotes for the Daily Inspiration dashboard panel.
+
+| Column | Type | Constraints | Description |
+|--------|------|-------------|-------------|
+| id | INTEGER | PRIMARY KEY AUTOINCREMENT | Unique quote identifier |
+| quote | TEXT | | Quote text |
+| source | TEXT | | Attribution / source |
+
+---
+
 ### settings
 
 Key-value store for all application settings.
@@ -127,7 +126,7 @@ Key-value store for all application settings.
 | key | TEXT | PRIMARY KEY | Setting key name |
 | value | TEXT | | JSON-encoded value |
 
-**Common keys:** `theme`, `wallpaper`, `reportTemplates`, `entryTemplates`, `customViews`, `entryListFields`
+**Common keys:** `theme`, `reportTemplates`, `entryTemplates`, `customViews`, `entryListFields`
 
 ---
 
@@ -149,14 +148,12 @@ entries (1) ------< images (many)
    |
    |-- .categories[]  ...> categories.name     (logical, JSON array)
    |-- .tags[]        ...> tags.name           (logical, JSON array)
-   |-- .people[]      ...> people(firstName,   (logical, JSON array of objects)
-   |                              lastName)
    |
 icons(type, name) ...> categories.name         (logical, type='category'/'category_hd')
                   ...> tags.name               (logical, type='tag'/'tag_hd')
-                  ...> people full name        (logical, type='person'/'person_hd')
 
 widgets                (standalone, references entries via filter criteria at runtime)
+inspiration            (standalone, quotes for Daily Inspiration panel)
 settings               (standalone key-value store)
 schema_version         (standalone, single row)
 ```
