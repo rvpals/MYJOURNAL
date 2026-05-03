@@ -5,6 +5,7 @@ import android.graphics.BitmapFactory
 import android.graphics.Color
 import android.graphics.Typeface
 import android.graphics.drawable.GradientDrawable
+import android.graphics.drawable.LayerDrawable
 import android.os.Bundle
 import android.text.TextUtils
 import android.util.Base64
@@ -675,6 +676,34 @@ class DashboardActivity : AppCompatActivity() {
 
         panel.visibility = View.VISIBLE
         content.removeAllViews()
+
+        val accent = ThemeManager.color(C.ACCENT)
+        val cardBg = ThemeManager.color(C.CARD_BG)
+        val shadowColor = (accent and 0x00FFFFFF) or 0x30000000
+        val shadow = GradientDrawable().apply {
+            shape = GradientDrawable.RECTANGLE
+            cornerRadius = dp(18).toFloat()
+            setColor(shadowColor)
+        }
+        val outerBorder = GradientDrawable().apply {
+            shape = GradientDrawable.RECTANGLE
+            cornerRadius = dp(16).toFloat()
+            setColor(Color.TRANSPARENT)
+            setStroke(dp(2), accent)
+        }
+        val innerFill = GradientDrawable().apply {
+            shape = GradientDrawable.RECTANGLE
+            cornerRadius = dp(14).toFloat()
+            setColor(cardBg)
+            setStroke(dp(1), (accent and 0x00FFFFFF) or 0x40000000)
+        }
+        val layered = LayerDrawable(arrayOf(shadow, outerBorder, innerFill))
+        layered.setLayerInset(0, 0, 0, 0, 0)
+        layered.setLayerInset(1, dp(3), dp(3), dp(3), dp(3))
+        layered.setLayerInset(2, dp(5), dp(5), dp(5), dp(5))
+        panel.background = layered
+        panel.setPadding(dp(20), dp(18), dp(20), dp(14))
+        panel.elevation = dp(6).toFloat()
 
         val json = db.getRandomInspiration()
         val obj = if (json.isNotEmpty()) try { JSONObject(json) } catch (_: Exception) { null } else null

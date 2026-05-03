@@ -134,6 +134,7 @@ summary: "Complete functional requirements for all feature areas — authenticat
 - Refresh button (🔄) to show a different random quote
 - Edit button (✏️) deep-links to Settings > Metadata tab for quote management
 - Panel always visible; empty state shows "No quotes yet" prompt
+- Decorative panel styling: double accent border with layered insets, 3D drop shadow via LayerDrawable + Android elevation
 - Quotes managed in Settings > Metadata > Inspiration Quotes (add/edit/delete)
 
 ### Dashboard Search
@@ -247,6 +248,9 @@ summary: "Complete functional requirements for all feature areas — authenticat
 - Backup folder: SAF folder picker, backup/restore JSON files
 - Password change: verify old, re-encrypt database
 
+### Templates Tab
+- 3 collapsible sections: Custom Views, Pre-fill Templates, Report Templates — collapse state persisted in BootstrapService
+
 ### Pre-fill Templates
 - Saved templates that auto-fill entry form fields (date, time, title, content, categories, tags)
 
@@ -277,7 +281,7 @@ summary: "Complete functional requirements for all feature areas — authenticat
 2. **DashboardActivity** — Native stats/entries/rankings/widgets
 3. **CalendarActivity** — Native monthly calendar with entry dots, day selection
 4. **AboutActivity** — App info, version, links
-5. **SearchActivity** — Native full-text search across all entries
+5. **SearchActivity** — Native full-text search across all entries, search term highlighting in results
 6. **EntryViewerActivity** — Native entry viewer with font customization
 7. **SettingsActivity** — Full native settings (7 tabs: Prefs, Templates, Metadata, Data, Widgets, Dashboard, Display)
 8. **EntryListActivity** — Native entry list with search, filter, sort, pagination, batch delete

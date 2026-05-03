@@ -13,6 +13,10 @@ summary: "Known bugs, platform limitations, fixed issues, and architectural note
 
 ## Fixed Issues
 
+### 2026-05-02
+
+- **SQL Explorer Library load crash** — Clicking "Load" on a saved query in the SQL Library dialog crashed the app. `findViewById<EditText>(R.id.explorer_sql_input)` inside the Load button's `setOnClickListener` resolved to `Button.findViewById` (via enclosing `apply` scope) instead of the Activity's, returning null → NPE. Fixed by qualifying with `this@ExplorerActivity.findViewById`.
+
 ### 2026-05-01
 
 - **Dashboard not refreshing after category icon change** — `handleIconResult()` and icon remove button in SettingsActivity did not set `DashboardActivity.needsRefresh`. Icons assigned to categories wouldn't appear in the Top Categories dashboard panel until app restart. Added `needsRefresh = true` in both paths.

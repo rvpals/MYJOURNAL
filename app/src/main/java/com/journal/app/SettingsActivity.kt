@@ -385,19 +385,32 @@ class SettingsActivity : AppCompatActivity() {
 
     private fun buildTemplatesTab() {
         val settings = try { JSONObject(db.getSettings()) } catch (_: Exception) { JSONObject() }
+        val prevContainer = contentContainer
 
-        buildSectionHeader("👁️  Custom Views")
+        val viewsContainer = buildCollapsibleSection("👁️  Custom Views", bs.get("tpl_views_collapsed") != "1") {
+            bs.set("tpl_views_collapsed", if (it) "0" else "1")
+        }
+        contentContainer = viewsContainer
         buildCustomViewsList(settings)
+        contentContainer = prevContainer
 
         buildSpacer()
 
-        buildSectionHeader("📝  Pre-fill Templates")
+        val entryContainer = buildCollapsibleSection("📝  Pre-fill Templates", bs.get("tpl_entry_collapsed") != "1") {
+            bs.set("tpl_entry_collapsed", if (it) "0" else "1")
+        }
+        contentContainer = entryContainer
         buildEntryTemplatesList(settings)
+        contentContainer = prevContainer
 
         buildSpacer()
 
-        buildSectionHeader("📄  Report Templates")
+        val reportContainer = buildCollapsibleSection("📄  Report Templates", bs.get("tpl_report_collapsed") != "1") {
+            bs.set("tpl_report_collapsed", if (it) "0" else "1")
+        }
+        contentContainer = reportContainer
         buildReportTemplatesList(settings)
+        contentContainer = prevContainer
     }
 
     // --- Custom Views ---

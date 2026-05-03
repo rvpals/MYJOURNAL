@@ -3,7 +3,10 @@ package com.journal.app
 import android.content.Intent
 import android.graphics.Typeface
 import android.os.Bundle
+import android.text.Spannable
+import android.text.SpannableString
 import android.text.TextUtils
+import android.text.style.BackgroundColorSpan
 import android.util.TypedValue
 import android.view.Gravity
 import android.view.View
@@ -147,7 +150,7 @@ class SearchActivity : AppCompatActivity() {
 
         val titleText = entry.optString("title", "")
         val title = TextView(this).apply {
-            text = if (titleText.isEmpty()) "Untitled" else titleText
+            text = if (titleText.isEmpty()) "Untitled" else highlightTerm(titleText, term, wholeWord)
             setTextColor(ThemeManager.color(C.TEXT))
             setTextSize(TypedValue.COMPLEX_UNIT_SP, 14f)
             setTypeface(null, Typeface.BOLD)
@@ -176,7 +179,7 @@ class SearchActivity : AppCompatActivity() {
         val snippet = getSearchSnippet(content, term, wholeWord, 120)
         if (snippet.isNotEmpty()) {
             val sub = TextView(this).apply {
-                text = snippet
+                text = highlightTerm(snippet, term, wholeWord)
                 setTextColor(ThemeManager.color(C.TEXT_SECONDARY))
                 setTextSize(TypedValue.COMPLEX_UNIT_SP, 12f)
                 maxLines = 3
@@ -211,6 +214,24 @@ class SearchActivity : AppCompatActivity() {
         ).apply { bottomMargin = dp(4) }
 
         return row
+    }
+
+    private fun highlightTerm(text: String, term: String, wholeWord: Boolean): SpannableString {
+        val spannable = SpannableString(text)
+        val highlightColor = (ThemeManager.color(C.ACCENT) and 0x00FFFFFF) or 0x40000000
+        val regex = if (wholeWord) {
+            Regex("\\b${Regex.escape(term)}\\b", RegexOption.IGNORE_CASE)
+        } else {
+            Regex(Regex.escape(term), RegexOption.IGNORE_CASE)
+        }
+        for (match in regex.findAll(text)) {
+            spannable.setSpan(
+                BackgroundColorSpan(highlightColor),
+                match.range.first, match.range.last + 1,
+                Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
+            )
+        }
+        return spannable
     }
 
     private fun getSearchSnippet(text: String, term: String, wholeWord: Boolean, maxLen: Int): String {

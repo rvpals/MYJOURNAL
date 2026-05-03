@@ -1238,7 +1238,7 @@ class ExplorerActivity : AppCompatActivity() {
                 val dialogRef = arrayOfNulls<AlertDialog>(1)
                 setOnClickListener {
                     dialogRef[0]?.dismiss()
-                    findViewById<EditText>(R.id.explorer_sql_input).setText(sql)
+                    this@ExplorerActivity.findViewById<EditText>(R.id.explorer_sql_input).setText(sql)
                 }
                 tag = dialogRef
             })

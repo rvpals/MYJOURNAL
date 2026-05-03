@@ -15,7 +15,7 @@ summary: "Project architecture reference — directory structure, tech stack, da
 
 Fully native Android encrypted journal app. All 14 screens are native Kotlin activities. Services (crypto, database, bootstrap, weather) are managed by a `ServiceProvider` singleton. All data stored locally in AES-256-GCM encrypted SQLCipher database.
 
-**App Name:** My Journal | **Version:** 1.5.0 | **Package:** com.journal.app | **Min SDK:** 24 | **Target SDK:** 34
+**App Name:** My Journal | **Version:** 1.6.0 | **Package:** com.journal.app | **Min SDK:** 24 | **Target SDK:** 34
 
 ## Project Structure
 
@@ -30,7 +30,7 @@ MYJOURNAL/
 │   │   │   ├── DashboardActivity.kt     # Native dashboard (stats, ranked lists, pinned/recent, widgets, hamburger menu)
 │   │   │   ├── CalendarActivity.kt      # Native calendar view
 │   │   │   ├── AboutActivity.kt         # App info screen
-│   │   │   ├── SearchActivity.kt        # Native full-text search screen
+│   │   │   ├── SearchActivity.kt        # Native full-text search screen with term highlighting
 │   │   │   ├── EntryViewerActivity.kt   # Native entry viewer with font settings
 │   │   │   ├── EntryListActivity.kt     # Native entry list (collapsible filters, order-by dropdowns, alternating rows, search, sort, paginate, batch delete)
 │   │   │   ├── ExplorerActivity.kt      # Native SQL Explorer (table browser, query builder, raw SQL, CSV/iCal export, SQL Library save/load)
@@ -143,3 +143,6 @@ Light, Dark, Ocean, Midnight, Forest, Amethyst, Aurora, Lavender, Frost, Navy, S
 - **CSV mapping** — CsvMappingActivity has Select CSV (file picker + auto-map headers), Test (20 random rows with mapping applied), and Save Mapping buttons; result grid with HorizontalScrollView and alternating row colors
 - **Settings deep-link** — `SettingsActivity.initialTab` static field allows opening Settings to a specific tab (e.g. "cattags" for Metadata)
 - **Collapsible metadata sections** — Categories and Tags lists in Metadata tab are collapsible; state persisted in BootstrapService
+- **Collapsible template sections** — Custom Views, Pre-fill Templates, and Report Templates in Templates tab are collapsible; state persisted in BootstrapService
+- **Search term highlighting** — SearchActivity highlights matching terms in title and content snippet using semi-transparent accent background spans
+- **Daily Inspiration decorative panel** — Double accent border with layered insets, 3D drop shadow via LayerDrawable + elevation

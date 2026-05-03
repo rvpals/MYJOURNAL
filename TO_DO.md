@@ -482,6 +482,12 @@ summary: "Remaining backlog, test checklist, version-by-version completion histo
 - [x] Category icons in dashboard ranked panel: Top Categories rows now show 24x24 category icons inline (base64 PNG decoded from icons table)
 - [x] Fix: Dashboard not refreshing after dashboard component settings change — toggle, move up, move down actions in Settings > Dashboard tab now set `DashboardActivity.needsRefresh = true`
 
+### v1.6.0 (2026-05-02, search highlights + UI polish)
+- [x] Fix: SQL Explorer Library load crash — `findViewById` resolved to Button scope instead of Activity, causing NPE on Load
+- [x] Search term highlighting: matching terms highlighted with semi-transparent accent background in title and content snippet
+- [x] Collapsible Templates tab: Custom Views, Pre-fill Templates, and Report Templates sections are now collapsible with persisted state in BootstrapService
+- [x] Daily Inspiration decorative panel: double accent border with layered insets, 3D drop shadow via LayerDrawable + Android elevation
+
 ## Kotlin Migration (complete)
 
 All original Java activities were converted to Kotlin (2026-04-17/18). MainActivity was later removed entirely when WebView was eliminated (2026-04-28). The app is now 100% Kotlin with 21 source files: 14 activities + 4 services + ServiceProvider + DashboardDataBuilder + ThemeManager.

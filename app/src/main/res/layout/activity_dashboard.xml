@@ -71,14 +71,18 @@
         android:layout_height="0dp"
         android:layout_weight="1"
         android:fillViewport="true"
-        android:scrollbarStyle="outsideOverlay">
+        android:scrollbarStyle="outsideOverlay"
+        android:clipChildren="false"
+        android:clipToPadding="false">
 
         <LinearLayout
             android:id="@+id/content_container"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:padding="12dp">
+            android:padding="12dp"
+            android:clipChildren="false"
+            android:clipToPadding="false">
 
             <!-- Weather + Streak Row -->
             <LinearLayout
@@ -430,7 +434,9 @@
                 android:orientation="vertical"
                 android:background="@drawable/login_card_bg"
                 android:padding="14dp"
-                android:layout_marginBottom="12dp"
+                android:layout_marginStart="4dp"
+                android:layout_marginEnd="4dp"
+                android:layout_marginBottom="16dp"
                 android:visibility="gone">
 
                 <TextView
