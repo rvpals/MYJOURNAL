@@ -488,6 +488,11 @@ summary: "Remaining backlog, test checklist, version-by-version completion histo
 - [x] Collapsible Templates tab: Custom Views, Pre-fill Templates, and Report Templates sections are now collapsible with persisted state in BootstrapService
 - [x] Daily Inspiration decorative panel: double accent border with layered insets, 3D drop shadow via LayerDrawable + Android elevation
 
+### v1.7.0 (2026-05-03, collapsible dashboard panels + entry refresh fix)
+- [x] Collapsible dashboard panels: Recent Entries, Top Tags, Top Categories, Top Places, Daily Inspiration — ▶/▼ toggle headers with collapse state persisted in BootstrapService (`dash_*_collapsed` keys)
+- [x] Shared `setupCollapsibleHeader()` helper in DashboardActivity for consistent collapsible behavior
+- [x] Fix: Dashboard not refreshing after entry save/delete — `EntryFormActivity` now sets `DashboardActivity.needsRefresh = true` in both `saveEntry()` and `confirmDelete()`
+
 ## Kotlin Migration (complete)
 
 All original Java activities were converted to Kotlin (2026-04-17/18). MainActivity was later removed entirely when WebView was eliminated (2026-04-28). The app is now 100% Kotlin with 21 source files: 14 activities + 4 services + ServiceProvider + DashboardDataBuilder + ThemeManager.

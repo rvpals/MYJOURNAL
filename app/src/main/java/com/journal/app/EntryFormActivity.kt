@@ -1158,6 +1158,7 @@ class EntryFormActivity : AppCompatActivity() {
             db.updateEntry(entryId, fields.toString())
         }
 
+        DashboardActivity.needsRefresh = true
         setResult(RESULT_OK)
         finish()
     }
@@ -1167,6 +1168,7 @@ class EntryFormActivity : AppCompatActivity() {
             .setMessage("Are you sure you want to delete this entry?")
             .setPositiveButton("Delete") { _, _ ->
                 db.deleteEntryById(entryId)
+                DashboardActivity.needsRefresh = true
                 setResult(RESULT_OK)
                 finish()
             }

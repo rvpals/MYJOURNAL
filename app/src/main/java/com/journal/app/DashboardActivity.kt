@@ -69,9 +69,9 @@ class DashboardActivity : AppCompatActivity() {
         populatePinnedEntries()
         populateRecentEntries()
         populateTodayInHistory()
-        populateRankedPanel(R.id.tags_list, R.id.panel_tags, "topTags", "tags")
+        populateRankedPanel(R.id.tags_list, R.id.panel_tags, R.id.tags_header, "topTags", "tags", "dash_tags_collapsed", "🏷️ Top Tags")
         populateCategoriesPanel()
-        populateRankedPanel(R.id.places_list, R.id.panel_places, "topPlaces", "placeName")
+        populateRankedPanel(R.id.places_list, R.id.panel_places, R.id.places_header, "topPlaces", "placeName", "dash_places_collapsed", "📍 Top Places")
         populateInspiration()
         applyDashboardComponentSettings()
     }
@@ -477,11 +477,26 @@ class DashboardActivity : AppCompatActivity() {
         }
     }
 
+    private fun setupCollapsibleHeader(header: TextView, content: View, prefKey: String, title: String) {
+        val bs = ServiceProvider.bootstrapService ?: return
+        header.setTextColor(ThemeManager.color(C.TEXT))
+        val collapsed = bs.get(prefKey) == "1"
+        content.visibility = if (collapsed) View.GONE else View.VISIBLE
+        header.text = "${if (collapsed) "▶" else "▼"} $title"
+        header.setOnClickListener {
+            val nowCollapsed = content.visibility == View.VISIBLE
+            content.visibility = if (nowCollapsed) View.GONE else View.VISIBLE
+            header.text = "${if (nowCollapsed) "▶" else "▼"} $title"
+            bs.set(prefKey, if (nowCollapsed) "1" else "0")
+        }
+    }
+
     // ========== Recent Entries ==========
 
     private fun populateRecentEntries() {
         val recent = dashboardData.optJSONArray("recentEntries")
         val list = findViewById<LinearLayout>(R.id.recent_entries_list)
+        setupCollapsibleHeader(findViewById(R.id.recent_header), list, "dash_recent_collapsed", "Recent Entries")
         list.removeAllViews()
 
         if (recent == null || recent.length() == 0) {
@@ -673,9 +688,12 @@ class DashboardActivity : AppCompatActivity() {
         val db = ServiceProvider.databaseService ?: return
         val panel = findViewById<LinearLayout>(R.id.panel_inspiration)
         val content = findViewById<LinearLayout>(R.id.inspiration_content)
+        val header = findViewById<TextView>(R.id.inspiration_header)
 
         panel.visibility = View.VISIBLE
         content.removeAllViews()
+
+        setupCollapsibleHeader(header, content, "dash_inspiration_collapsed", "✨ Daily Inspiration")
 
         val accent = ThemeManager.color(C.ACCENT)
         val cardBg = ThemeManager.color(C.CARD_BG)
@@ -797,11 +815,16 @@ class DashboardActivity : AppCompatActivity() {
         val bs = ServiceProvider.bootstrapService
         val isCardView = bs?.get("categories_view_mode") == "card"
 
-        // Replace the static title TextView with a row containing title + toggle
-        val titleView = panel.getChildAt(0)
-        if (titleView is TextView) {
-            panel.removeViewAt(0)
+        val header = findViewById<TextView>(R.id.categories_header)
+        setupCollapsibleHeader(header, list, "dash_categories_collapsed", "📁 Top Categories")
+
+        // Replace header with row containing title + view mode toggle (first time only)
+        val parent = header.parent
+        if (parent === panel) {
+            val headerIndex = panel.indexOfChild(header)
+            panel.removeView(header)
             val titleRow = LinearLayout(this).apply {
+                tag = "cat_title_row"
                 orientation = LinearLayout.HORIZONTAL
                 gravity = Gravity.CENTER_VERTICAL
                 layoutParams = LinearLayout.LayoutParams(
@@ -809,14 +832,8 @@ class DashboardActivity : AppCompatActivity() {
                     LinearLayout.LayoutParams.WRAP_CONTENT
                 ).apply { bottomMargin = dp(8) }
             }
-            titleRow.addView(TextView(this).apply {
-                text = "📁 Top Categories"
-                setTextColor(ThemeManager.color(C.TEXT))
-                setTextSize(TypedValue.COMPLEX_UNIT_SP, 15f)
-                setTypeface(null, Typeface.BOLD)
-                gravity = Gravity.CENTER
-                layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
-            })
+            header.layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
+            titleRow.addView(header)
             titleRow.addView(TextView(this).apply {
                 tag = "cat_view_toggle"
                 text = if (isCardView) "☰" else "▦"
@@ -831,9 +848,10 @@ class DashboardActivity : AppCompatActivity() {
                     populateCategoriesPanel()
                 }
             })
-            panel.addView(titleRow, 0)
-        } else if (titleView is LinearLayout) {
-            val toggle = titleView.findViewWithTag<TextView>("cat_view_toggle")
+            panel.addView(titleRow, headerIndex)
+        } else {
+            val row = parent as? LinearLayout
+            val toggle = row?.findViewWithTag<TextView>("cat_view_toggle")
             toggle?.text = if (isCardView) "☰" else "▦"
             toggle?.setOnClickListener {
                 val newMode = if (isCardView) "list" else "card"
@@ -976,7 +994,7 @@ class DashboardActivity : AppCompatActivity() {
         }
     }
 
-    private fun populateRankedPanel(listId: Int, panelId: Int, dataKey: String, filterField: String) {
+    private fun populateRankedPanel(listId: Int, panelId: Int, headerId: Int, dataKey: String, filterField: String, prefKey: String, title: String) {
         val items = dashboardData.optJSONArray(dataKey)
         val list = findViewById<LinearLayout>(listId)
         val panel = findViewById<LinearLayout>(panelId)
@@ -987,6 +1005,7 @@ class DashboardActivity : AppCompatActivity() {
         }
 
         panel.visibility = View.VISIBLE
+        setupCollapsibleHeader(findViewById(headerId), list, prefKey, title)
         list.removeAllViews()
 
         val limit = minOf(items.length(), 10)

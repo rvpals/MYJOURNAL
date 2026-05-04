@@ -13,6 +13,10 @@ summary: "Known bugs, platform limitations, fixed issues, and architectural note
 
 ## Fixed Issues
 
+### 2026-05-03
+
+- **Dashboard not refreshing after entry save/delete** — `EntryFormActivity` did not set `DashboardActivity.needsRefresh` in `saveEntry()` or `confirmDelete()`. New or edited entries required manual refresh to appear on dashboard. Added `needsRefresh = true` in both save and delete paths.
+
 ### 2026-05-02
 
 - **SQL Explorer Library load crash** — Clicking "Load" on a saved query in the SQL Library dialog crashed the app. `findViewById<EditText>(R.id.explorer_sql_input)` inside the Load button's `setOnClickListener` resolved to `Button.findViewById` (via enclosing `apply` scope) instead of the Activity's, returning null → NPE. Fixed by qualifying with `this@ExplorerActivity.findViewById`.
@@ -106,7 +110,7 @@ Weather/streak, Stats, Quick actions, Widgets, Pinned entries, Recent entries, T
 
 ### Dashboard Auto-Refresh
 
-`DashboardActivity.needsRefresh` static flag triggers dashboard rebuild in `onResume()`. Set after: erase all entries (SettingsActivity), CSV import completion (SettingsActivity — shows AlertDialog, OK finishes back to dashboard), widget save/delete (WidgetEditorActivity), category icon change (SettingsActivity — icon upload or remove), dashboard component settings change (SettingsActivity — toggle/reorder in Dashboard tab).
+`DashboardActivity.needsRefresh` static flag triggers dashboard rebuild in `onResume()`. Set after: erase all entries (SettingsActivity), CSV import completion (SettingsActivity — shows AlertDialog, OK finishes back to dashboard), widget save/delete (WidgetEditorActivity), category icon change (SettingsActivity — icon upload or remove), dashboard component settings change (SettingsActivity — toggle/reorder in Dashboard tab), entry save or delete (EntryFormActivity).
 
 ### Widgets
 

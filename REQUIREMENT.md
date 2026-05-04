@@ -81,7 +81,8 @@ summary: "Complete functional requirements for all feature areas — authenticat
 - Locations: geocoding search (Photon/Nominatim) via background thread, GPS via `LocationManager.requestSingleUpdate()`, manual lat/lng entry; results shown in `AlertDialog` picker
 - Weather: `WeatherService.fetchCurrent()` on background thread; auto-populated on new entry if `auto_gps_weather` setting enabled and GPS available
 - Images: `GetMultipleContents()` for gallery, `TakePicturePreview()` for camera; `resizeBitmap()` creates full (1920px) and thumb (150px) as JPEG base64
-- Save: constructs `JSONObject` with all fields, calls `db.addEntry()` or `db.updateEntry()`
+- Save: constructs `JSONObject` with all fields, calls `db.addEntry()` or `db.updateEntry()`, sets `DashboardActivity.needsRefresh`
+- Delete: calls `db.deleteEntryById()`, sets `DashboardActivity.needsRefresh`
 
 ### Entry List (EntryListActivity.kt)
 - Card view: entry cards with date, title, category badge, tag chips, content preview
@@ -121,6 +122,7 @@ summary: "Complete functional requirements for all feature areas — authenticat
 
 ### Ranked Panels
 - Top tags, categories, places — ranked by entry count
+- Collapsible panels: ▶/▼ toggle header, collapse state persisted in BootstrapService (`dash_tags_collapsed`, `dash_categories_collapsed`, `dash_places_collapsed`)
 - Clickable items open EntryListActivity with field-specific filter
 - 3D rank badges: vertical gradient (cyan→accent→dark teal), rounded corners (8dp), elevation shadow
 - 3D count badges: dark gradient, rounded corners (6dp), elevation shadow
@@ -133,6 +135,7 @@ summary: "Complete functional requirements for all feature areas — authenticat
 - Source attribution with accent color
 - Refresh button (🔄) to show a different random quote
 - Edit button (✏️) deep-links to Settings > Metadata tab for quote management
+- Collapsible panel: ▶/▼ toggle header, collapse state persisted in BootstrapService (`dash_inspiration_collapsed`)
 - Panel always visible; empty state shows "No quotes yet" prompt
 - Decorative panel styling: double accent border with layered insets, 3D drop shadow via LayerDrawable + Android elevation
 - Quotes managed in Settings > Metadata > Inspiration Quotes (add/edit/delete)
@@ -150,6 +153,7 @@ summary: "Complete functional requirements for all feature areas — authenticat
 
 ### Pinned & Recent Entries
 - Pinned entries and recent entries displayed as rows
+- Recent Entries panel is collapsible: ▶/▼ toggle header, collapse state persisted in BootstrapService (`dash_recent_collapsed`)
 - Click opens EntryViewerActivity directly
 
 ### Dashboard Widgets

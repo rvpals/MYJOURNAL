@@ -15,7 +15,7 @@ summary: "Project architecture reference — directory structure, tech stack, da
 
 Fully native Android encrypted journal app. All 14 screens are native Kotlin activities. Services (crypto, database, bootstrap, weather) are managed by a `ServiceProvider` singleton. All data stored locally in AES-256-GCM encrypted SQLCipher database.
 
-**App Name:** My Journal | **Version:** 1.6.0 | **Package:** com.journal.app | **Min SDK:** 24 | **Target SDK:** 34
+**App Name:** My Journal | **Version:** 1.7.0 | **Package:** com.journal.app | **Min SDK:** 24 | **Target SDK:** 34
 
 ## Project Structure
 
@@ -132,7 +132,7 @@ Light, Dark, Ocean, Midnight, Forest, Amethyst, Aurora, Lavender, Frost, Navy, S
 - **Bootstrap store** — all key-value storage uses BootstrapService (SharedPreferences wrapper)
 - **Large data to activities** — SearchActivity, CalendarActivity use static `companion object` holders for entry data (avoids TransactionTooLargeException)
 - **Dashboard component settings** — Settings > Dashboard tab allows toggling/reordering 11 components; stored in BootstrapService as `dashboard_components` JSON
-- **Dashboard auto-refresh** — `DashboardActivity.needsRefresh` static flag; set after erase all entries, CSV import completion, widget save/delete, or category icon change; checked in `onResume()` to rebuild dashboard data
+- **Dashboard auto-refresh** — `DashboardActivity.needsRefresh` static flag; set after erase all entries, CSV import completion, widget save/delete, category icon change, or entry save/delete; checked in `onResume()` to rebuild dashboard data
 - **DashboardActivity navigation** — hamburger menu (☰) in top navbar with PopupMenu (Entries, Calendar, Reports, Explorer, Settings, About); no bottom nav bar
 - **File exports** — `ServiceProvider.saveFileToDownloads()` via MediaStore scoped storage (API 29+)
 - **Auto GPS & weather** — Optional setting (`auto_gps_weather` in BootstrapService) to auto-populate GPS location and weather when creating a new entry; silently skips if location permission not granted or GPS disabled
@@ -145,4 +145,5 @@ Light, Dark, Ocean, Midnight, Forest, Amethyst, Aurora, Lavender, Frost, Navy, S
 - **Collapsible metadata sections** — Categories and Tags lists in Metadata tab are collapsible; state persisted in BootstrapService
 - **Collapsible template sections** — Custom Views, Pre-fill Templates, and Report Templates in Templates tab are collapsible; state persisted in BootstrapService
 - **Search term highlighting** — SearchActivity highlights matching terms in title and content snippet using semi-transparent accent background spans
+- **Collapsible dashboard panels** — Recent Entries, Top Tags, Top Categories, Top Places, Daily Inspiration panels have ▶/▼ toggle headers; collapse state persisted in BootstrapService (`dash_*_collapsed` keys)
 - **Daily Inspiration decorative panel** — Double accent border with layered insets, 3D drop shadow via LayerDrawable + elevation
