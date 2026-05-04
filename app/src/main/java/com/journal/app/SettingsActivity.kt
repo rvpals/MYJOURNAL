@@ -951,6 +951,7 @@ class SettingsActivity : AppCompatActivity() {
             val autoTime = tpl.optBoolean("autoTime", false)
             val defTitle = tpl.optString("title", "")
             val defContent = tpl.optString("content", "")
+            val defCategories = tpl.optJSONArray("categories") ?: JSONArray()
             val defTags = tpl.optJSONArray("tags") ?: JSONArray()
 
             val wrapper = LinearLayout(this).apply {
@@ -1008,6 +1009,10 @@ class SettingsActivity : AppCompatActivity() {
             if (defContent.isNotEmpty()) {
                 val preview = if (defContent.length > 60) defContent.substring(0, 60) + "…" else defContent
                 detailParts.add("Content: $preview")
+            }
+            if (defCategories.length() > 0) {
+                val catList = (0 until defCategories.length()).map { defCategories.optString(it) }.joinToString(", ")
+                detailParts.add("Categories: $catList")
             }
             if (defTags.length() > 0) {
                 val tagList = (0 until defTags.length()).map { defTags.optString(it) }.joinToString(", ")
@@ -1133,6 +1138,10 @@ class SettingsActivity : AppCompatActivity() {
         val contentInput = makeDialogInput("Default content", tpl.optString("content"), multiLine = true)
         container.addView(contentInput)
 
+        val categoriesInput = makeDialogInput("Categories (comma-separated)",
+            jsonArrayToStr(tpl.optJSONArray("categories")))
+        container.addView(categoriesInput)
+
         val tagsInput = makeDialogInput("Tags (comma-separated)",
             jsonArrayToStr(tpl.optJSONArray("tags")))
         container.addView(tagsInput)
@@ -1152,6 +1161,10 @@ class SettingsActivity : AppCompatActivity() {
                 tpl.put("autoTime", autoTimeCb.isChecked)
                 tpl.put("title", titleInput.text.toString())
                 tpl.put("content", contentInput.text.toString())
+                val catStr = categoriesInput.text.toString()
+                val catArr = JSONArray()
+                catStr.split(",").map { it.trim() }.filter { it.isNotEmpty() }.forEach { catArr.put(it) }
+                tpl.put("categories", catArr)
                 val tagStr = tagsInput.text.toString()
                 val tagArr = JSONArray()
                 tagStr.split(",").map { it.trim() }.filter { it.isNotEmpty() }.forEach { tagArr.put(it) }

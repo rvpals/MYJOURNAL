@@ -261,6 +261,7 @@ summary: "Complete functional requirements for all feature areas — authenticat
 
 ### Pre-fill Templates
 - Saved templates that auto-fill entry form fields (date, time, title, content, categories, tags)
+- Template editor: name, description, auto-date checkbox, auto-time checkbox, default title, default content, categories (comma-separated), tags (comma-separated)
 - Applied in EntryFormActivity via 📋 button in navbar (new entries only); picker dialog lists all templates; selected template merges fields into the form
 
 ### Widgets (WidgetEditorActivity.kt)

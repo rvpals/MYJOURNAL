@@ -1115,7 +1115,11 @@ class EntryFormActivity : AppCompatActivity() {
             }
         }
 
-        showTab(activeTab)
+        contentContainer.removeAllViews()
+        when (activeTab) {
+            "main" -> buildMainTab()
+            "misc" -> buildMiscTab()
+        }
         Toast.makeText(this, "Template applied", Toast.LENGTH_SHORT).show()
     }
 

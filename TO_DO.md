@@ -493,6 +493,11 @@ summary: "Remaining backlog, test checklist, version-by-version completion histo
 - [x] Shared `setupCollapsibleHeader()` helper in DashboardActivity for consistent collapsible behavior
 - [x] Fix: Dashboard not refreshing after entry save/delete — `EntryFormActivity` now sets `DashboardActivity.needsRefresh = true` in both `saveEntry()` and `confirmDelete()`
 
+### v1.8.2 (2026-05-04, categories in pre-fill templates + title fix)
+- [x] Pre-fill template editor: added Categories input field (comma-separated) alongside existing Tags field
+- [x] Pre-fill template summary: categories shown in collapsible item detail view
+- [x] Fix: Pre-fill template title still not populating — `applyTemplate()` called `showTab()` which re-synced form data, overwriting template title; replaced with direct tab rebuild
+
 ### v1.8.1 (2026-05-04, bug fix + UI polish)
 - [x] Fix: Pre-fill template not populating title field — `buildMainTab()` overwrote `titleValue` with old input before creating new input; moved readback to `syncFormData()`
 - [x] Centered "Today In History" and "Recent Entries" panel header text in dashboard

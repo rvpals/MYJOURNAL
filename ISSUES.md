@@ -15,7 +15,8 @@ summary: "Known bugs, platform limitations, fixed issues, and architectural note
 
 ### 2026-05-04
 
-- **Pre-fill template not populating title field** — `buildMainTab()` read the old (empty) `titleInput` text back into `titleValue` before creating the new input, overwriting the value `applyTemplate()` had just set. Moved the title/content readback into `syncFormData()` which runs before template values are applied.
+- **Pre-fill template not populating title field (v1.8.2)** — `applyTemplate()` called `showTab(activeTab)` which internally called `syncFormData()`, reading the old `titleInput.text` back into `titleValue` and overwriting what the template had just set. Replaced `showTab()` call with direct `contentContainer.removeAllViews()` + `buildMainTab()`/`buildMiscTab()` to skip the sync.
+- **Pre-fill template not populating title field (v1.8.1)** — `buildMainTab()` read the old (empty) `titleInput` text back into `titleValue` before creating the new input, overwriting the value `applyTemplate()` had just set. Moved the title/content readback into `syncFormData()` which runs before template values are applied.
 
 ### 2026-05-03
 
