@@ -268,7 +268,8 @@ class EntryFormActivity : AppCompatActivity() {
 
     private fun syncFormData() {
         if (activeTab == "main" && ::titleInput.isInitialized) {
-            // Main tab data is stored in the input fields — read on save
+            titleValue = titleInput.text.toString()
+            contentValue = contentInput.text.toString()
         }
         if (activeTab == "misc" && ::placeNameInput.isInitialized) {
             placeName = placeNameInput.text.toString().trim()
@@ -284,12 +285,6 @@ class EntryFormActivity : AppCompatActivity() {
     // ========== Main Tab ==========
 
     private fun buildMainTab() {
-        if (::titleInput.isInitialized) {
-            titleValue = titleInput.text.toString()
-        }
-        if (::contentInput.isInitialized) {
-            contentValue = contentInput.text.toString()
-        }
 
         addSectionHeader("Main")
 

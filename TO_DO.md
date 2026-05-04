@@ -493,6 +493,10 @@ summary: "Remaining backlog, test checklist, version-by-version completion histo
 - [x] Shared `setupCollapsibleHeader()` helper in DashboardActivity for consistent collapsible behavior
 - [x] Fix: Dashboard not refreshing after entry save/delete — `EntryFormActivity` now sets `DashboardActivity.needsRefresh = true` in both `saveEntry()` and `confirmDelete()`
 
+### v1.8.1 (2026-05-04, bug fix + UI polish)
+- [x] Fix: Pre-fill template not populating title field — `buildMainTab()` overwrote `titleValue` with old input before creating new input; moved readback to `syncFormData()`
+- [x] Centered "Today In History" and "Recent Entries" panel header text in dashboard
+
 ### v1.8.0 (2026-05-04, custom view filters + pre-fill templates + collapsible template items)
 - [x] Custom view filter in Entry List: "View" spinner in filter panel loads saved custom views; selecting a view applies full condition evaluation (AND/OR, negation, date relative ranges, text/array/boolean operators) and multi-level orderBy sorting; title shows view name; clear filters resets view
 - [x] Custom view filter in Reports: "Custom View" spinner in Filters section; selecting a view pre-populates date from/to, category, tag filters and applies full condition evaluation engine during report generation

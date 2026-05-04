@@ -13,6 +13,10 @@ summary: "Known bugs, platform limitations, fixed issues, and architectural note
 
 ## Fixed Issues
 
+### 2026-05-04
+
+- **Pre-fill template not populating title field** — `buildMainTab()` read the old (empty) `titleInput` text back into `titleValue` before creating the new input, overwriting the value `applyTemplate()` had just set. Moved the title/content readback into `syncFormData()` which runs before template values are applied.
+
 ### 2026-05-03
 
 - **Dashboard not refreshing after entry save/delete** — `EntryFormActivity` did not set `DashboardActivity.needsRefresh` in `saveEntry()` or `confirmDelete()`. New or edited entries required manual refresh to appear on dashboard. Added `needsRefresh = true` in both save and delete paths.

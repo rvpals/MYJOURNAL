@@ -337,6 +337,7 @@
                     android:textColor="@color/login_text"
                     android:textSize="15sp"
                     android:textStyle="bold"
+                    android:textAlignment="center"
                     android:layout_marginBottom="8dp"
                     android:clickable="true"
                     android:focusable="true" />
@@ -360,12 +361,13 @@
                 android:visibility="gone">
 
                 <TextView
-                    android:layout_width="wrap_content"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:text="📅 Today in History"
                     android:textColor="@color/login_text"
                     android:textSize="15sp"
                     android:textStyle="bold"
+                    android:textAlignment="center"
                     android:layout_marginBottom="8dp" />
 
                 <LinearLayout
