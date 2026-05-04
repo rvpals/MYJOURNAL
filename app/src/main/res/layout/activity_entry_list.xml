@@ -121,6 +121,30 @@
                 android:background="@drawable/btn_accent" />
         </LinearLayout>
 
+        <!-- Custom View Row -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:paddingBottom="4dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="View:"
+                android:textColor="@color/login_text_secondary"
+                android:textSize="12sp"
+                android:layout_marginEnd="6dp" />
+
+            <Spinner
+                android:id="@+id/el_custom_view"
+                android:layout_width="0dp"
+                android:layout_height="36dp"
+                android:layout_weight="1"
+                android:background="@drawable/spinner_bg" />
+        </LinearLayout>
+
         <!-- Filter Row -->
         <LinearLayout
             android:id="@+id/el_filter_row"

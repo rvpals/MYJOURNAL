@@ -101,7 +101,9 @@ summary: "Known bugs, platform limitations, fixed issues, and architectural note
 - **DashboardActivity**: No bottom nav bar. Top navbar has Search, journal name, New Entry, Lock, and ☰ hamburger menu (`PopupMenu` with Entries, Calendar, Reports, Explorer, Settings, About).
 - **EntryFormActivity**: Plain text content input. Action buttons (Save/Cancel/Delete) in top navbar, no bottom bar.
 - **ReportsActivity**: HTML button exports to Downloads and opens in browser via ACTION_VIEW intent. Output area 600dp.
-- **EntryListActivity**: Collapsible "Filter Info" box with search, category/tag filters, "Order by" dropdowns (field + direction), select mode, page size. Alternating row colors (CARD_BG/INPUT_BG) with CARD_BORDER stroke.
+- **EntryListActivity**: Collapsible "Filter Info" box with custom view selector, search, category/tag filters, "Order by" dropdowns (field + direction), select mode, page size. Alternating row colors (CARD_BG/INPUT_BG) with CARD_BORDER stroke. Custom view filter applies full condition evaluation engine with multi-level orderBy sorting.
+- **ReportsActivity**: Custom view selector pre-populates date/category/tag filters and applies full condition evaluation during report generation.
+- **EntryFormActivity**: 📋 template button (new entries only) opens pre-fill template picker; applies saved field defaults.
 - **SettingsActivity**: 7 tabs in 3-row grid (3 per row, equal-width) instead of horizontal scroll. Display tab for theme, app font (family + size), entry viewer font, and alternate row color.
 
 ### Dashboard Components (11 total)

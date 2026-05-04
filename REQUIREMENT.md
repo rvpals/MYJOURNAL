@@ -81,6 +81,7 @@ summary: "Complete functional requirements for all feature areas — authenticat
 - Locations: geocoding search (Photon/Nominatim) via background thread, GPS via `LocationManager.requestSingleUpdate()`, manual lat/lng entry; results shown in `AlertDialog` picker
 - Weather: `WeatherService.fetchCurrent()` on background thread; auto-populated on new entry if `auto_gps_weather` setting enabled and GPS available
 - Images: `GetMultipleContents()` for gallery, `TakePicturePreview()` for camera; `resizeBitmap()` creates full (1920px) and thumb (150px) as JPEG base64
+- Pre-fill templates: 📋 button in navbar (new entries only, visible when templates exist); tapping opens picker dialog listing all pre-fill templates; selecting a template applies auto-date, auto-time, default title, content, tags, and categories to the form, merging with existing data
 - Save: constructs `JSONObject` with all fields, calls `db.addEntry()` or `db.updateEntry()`, sets `DashboardActivity.needsRefresh`
 - Delete: calls `db.deleteEntryById()`, sets `DashboardActivity.needsRefresh`
 
@@ -94,6 +95,7 @@ summary: "Complete functional requirements for all feature areas — authenticat
 - Sort: "Order by" dropdowns in Filter Info box — field selector (Date, Time, Title, Created, Updated, Categories, Tags) and direction (Desc/Asc), persisted to BootstrapService
 - Multi-select mode: checkbox per entry, batch delete with confirmation
 - Widget filter support: `matchesWidgetFilters()` with date/text/array operators
+- Custom view filter: "View" spinner loads saved custom views as filter presets; applies full condition evaluation engine (AND/OR logic, negation, all field types including relative date ranges) and multi-level orderBy sorting; title shows active view name; clear filters resets view selection
 
 ### Entry Viewer (EntryViewerActivity.kt)
 - Read-only display of all entry fields
@@ -210,6 +212,7 @@ summary: "Complete functional requirements for all feature areas — authenticat
 
 ### Filters
 - Date range (from/to), category, tag — applied before report generation
+- Custom view filter: "Custom View" spinner loads saved custom views; selecting a view pre-populates date/category/tag filters from conditions and applies full condition evaluation engine (AND/OR logic, negation, all field types) during report generation
 
 ## 8. Settings (SettingsActivity.kt, ~3000+ lines)
 
@@ -254,9 +257,11 @@ summary: "Complete functional requirements for all feature areas — authenticat
 
 ### Templates Tab
 - 3 collapsible sections: Custom Views, Pre-fill Templates, Report Templates — collapse state persisted in BootstrapService
+- Individual template items within each section are collapsible panels with ▶/▼ toggle headers; header shows name + summary (condition count, badges, description, char count), expanded body shows full details and Edit/Delete buttons
 
 ### Pre-fill Templates
 - Saved templates that auto-fill entry form fields (date, time, title, content, categories, tags)
+- Applied in EntryFormActivity via 📋 button in navbar (new entries only); picker dialog lists all templates; selected template merges fields into the form
 
 ### Widgets (WidgetEditorActivity.kt)
 - Widget list, create/edit/delete

@@ -23,6 +23,7 @@ import com.journal.app.ThemeManager.C
 import org.json.JSONArray
 import org.json.JSONObject
 import java.text.SimpleDateFormat
+import java.util.Calendar
 import java.util.Locale
 
 class EntryListActivity : AppCompatActivity() {
@@ -69,6 +70,9 @@ class EntryListActivity : AppCompatActivity() {
     private var widgetFilters: JSONArray? = null
     private var widgetName: String? = null
 
+    private var customViews = JSONArray()
+    private var activeViewIndex = 0
+
     override fun attachBaseContext(newBase: android.content.Context) {
         super.attachBaseContext(ThemeManager.fontScaledContext(newBase))
     }
@@ -111,6 +115,7 @@ class EntryListActivity : AppCompatActivity() {
         pageSize = bs.get("entries_page_size")?.toIntOrNull() ?: 20
 
         loadFieldSettings()
+        loadCustomViews()
         setupControls()
         loadEntries()
         applyFilters()
@@ -136,6 +141,11 @@ class EntryListActivity : AppCompatActivity() {
     }
 
     private fun show(key: String): Boolean = showFields[key] != false
+
+    private fun loadCustomViews() {
+        val settings = try { JSONObject(db.getSettings()) } catch (_: Exception) { JSONObject() }
+        customViews = settings.optJSONArray("customViews") ?: JSONArray()
+    }
 
     @SuppressLint("ClickableViewAccessibility")
     private fun setupControls() {
@@ -174,6 +184,7 @@ class EntryListActivity : AppCompatActivity() {
         }
 
         // Filters
+        setupCustomViewSpinner()
         setupCategoryFilter()
         setupTagFilter()
 
@@ -184,10 +195,12 @@ class EntryListActivity : AppCompatActivity() {
             filterTag = ""
             widgetFilters = null
             widgetName = null
+            activeViewIndex = 0
             sortField = "dtCreated"
             sortDir = "desc"
             bs.set("default_entry_sort_field", sortField)
             bs.set("default_entry_sort_dir", sortDir)
+            setupCustomViewSpinner()
             setupCategoryFilter()
             setupTagFilter()
             setupOrderBySpinners()
@@ -278,6 +291,42 @@ class EntryListActivity : AppCompatActivity() {
         }
     }
 
+    private fun setupCustomViewSpinner() {
+        val spinner = findViewById<Spinner>(R.id.el_custom_view)
+        val names = mutableListOf("All Entries")
+        for (i in 0 until customViews.length()) {
+            val v = customViews.optJSONObject(i) ?: continue
+            names.add(v.optString("name", "Untitled"))
+        }
+
+        val adapter = makeFilterAdapter(names)
+        spinner.adapter = adapter
+        spinner.setSelection(activeViewIndex)
+
+        var init = true
+        spinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
+            override fun onItemSelected(p: AdapterView<*>?, v: View?, pos: Int, id: Long) {
+                if (init) { init = false; return }
+                activeViewIndex = pos
+                if (pos > 0) {
+                    val view = customViews.optJSONObject(pos - 1)
+                    val orderByArr = view?.optJSONArray("orderBy")
+                    if (orderByArr != null && orderByArr.length() > 0) {
+                        val first = orderByArr.optJSONObject(0)
+                        if (first != null) {
+                            sortField = first.optString("field", "dtCreated")
+                            sortDir = first.optString("direction", "desc")
+                            setupOrderBySpinners()
+                        }
+                    }
+                }
+                currentPage = 1
+                applyFilters()
+            }
+            override fun onNothingSelected(p: AdapterView<*>?) {}
+        }
+    }
+
     private fun setupOrderBySpinners() {
         val fieldSpinner = findViewById<Spinner>(R.id.el_order_field)
         val dirSpinner = findViewById<Spinner>(R.id.el_order_dir)
@@ -356,6 +405,16 @@ class EntryListActivity : AppCompatActivity() {
             // Widget filter
             if (widgetFilters != null && !matchesWidgetFilters(e, widgetFilters!!)) continue
 
+            // Custom view filter
+            if (activeViewIndex > 0) {
+                val view = customViews.optJSONObject(activeViewIndex - 1)
+                if (view != null) {
+                    val conditions = view.optJSONArray("conditions") ?: JSONArray()
+                    val logic = view.optString("logic", "AND")
+                    if (!matchesCustomViewConditions(e, conditions, logic)) continue
+                }
+            }
+
             // Search filter
             if (query.isNotEmpty()) {
                 val title = e.optString("title", "").lowercase()
@@ -391,13 +450,39 @@ class EntryListActivity : AppCompatActivity() {
             filteredEntries.add(e)
         }
 
-        // Sort
-        filteredEntries.sortWith(Comparator { a, b ->
-            val va = getFieldValue(a, sortField)
-            val vb = getFieldValue(b, sortField)
-            val cmp = va.compareTo(vb, ignoreCase = true)
-            if (sortDir == "asc") cmp else -cmp
-        })
+        // Sort — use custom view's multi-level orderBy if active
+        if (activeViewIndex > 0) {
+            val view = customViews.optJSONObject(activeViewIndex - 1)
+            val orderByArr = view?.optJSONArray("orderBy")
+            if (orderByArr != null && orderByArr.length() > 0) {
+                filteredEntries.sortWith(Comparator { a, b ->
+                    for (j in 0 until orderByArr.length()) {
+                        val ord = orderByArr.optJSONObject(j) ?: continue
+                        val f = ord.optString("field", "date")
+                        val dir = ord.optString("direction", "asc")
+                        val va = getFieldValue(a, f)
+                        val vb = getFieldValue(b, f)
+                        val cmp = va.compareTo(vb, ignoreCase = true)
+                        if (cmp != 0) return@Comparator if (dir == "desc") -cmp else cmp
+                    }
+                    0
+                })
+            } else {
+                filteredEntries.sortWith(Comparator { a, b ->
+                    val va = getFieldValue(a, sortField)
+                    val vb = getFieldValue(b, sortField)
+                    val cmp = va.compareTo(vb, ignoreCase = true)
+                    if (sortDir == "asc") cmp else -cmp
+                })
+            }
+        } else {
+            filteredEntries.sortWith(Comparator { a, b ->
+                val va = getFieldValue(a, sortField)
+                val vb = getFieldValue(b, sortField)
+                val cmp = va.compareTo(vb, ignoreCase = true)
+                if (sortDir == "asc") cmp else -cmp
+            })
+        }
 
         renderPage()
     }
@@ -472,6 +557,111 @@ class EntryListActivity : AppCompatActivity() {
         return true
     }
 
+    private fun matchesCustomViewConditions(entry: JSONObject, conditions: JSONArray, logic: String): Boolean {
+        if (conditions.length() == 0) return true
+        if (logic == "OR") {
+            for (i in 0 until conditions.length()) {
+                val c = conditions.optJSONObject(i) ?: continue
+                if (evaluateViewCondition(entry, c)) return true
+            }
+            return false
+        } else {
+            for (i in 0 until conditions.length()) {
+                val c = conditions.optJSONObject(i) ?: continue
+                if (!evaluateViewCondition(entry, c)) return false
+            }
+            return true
+        }
+    }
+
+    private fun evaluateViewCondition(entry: JSONObject, cond: JSONObject): Boolean {
+        val field = cond.optString("field", "")
+        val op = cond.optString("operator", "")
+        val value = cond.optString("value", "")
+        val negate = cond.optBoolean("negate", false)
+        val result = evaluateViewInner(entry, field, op, value)
+        return if (negate) !result else result
+    }
+
+    private fun evaluateViewInner(entry: JSONObject, field: String, op: String, value: String): Boolean {
+        return when (viewFieldType(field)) {
+            "date" -> {
+                val d = entry.optString("date", "")
+                when (op) {
+                    "equals" -> d == value
+                    "not_equals" -> d != value
+                    "before" -> d < value
+                    "after" -> d > value
+                    "is_empty" -> d.isEmpty()
+                    "is_not_empty" -> d.isNotEmpty()
+                    "within_days", "within_weeks", "within_months", "within_years" -> {
+                        val n = value.toIntOrNull() ?: 1
+                        val cal = Calendar.getInstance()
+                        when (op) {
+                            "within_days" -> cal.add(Calendar.DAY_OF_MONTH, -n)
+                            "within_weeks" -> cal.add(Calendar.DAY_OF_MONTH, -(n * 7))
+                            "within_months" -> cal.add(Calendar.MONTH, -n)
+                            "within_years" -> cal.add(Calendar.YEAR, -n)
+                        }
+                        val pastStr = SimpleDateFormat("yyyy-MM-dd", Locale.US).format(cal.time)
+                        d >= pastStr
+                    }
+                    else -> true
+                }
+            }
+            "array" -> {
+                val arr = entry.optJSONArray(field) ?: JSONArray()
+                val items = mutableListOf<String>()
+                for (j in 0 until arr.length()) items.add(arr.optString(j, ""))
+                when (op) {
+                    "includes" -> items.contains(value)
+                    "not_includes" -> !items.contains(value)
+                    "is_empty" -> items.isEmpty()
+                    "is_not_empty" -> items.isNotEmpty()
+                    else -> true
+                }
+            }
+            "boolean" -> {
+                val has = if (field == "weather") {
+                    val w = entry.opt("weather")
+                    w is JSONObject && w.has("temp")
+                } else {
+                    val v = entry.opt(field)
+                    v != null && v.toString().isNotEmpty()
+                }
+                when (op) {
+                    "exists" -> has
+                    "not_exists" -> !has
+                    else -> true
+                }
+            }
+            else -> {
+                val s = entry.optString(field, "").lowercase()
+                val v = value.lowercase()
+                when (op) {
+                    "contains" -> s.contains(v)
+                    "not_contains" -> !s.contains(v)
+                    "equals" -> s == v
+                    "not_equals" -> s != v
+                    "starts_with" -> s.startsWith(v)
+                    "ends_with" -> s.endsWith(v)
+                    "is_empty" -> s.isEmpty()
+                    "is_not_empty" -> s.isNotEmpty()
+                    else -> true
+                }
+            }
+        }
+    }
+
+    private fun viewFieldType(field: String): String {
+        return when (field) {
+            "date" -> "date"
+            "categories", "tags" -> "array"
+            "weather" -> "boolean"
+            else -> "text"
+        }
+    }
+
     private fun getFieldValue(entry: JSONObject, field: String): String {
         return when (field) {
             "categories" -> jsonArrayToStr(entry.optJSONArray("categories"))
@@ -485,7 +675,12 @@ class EntryListActivity : AppCompatActivity() {
     private fun renderPage() {
         val total = filteredEntries.size
         val wn = widgetName
-        titleView.text = if (wn != null) "$total Entries — $wn" else "$total Entries"
+        val viewName = if (activeViewIndex > 0) customViews.optJSONObject(activeViewIndex - 1)?.optString("name", "") else null
+        titleView.text = when {
+            wn != null -> "$total Entries — $wn"
+            !viewName.isNullOrEmpty() -> "$total Entries — $viewName"
+            else -> "$total Entries"
+        }
         entryCountView.text = if (total == allEntries.length()) "$total entries" else "$total of ${allEntries.length()}"
 
         entriesContainer.removeAllViews()
@@ -950,6 +1145,8 @@ class EntryListActivity : AppCompatActivity() {
     override fun onResume() {
         super.onResume()
         if (lastThemeVersion != ThemeManager.themeVersion) { finish(); return }
+        loadCustomViews()
+        setupCustomViewSpinner()
         loadEntries()
         applyFilters()
     }

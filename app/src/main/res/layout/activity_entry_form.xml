@@ -39,6 +39,16 @@
             android:ellipsize="end" />
 
         <Button
+            android:id="@+id/btn_template"
+            android:layout_width="42dp"
+            android:layout_height="38dp"
+            android:text="📋"
+            android:textSize="16sp"
+            android:background="@drawable/btn_secondary"
+            android:visibility="gone"
+            android:layout_marginStart="4dp" />
+
+        <Button
             android:id="@+id/btn_save"
             android:layout_width="wrap_content"
             android:layout_height="38dp"
@@ -48,7 +58,7 @@
             android:background="@drawable/btn_accent"
             android:textColor="@color/login_card_bg"
             android:paddingHorizontal="14dp"
-            android:layout_marginStart="8dp" />
+            android:layout_marginStart="4dp" />
 
         <Button
             android:id="@+id/btn_cancel"

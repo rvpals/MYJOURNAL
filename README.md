@@ -21,7 +21,8 @@ A fully native Kotlin Android app for keeping a personal journal with rich text 
 - **Weather tracking** — Open-Meteo API integration, GPS-based, optional auto-populate on new entry
 - **Dashboard** — Stats, pinned entries, search, ranked panels (collapsible), configurable widgets, Today in History, Daily Inspiration
 - **App font customization** — Font family (9 options) and size scale across all screens
-- **Custom views** — Saved filter/sort/group combinations
+- **Custom views** — Saved filter/sort/group combinations, usable as filter presets in Entry List and Reports
+- **Pre-fill templates** — Auto-populate new entries with saved field defaults (date, time, title, content, tags, categories)
 - **SQL Explorer** — Query builder, raw SQL, CSV and iCalendar export, SQL Library (save/load/edit/delete queries)
 - **Reports** — HTML (exports to browser), PDF (native PdfDocument), CSV
 - **Calendar view** — Monthly grid with entry dots, day selection

@@ -26,6 +26,7 @@ import com.journal.app.ThemeManager.C
 import org.json.JSONArray
 import org.json.JSONObject
 import java.text.SimpleDateFormat
+import java.util.Calendar
 import java.util.Date
 import java.util.Locale
 
@@ -48,10 +49,13 @@ class ReportsActivity : AppCompatActivity() {
     private lateinit var categorySpinner: Spinner
     private lateinit var tagSpinner: Spinner
     private lateinit var templateSpinner: Spinner
+    private lateinit var customViewSpinner: Spinner
 
     private var categories = listOf<String>()
     private var tags = listOf<String>()
     private var templates = JSONArray()
+    private var customViews = JSONArray()
+    private var activeViewIndex = 0
 
     override fun attachBaseContext(newBase: android.content.Context) {
         super.attachBaseContext(ThemeManager.fontScaledContext(newBase))
@@ -89,6 +93,7 @@ class ReportsActivity : AppCompatActivity() {
         try {
             val settings = JSONObject(db.getSettings())
             templates = settings.optJSONArray("reportTemplates") ?: JSONArray()
+            customViews = settings.optJSONArray("customViews") ?: JSONArray()
         } catch (_: Exception) {}
     }
 
@@ -98,6 +103,34 @@ class ReportsActivity : AppCompatActivity() {
         contentContainer.removeAllViews()
 
         addSectionHeader("Filters")
+
+        // Custom View
+        if (customViews.length() > 0) {
+            addLabel("Custom View")
+            val viewNames = mutableListOf("None")
+            for (i in 0 until customViews.length()) {
+                val v = customViews.optJSONObject(i) ?: continue
+                viewNames.add(v.optString("name", "Untitled"))
+            }
+            customViewSpinner = makeSpinner(viewNames, 0)
+            var cvInit = true
+            customViewSpinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
+                override fun onItemSelected(p: AdapterView<*>?, v: View?, pos: Int, id: Long) {
+                    if (cvInit) { cvInit = false; return }
+                    activeViewIndex = pos
+                    if (pos > 0) {
+                        applyCustomViewToFilters(customViews.optJSONObject(pos - 1))
+                    } else {
+                        dateFromInput.text.clear()
+                        dateToInput.text.clear()
+                        categorySpinner.setSelection(0)
+                        tagSpinner.setSelection(0)
+                    }
+                }
+                override fun onNothingSelected(p: AdapterView<*>?) {}
+            }
+            contentContainer.addView(customViewSpinner)
+        }
 
         // Date From
         addLabel("Date From")
@@ -221,6 +254,17 @@ class ReportsActivity : AppCompatActivity() {
         }
 
         var filtered = entries.toList()
+
+        // Apply custom view conditions (full evaluation for all condition types)
+        if (activeViewIndex > 0) {
+            val view = customViews.optJSONObject(activeViewIndex - 1)
+            if (view != null) {
+                val conditions = view.optJSONArray("conditions") ?: JSONArray()
+                val logic = view.optString("logic", "AND")
+                filtered = filtered.filter { matchesCustomViewConditions(it, conditions, logic) }
+            }
+        }
+
         if (dateFrom.isNotEmpty()) filtered = filtered.filter { it.optString("date", "") >= dateFrom }
         if (dateTo.isNotEmpty()) filtered = filtered.filter { it.optString("date", "") <= dateTo }
         if (selectedCat.isNotEmpty()) {
@@ -237,6 +281,169 @@ class ReportsActivity : AppCompatActivity() {
         }
 
         return filtered.sortedBy { it.optString("date", "") }
+    }
+
+    private fun applyCustomViewToFilters(view: JSONObject?) {
+        if (view == null) return
+        val conditions = view.optJSONArray("conditions") ?: return
+
+        dateFromInput.text.clear()
+        dateToInput.text.clear()
+        categorySpinner.setSelection(0)
+        tagSpinner.setSelection(0)
+
+        for (i in 0 until conditions.length()) {
+            val c = conditions.optJSONObject(i) ?: continue
+            val field = c.optString("field", "")
+            val op = c.optString("operator", "")
+            val value = c.optString("value", "")
+            val negate = c.optBoolean("negate", false)
+            if (negate) continue
+
+            when {
+                field == "date" && op == "after" -> dateFromInput.setText(value)
+                field == "date" && op == "before" -> dateToInput.setText(value)
+                field == "date" && op == "within_days" -> {
+                    val n = value.toIntOrNull() ?: 1
+                    val cal = Calendar.getInstance()
+                    cal.add(Calendar.DAY_OF_MONTH, -n)
+                    dateFromInput.setText(SimpleDateFormat("yyyy-MM-dd", Locale.US).format(cal.time))
+                }
+                field == "date" && op == "within_weeks" -> {
+                    val n = value.toIntOrNull() ?: 1
+                    val cal = Calendar.getInstance()
+                    cal.add(Calendar.DAY_OF_MONTH, -(n * 7))
+                    dateFromInput.setText(SimpleDateFormat("yyyy-MM-dd", Locale.US).format(cal.time))
+                }
+                field == "date" && op == "within_months" -> {
+                    val n = value.toIntOrNull() ?: 1
+                    val cal = Calendar.getInstance()
+                    cal.add(Calendar.MONTH, -n)
+                    dateFromInput.setText(SimpleDateFormat("yyyy-MM-dd", Locale.US).format(cal.time))
+                }
+                field == "date" && op == "within_years" -> {
+                    val n = value.toIntOrNull() ?: 1
+                    val cal = Calendar.getInstance()
+                    cal.add(Calendar.YEAR, -n)
+                    dateFromInput.setText(SimpleDateFormat("yyyy-MM-dd", Locale.US).format(cal.time))
+                }
+                field == "categories" && op == "includes" -> {
+                    val idx = categories.indexOf(value)
+                    if (idx >= 0) categorySpinner.setSelection(idx + 1)
+                }
+                field == "tags" && op == "includes" -> {
+                    val idx = tags.indexOf(value)
+                    if (idx >= 0) tagSpinner.setSelection(idx + 1)
+                }
+            }
+        }
+    }
+
+    // ========== Custom View Condition Evaluation ==========
+
+    private fun matchesCustomViewConditions(entry: JSONObject, conditions: JSONArray, logic: String): Boolean {
+        if (conditions.length() == 0) return true
+        if (logic == "OR") {
+            for (i in 0 until conditions.length()) {
+                val c = conditions.optJSONObject(i) ?: continue
+                if (evaluateViewCondition(entry, c)) return true
+            }
+            return false
+        } else {
+            for (i in 0 until conditions.length()) {
+                val c = conditions.optJSONObject(i) ?: continue
+                if (!evaluateViewCondition(entry, c)) return false
+            }
+            return true
+        }
+    }
+
+    private fun evaluateViewCondition(entry: JSONObject, cond: JSONObject): Boolean {
+        val field = cond.optString("field", "")
+        val op = cond.optString("operator", "")
+        val value = cond.optString("value", "")
+        val negate = cond.optBoolean("negate", false)
+        val result = evaluateViewInner(entry, field, op, value)
+        return if (negate) !result else result
+    }
+
+    private fun evaluateViewInner(entry: JSONObject, field: String, op: String, value: String): Boolean {
+        return when (viewFieldType(field)) {
+            "date" -> {
+                val d = entry.optString("date", "")
+                when (op) {
+                    "equals" -> d == value
+                    "not_equals" -> d != value
+                    "before" -> d < value
+                    "after" -> d > value
+                    "is_empty" -> d.isEmpty()
+                    "is_not_empty" -> d.isNotEmpty()
+                    "within_days", "within_weeks", "within_months", "within_years" -> {
+                        val n = value.toIntOrNull() ?: 1
+                        val cal = Calendar.getInstance()
+                        when (op) {
+                            "within_days" -> cal.add(Calendar.DAY_OF_MONTH, -n)
+                            "within_weeks" -> cal.add(Calendar.DAY_OF_MONTH, -(n * 7))
+                            "within_months" -> cal.add(Calendar.MONTH, -n)
+                            "within_years" -> cal.add(Calendar.YEAR, -n)
+                        }
+                        val pastStr = SimpleDateFormat("yyyy-MM-dd", Locale.US).format(cal.time)
+                        d >= pastStr
+                    }
+                    else -> true
+                }
+            }
+            "array" -> {
+                val arr = entry.optJSONArray(field) ?: JSONArray()
+                val items = mutableListOf<String>()
+                for (j in 0 until arr.length()) items.add(arr.optString(j, ""))
+                when (op) {
+                    "includes" -> items.contains(value)
+                    "not_includes" -> !items.contains(value)
+                    "is_empty" -> items.isEmpty()
+                    "is_not_empty" -> items.isNotEmpty()
+                    else -> true
+                }
+            }
+            "boolean" -> {
+                val has = if (field == "weather") {
+                    val w = entry.opt("weather")
+                    w is JSONObject && w.has("temp")
+                } else {
+                    val v = entry.opt(field)
+                    v != null && v.toString().isNotEmpty()
+                }
+                when (op) {
+                    "exists" -> has
+                    "not_exists" -> !has
+                    else -> true
+                }
+            }
+            else -> {
+                val s = entry.optString(field, "").lowercase()
+                val v = value.lowercase()
+                when (op) {
+                    "contains" -> s.contains(v)
+                    "not_contains" -> !s.contains(v)
+                    "equals" -> s == v
+                    "not_equals" -> s != v
+                    "starts_with" -> s.startsWith(v)
+                    "ends_with" -> s.endsWith(v)
+                    "is_empty" -> s.isEmpty()
+                    "is_not_empty" -> s.isNotEmpty()
+                    else -> true
+                }
+            }
+        }
+    }
+
+    private fun viewFieldType(field: String): String {
+        return when (field) {
+            "date" -> "date"
+            "categories", "tags" -> "array"
+            "weather" -> "boolean"
+            else -> "text"
+        }
     }
 
     // ========== Report Generation ==========

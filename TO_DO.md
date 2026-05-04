@@ -493,6 +493,12 @@ summary: "Remaining backlog, test checklist, version-by-version completion histo
 - [x] Shared `setupCollapsibleHeader()` helper in DashboardActivity for consistent collapsible behavior
 - [x] Fix: Dashboard not refreshing after entry save/delete — `EntryFormActivity` now sets `DashboardActivity.needsRefresh = true` in both `saveEntry()` and `confirmDelete()`
 
+### v1.8.0 (2026-05-04, custom view filters + pre-fill templates + collapsible template items)
+- [x] Custom view filter in Entry List: "View" spinner in filter panel loads saved custom views; selecting a view applies full condition evaluation (AND/OR, negation, date relative ranges, text/array/boolean operators) and multi-level orderBy sorting; title shows view name; clear filters resets view
+- [x] Custom view filter in Reports: "Custom View" spinner in Filters section; selecting a view pre-populates date from/to, category, tag filters and applies full condition evaluation engine during report generation
+- [x] Collapsible template items: individual Custom Views, Pre-fill Templates, and Report Templates in Settings > Templates tab are now collapsible panels with ▶/▼ toggle headers; headers show name + summary badges, expanded body shows full details (conditions, settings, HTML preview) and Edit/Delete buttons
+- [x] Pre-fill templates in Entry Form: 📋 template button in navbar (new entries only, shown when templates exist); picker dialog lists all pre-fill templates; applies auto-date, auto-time, default title, content, tags, and categories — merges with existing form data
+
 ## Kotlin Migration (complete)
 
 All original Java activities were converted to Kotlin (2026-04-17/18). MainActivity was later removed entirely when WebView was eliminated (2026-04-28). The app is now 100% Kotlin with 21 source files: 14 activities + 4 services + ServiceProvider + DashboardDataBuilder + ThemeManager.

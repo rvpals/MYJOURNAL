@@ -81,6 +81,7 @@ class EntryFormActivity : AppCompatActivity() {
     private var allTags = listOf<String>()
     private var allPlaceNames = listOf<String>()
     private var tagDescriptions = mutableMapOf<String, String>()
+    private var entryTemplates = JSONArray()
 
     private val imagePicker = registerForActivityResult(ActivityResultContracts.GetMultipleContents()) { uris ->
         for (uri in uris) processImageUri(uri)
@@ -165,6 +166,12 @@ class EntryFormActivity : AppCompatActivity() {
         findViewById<Button>(R.id.btn_save).setOnClickListener { saveEntry() }
         findViewById<Button>(R.id.btn_cancel).setOnClickListener { confirmCancel() }
 
+        val templateBtn = findViewById<Button>(R.id.btn_template)
+        if (isNew && entryTemplates.length() > 0) {
+            templateBtn.visibility = View.VISIBLE
+            templateBtn.setOnClickListener { showTemplatePicker() }
+        }
+
         setupTabs()
         showTab("main")
 
@@ -193,6 +200,10 @@ class EntryFormActivity : AppCompatActivity() {
         try {
             val pnJson = JSONArray(db.getAllPlaceNames())
             allPlaceNames = (0 until pnJson.length()).map { pnJson.getString(it) }
+        } catch (_: Exception) {}
+        try {
+            val settings = JSONObject(db.getSettings())
+            entryTemplates = settings.optJSONArray("entryTemplates") ?: JSONArray()
         } catch (_: Exception) {}
     }
 
@@ -1056,6 +1067,61 @@ class EntryFormActivity : AppCompatActivity() {
         val humidity = w.optInt("humidity", 0)
         val wind = w.optDouble("windSpeed", 0.0)
         return "$desc, $temp°$unit (feels $feelsLike°$unit), Humidity $humidity%, Wind $wind mph"
+    }
+
+    // ========== Pre-fill Templates ==========
+
+    private fun showTemplatePicker() {
+        val names = mutableListOf<String>()
+        for (i in 0 until entryTemplates.length()) {
+            val tpl = entryTemplates.optJSONObject(i) ?: continue
+            names.add(tpl.optString("name", "Untitled"))
+        }
+        AlertDialog.Builder(this)
+            .setTitle("Apply Template")
+            .setItems(names.toTypedArray()) { _, which ->
+                applyTemplate(entryTemplates.optJSONObject(which))
+            }
+            .setNegativeButton("Cancel", null)
+            .show()
+    }
+
+    private fun applyTemplate(tpl: JSONObject?) {
+        if (tpl == null) return
+        syncFormData()
+
+        if (tpl.optBoolean("autoDate", false)) {
+            dateValue = SimpleDateFormat("yyyy-MM-dd", Locale.US).format(Date())
+        }
+        if (tpl.optBoolean("autoTime", false)) {
+            val cal = Calendar.getInstance()
+            timeValue = String.format(Locale.US, "%02d:%02d", cal.get(Calendar.HOUR_OF_DAY), cal.get(Calendar.MINUTE))
+        }
+
+        val tplTitle = tpl.optString("title", "")
+        if (tplTitle.isNotEmpty()) titleValue = tplTitle
+
+        val tplContent = tpl.optString("content", "")
+        if (tplContent.isNotEmpty()) contentValue = tplContent
+
+        val tplTags = tpl.optJSONArray("tags")
+        if (tplTags != null && tplTags.length() > 0) {
+            for (i in 0 until tplTags.length()) {
+                val tag = tplTags.optString(i, "").trim()
+                if (tag.isNotEmpty() && !currentTags.contains(tag)) currentTags.add(tag)
+            }
+        }
+
+        val tplCategories = tpl.optJSONArray("categories")
+        if (tplCategories != null && tplCategories.length() > 0) {
+            for (i in 0 until tplCategories.length()) {
+                val cat = tplCategories.optString(i, "").trim()
+                if (cat.isNotEmpty()) selectedCategories.add(cat)
+            }
+        }
+
+        showTab(activeTab)
+        Toast.makeText(this, "Template applied", Toast.LENGTH_SHORT).show()
     }
 
     // ========== Date/Time Pickers ==========

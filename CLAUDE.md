@@ -15,7 +15,7 @@ summary: "Project architecture reference — directory structure, tech stack, da
 
 Fully native Android encrypted journal app. All 14 screens are native Kotlin activities. Services (crypto, database, bootstrap, weather) are managed by a `ServiceProvider` singleton. All data stored locally in AES-256-GCM encrypted SQLCipher database.
 
-**App Name:** My Journal | **Version:** 1.7.0 | **Package:** com.journal.app | **Min SDK:** 24 | **Target SDK:** 34
+**App Name:** My Journal | **Version:** 1.8.0 | **Package:** com.journal.app | **Min SDK:** 24 | **Target SDK:** 34
 
 ## Project Structure
 
@@ -32,11 +32,11 @@ MYJOURNAL/
 │   │   │   ├── AboutActivity.kt         # App info screen
 │   │   │   ├── SearchActivity.kt        # Native full-text search screen with term highlighting
 │   │   │   ├── EntryViewerActivity.kt   # Native entry viewer with font settings
-│   │   │   ├── EntryListActivity.kt     # Native entry list (collapsible filters, order-by dropdowns, alternating rows, search, sort, paginate, batch delete)
+│   │   │   ├── EntryListActivity.kt     # Native entry list (collapsible filters, custom view filter, order-by dropdowns, alternating rows, search, sort, paginate, batch delete)
 │   │   │   ├── ExplorerActivity.kt      # Native SQL Explorer (table browser, query builder, raw SQL, CSV/iCal export, SQL Library save/load)
 │   │   │   ├── SettingsActivity.kt      # Native settings (7 tabs in 3-row grid: Prefs, Templates, Metadata, Data, Widgets, Dashboard, Display incl. App Font)
-│   │   │   ├── EntryFormActivity.kt     # Native entry form (content, images, categories, tags, locations, weather)
-│   │   │   ├── ReportsActivity.kt       # Native reports (HTML export+browser open, PDF/CSV, filters, templates)
+│   │   │   ├── EntryFormActivity.kt     # Native entry form (content, images, categories, tags, locations, weather, pre-fill templates)
+│   │   │   ├── ReportsActivity.kt       # Native reports (HTML export+browser open, PDF/CSV, filters, custom view filter, templates)
 │   │   │   ├── WidgetEditorActivity.kt  # Native widget editor (header/filters/functions tabs, preview)
 │   │   │   ├── CustomViewEditorActivity.kt # Native custom view editor (conditions, groupBy, orderBy, display)
 │   │   │   ├── CsvMappingActivity.kt    # Native CSV import mapping screen (file picker, test preview, result grid)
@@ -136,14 +136,17 @@ Light, Dark, Ocean, Midnight, Forest, Amethyst, Aurora, Lavender, Frost, Navy, S
 - **DashboardActivity navigation** — hamburger menu (☰) in top navbar with PopupMenu (Entries, Calendar, Reports, Explorer, Settings, About); no bottom nav bar
 - **File exports** — `ServiceProvider.saveFileToDownloads()` via MediaStore scoped storage (API 29+)
 - **Auto GPS & weather** — Optional setting (`auto_gps_weather` in BootstrapService) to auto-populate GPS location and weather when creating a new entry; silently skips if location permission not granted or GPS disabled
-- **Entry form layout** — Plain text content input; all action buttons (Save/Cancel/Delete) in top navbar, no bottom bar
-- **Entry list** — Collapsible "Filter Info" box with search/filter controls and Order by dropdowns (field + asc/desc); alternating row colors (`CARD_BG`/custom `alt_row_bg_color`) with `CARD_BORDER` stroke
+- **Entry form layout** — Plain text content input; all action buttons (Save/Cancel/Delete) in top navbar, no bottom bar; 📋 template button for new entries when pre-fill templates exist
+- **Entry list** — Collapsible "Filter Info" box with custom view selector, search/filter controls and Order by dropdowns (field + asc/desc); alternating row colors (`CARD_BG`/custom `alt_row_bg_color`) with `CARD_BORDER` stroke
+- **Custom view integration** — Custom views selectable as filter presets in EntryListActivity and ReportsActivity; full condition evaluation engine (AND/OR logic, negation, date relative ranges, text/array/boolean operators); entry list also applies multi-level orderBy sorting from views
 - **Settings tabs** — 3-row grid layout (3 tabs per row), equal-width buttons, no horizontal scrolling; 7 tabs: Prefs, Templates, Metadata, Data, Widgets, Dashboard, Display
 - **HTML reports** — Exported to Downloads and opened in browser via `ACTION_VIEW` intent
 - **CSV mapping** — CsvMappingActivity has Select CSV (file picker + auto-map headers), Test (20 random rows with mapping applied), and Save Mapping buttons; result grid with HorizontalScrollView and alternating row colors
 - **Settings deep-link** — `SettingsActivity.initialTab` static field allows opening Settings to a specific tab (e.g. "cattags" for Metadata)
 - **Collapsible metadata sections** — Categories and Tags lists in Metadata tab are collapsible; state persisted in BootstrapService
 - **Collapsible template sections** — Custom Views, Pre-fill Templates, and Report Templates in Templates tab are collapsible; state persisted in BootstrapService
+- **Collapsible template items** — Individual items within each template section (Custom Views, Pre-fill Templates, Report Templates) are collapsible panels with ▶/▼ toggle; header shows name + summary, body shows details and Edit/Delete buttons
+- **Pre-fill templates in entry form** — 📋 button in navbar (new entries only) opens picker dialog; applies template's auto-date, auto-time, title, content, tags, categories to the form
 - **Search term highlighting** — SearchActivity highlights matching terms in title and content snippet using semi-transparent accent background spans
 - **Collapsible dashboard panels** — Recent Entries, Top Tags, Top Categories, Top Places, Daily Inspiration panels have ▶/▼ toggle headers; collapse state persisted in BootstrapService (`dash_*_collapsed` keys)
 - **Daily Inspiration decorative panel** — Double accent border with layered insets, 3D drop shadow via LayerDrawable + elevation

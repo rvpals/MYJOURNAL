@@ -436,13 +436,13 @@ class SettingsActivity : AppCompatActivity() {
             val id = view.optString("id", "")
             val name = view.optString("name", "Untitled")
             val condCount = (view.optJSONArray("conditions") ?: JSONArray()).length()
+            val orderCount = (view.optJSONArray("orderBy") ?: JSONArray()).length()
             val pinned = view.optBoolean("pinToDashboard", false)
             val isDefault = view.optBoolean("defaultEntryView", false)
+            val logic = view.optString("logic", "AND")
 
-            val row = LinearLayout(this).apply {
-                orientation = LinearLayout.HORIZONTAL
-                gravity = Gravity.CENTER_VERTICAL
-                setPadding(dp(10), dp(8), dp(10), dp(8))
+            val wrapper = LinearLayout(this).apply {
+                orientation = LinearLayout.VERTICAL
                 background = ContextCompat.getDrawable(this@SettingsActivity, R.drawable.entry_row_bg)
                 layoutParams = LinearLayout.LayoutParams(
                     LinearLayout.LayoutParams.MATCH_PARENT,
@@ -450,43 +450,108 @@ class SettingsActivity : AppCompatActivity() {
                 ).apply { bottomMargin = dp(4) }
             }
 
-            val textCol = LinearLayout(this).apply {
-                orientation = LinearLayout.VERTICAL
-                layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
+            val headerRow = LinearLayout(this).apply {
+                orientation = LinearLayout.HORIZONTAL
+                gravity = Gravity.CENTER_VERTICAL
+                setPadding(dp(10), dp(8), dp(10), dp(8))
+                isClickable = true
+                isFocusable = true
             }
-            textCol.addView(TextView(this).apply {
+            val arrow = TextView(this).apply {
+                text = "▶"
+                setTextColor(ThemeManager.color(C.ACCENT))
+                textSize = 12f
+                setPadding(0, 0, dp(6), 0)
+            }
+            headerRow.addView(arrow)
+            headerRow.addView(TextView(this).apply {
                 text = name
                 setTextColor(ThemeManager.color(C.TEXT))
                 textSize = 14f
                 setTypeface(null, Typeface.BOLD)
+                layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
             })
+
             val badges = mutableListOf<String>()
-            if (condCount > 0) badges.add("$condCount condition${if (condCount > 1) "s" else ""}")
-            if (pinned) badges.add("📌 Pinned")
-            if (isDefault) badges.add("⭐ Default")
+            if (condCount > 0) badges.add("$condCount cond")
+            if (pinned) badges.add("📌")
+            if (isDefault) badges.add("⭐")
             if (badges.isNotEmpty()) {
-                textCol.addView(TextView(this).apply {
-                    text = badges.joinToString("  ·  ")
+                headerRow.addView(TextView(this).apply {
+                    text = badges.joinToString(" ")
                     setTextColor(ThemeManager.color(C.TEXT_SECONDARY))
                     textSize = 11f
+                    setPadding(dp(4), 0, 0, 0)
                 })
             }
-            row.addView(textCol)
+            wrapper.addView(headerRow)
 
-            row.addView(Button(this).apply {
-                text = "✏️"
-                textSize = 14f
+            val body = LinearLayout(this).apply {
+                orientation = LinearLayout.VERTICAL
+                setPadding(dp(14), dp(4), dp(10), dp(8))
+                visibility = View.GONE
+            }
+
+            // Detail info
+            val detailParts = mutableListOf<String>()
+            if (condCount > 0) detailParts.add("$condCount condition${if (condCount > 1) "s" else ""} ($logic)")
+            if (orderCount > 0) detailParts.add("$orderCount sort field${if (orderCount > 1) "s" else ""}")
+            if (pinned) detailParts.add("📌 Pinned to Dashboard")
+            if (isDefault) detailParts.add("⭐ Default Entry View")
+            val groupBy = view.optString("groupBy", "")
+            if (groupBy.isNotEmpty()) detailParts.add("Group by: $groupBy")
+            if (detailParts.isNotEmpty()) {
+                body.addView(TextView(this).apply {
+                    text = detailParts.joinToString("\n")
+                    setTextColor(ThemeManager.color(C.TEXT_SECONDARY))
+                    textSize = 11f
+                    setPadding(0, 0, 0, dp(6))
+                })
+            }
+
+            // Condition summary
+            val conditions = view.optJSONArray("conditions") ?: JSONArray()
+            for (ci in 0 until conditions.length()) {
+                val c = conditions.optJSONObject(ci) ?: continue
+                val f = c.optString("field", "")
+                val op = c.optString("operator", "")
+                val v = c.optString("value", "")
+                val neg = if (c.optBoolean("negate", false)) "NOT " else ""
+                val valStr = if (op.contains("empty") || op.contains("exists")) "" else " \"$v\""
+                body.addView(TextView(this).apply {
+                    text = "• ${neg}$f $op$valStr"
+                    setTextColor(ThemeManager.color(C.TEXT_SECONDARY))
+                    textSize = 10f
+                    setPadding(dp(4), 0, 0, dp(1))
+                })
+            }
+
+            // Action buttons
+            val btnRow = LinearLayout(this).apply {
+                orientation = LinearLayout.HORIZONTAL
+                gravity = Gravity.END
+                setPadding(0, dp(4), 0, 0)
+            }
+            btnRow.addView(Button(this).apply {
+                text = "✏️ Edit"
+                textSize = 12f
+                isAllCaps = false
                 setBackgroundColor(Color.TRANSPARENT)
-                layoutParams = LinearLayout.LayoutParams(dp(36), dp(36))
+                setTextColor(ThemeManager.color(C.ACCENT))
+                layoutParams = LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.WRAP_CONTENT, dp(34)
+                ).apply { marginEnd = dp(4) }
                 setOnClickListener { launchCustomViewEditor(view.optString("id")) }
             })
-
-            row.addView(Button(this).apply {
-                text = "✕"
-                textSize = 14f
-                setTextColor(ThemeManager.color(C.ERROR))
+            btnRow.addView(Button(this).apply {
+                text = "✕ Delete"
+                textSize = 12f
+                isAllCaps = false
                 setBackgroundColor(Color.TRANSPARENT)
-                layoutParams = LinearLayout.LayoutParams(dp(36), dp(36))
+                setTextColor(ThemeManager.color(C.ERROR))
+                layoutParams = LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.WRAP_CONTENT, dp(34)
+                )
                 setOnClickListener {
                     AlertDialog.Builder(this@SettingsActivity)
                         .setMessage("Delete view \"$name\"?")
@@ -494,8 +559,8 @@ class SettingsActivity : AppCompatActivity() {
                             val arr = settings.optJSONArray("customViews") ?: JSONArray()
                             val updated = JSONArray()
                             for (j in 0 until arr.length()) {
-                                val v = arr.optJSONObject(j)
-                                if (v != null && v.optString("id") != id) updated.put(v)
+                                val vw = arr.optJSONObject(j)
+                                if (vw != null && vw.optString("id") != id) updated.put(vw)
                             }
                             db.setSettings(JSONObject().apply { put("customViews", updated) }.toString())
                             showTab("templates")
@@ -504,8 +569,16 @@ class SettingsActivity : AppCompatActivity() {
                         .show()
                 }
             })
+            body.addView(btnRow)
+            wrapper.addView(body)
 
-            contentContainer.addView(row)
+            headerRow.setOnClickListener {
+                val expanded = body.visibility != View.VISIBLE
+                body.visibility = if (expanded) View.VISIBLE else View.GONE
+                arrow.text = if (expanded) "▼" else "▶"
+            }
+
+            contentContainer.addView(wrapper)
         }
     }
 
@@ -874,11 +947,14 @@ class SettingsActivity : AppCompatActivity() {
             val id = tpl.optString("id", "")
             val name = tpl.optString("name", "Untitled")
             val desc = tpl.optString("description", "")
+            val autoDate = tpl.optBoolean("autoDate", false)
+            val autoTime = tpl.optBoolean("autoTime", false)
+            val defTitle = tpl.optString("title", "")
+            val defContent = tpl.optString("content", "")
+            val defTags = tpl.optJSONArray("tags") ?: JSONArray()
 
-            val row = LinearLayout(this).apply {
-                orientation = LinearLayout.HORIZONTAL
-                gravity = Gravity.CENTER_VERTICAL
-                setPadding(dp(10), dp(8), dp(10), dp(8))
+            val wrapper = LinearLayout(this).apply {
+                orientation = LinearLayout.VERTICAL
                 background = ContextCompat.getDrawable(this@SettingsActivity, R.drawable.entry_row_bg)
                 layoutParams = LinearLayout.LayoutParams(
                     LinearLayout.LayoutParams.MATCH_PARENT,
@@ -886,38 +962,93 @@ class SettingsActivity : AppCompatActivity() {
                 ).apply { bottomMargin = dp(4) }
             }
 
-            val textCol = LinearLayout(this).apply {
-                orientation = LinearLayout.VERTICAL
-                layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
+            val headerRow = LinearLayout(this).apply {
+                orientation = LinearLayout.HORIZONTAL
+                gravity = Gravity.CENTER_VERTICAL
+                setPadding(dp(10), dp(8), dp(10), dp(8))
+                isClickable = true
+                isFocusable = true
             }
-            textCol.addView(TextView(this).apply {
+            val arrow = TextView(this).apply {
+                text = "▶"
+                setTextColor(ThemeManager.color(C.ACCENT))
+                textSize = 12f
+                setPadding(0, 0, dp(6), 0)
+            }
+            headerRow.addView(arrow)
+            headerRow.addView(TextView(this).apply {
                 text = name
                 setTextColor(ThemeManager.color(C.TEXT))
                 textSize = 14f
+                setTypeface(null, Typeface.BOLD)
+                layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
             })
             if (desc.isNotEmpty()) {
-                textCol.addView(TextView(this).apply {
+                headerRow.addView(TextView(this).apply {
                     text = desc
                     setTextColor(ThemeManager.color(C.TEXT_SECONDARY))
-                    textSize = 11f
+                    textSize = 10f
+                    maxLines = 1
+                    setPadding(dp(4), 0, 0, 0)
                 })
             }
-            row.addView(textCol)
+            wrapper.addView(headerRow)
 
-            row.addView(Button(this).apply {
-                text = "✏️"
-                textSize = 14f
+            val body = LinearLayout(this).apply {
+                orientation = LinearLayout.VERTICAL
+                setPadding(dp(14), dp(4), dp(10), dp(8))
+                visibility = View.GONE
+            }
+
+            // Detail info
+            val detailParts = mutableListOf<String>()
+            if (autoDate) detailParts.add("Auto-fill date")
+            if (autoTime) detailParts.add("Auto-fill time")
+            if (defTitle.isNotEmpty()) detailParts.add("Title: $defTitle")
+            if (defContent.isNotEmpty()) {
+                val preview = if (defContent.length > 60) defContent.substring(0, 60) + "…" else defContent
+                detailParts.add("Content: $preview")
+            }
+            if (defTags.length() > 0) {
+                val tagList = (0 until defTags.length()).map { defTags.optString(it) }.joinToString(", ")
+                detailParts.add("Tags: $tagList")
+            }
+            if (desc.isNotEmpty()) detailParts.add(0, desc)
+            if (detailParts.isNotEmpty()) {
+                body.addView(TextView(this).apply {
+                    text = detailParts.joinToString("\n")
+                    setTextColor(ThemeManager.color(C.TEXT_SECONDARY))
+                    textSize = 11f
+                    setPadding(0, 0, 0, dp(6))
+                })
+            }
+
+            // Action buttons
+            val btnRow = LinearLayout(this).apply {
+                orientation = LinearLayout.HORIZONTAL
+                gravity = Gravity.END
+                setPadding(0, dp(4), 0, 0)
+            }
+            btnRow.addView(Button(this).apply {
+                text = "✏️ Edit"
+                textSize = 12f
+                isAllCaps = false
                 setBackgroundColor(Color.TRANSPARENT)
-                layoutParams = LinearLayout.LayoutParams(dp(36), dp(36))
+                setTextColor(ThemeManager.color(C.ACCENT))
+                layoutParams = LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.WRAP_CONTENT, dp(34)
+                ).apply { marginEnd = dp(4) }
                 setOnClickListener { editEntryTemplateDialog(settings, tpl) }
             })
-
-            row.addView(Button(this).apply {
-                text = "✕"
-                textSize = 14f
-                setTextColor(ThemeManager.color(C.ERROR))
+            btnRow.addView(Button(this).apply {
+                text = "✕ Delete"
+                textSize = 12f
+                isAllCaps = false
                 setBackgroundColor(Color.TRANSPARENT)
-                layoutParams = LinearLayout.LayoutParams(dp(36), dp(36))
+                setTextColor(ThemeManager.color(C.ERROR))
+                layoutParams = LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.WRAP_CONTENT, dp(34)
+                )
                 setOnClickListener {
                     AlertDialog.Builder(this@SettingsActivity)
                         .setMessage("Delete template \"$name\"?")
@@ -935,8 +1066,16 @@ class SettingsActivity : AppCompatActivity() {
                         .show()
                 }
             })
+            body.addView(btnRow)
+            wrapper.addView(body)
 
-            contentContainer.addView(row)
+            headerRow.setOnClickListener {
+                val expanded = body.visibility != View.VISIBLE
+                body.visibility = if (expanded) View.VISIBLE else View.GONE
+                arrow.text = if (expanded) "▼" else "▶"
+            }
+
+            contentContainer.addView(wrapper)
         }
     }
 
@@ -1088,11 +1227,10 @@ class SettingsActivity : AppCompatActivity() {
             val tpl = templates.optJSONObject(i) ?: continue
             val id = tpl.optString("id", "")
             val name = tpl.optString("name", "Untitled")
+            val html = tpl.optString("html", "")
 
-            val row = LinearLayout(this).apply {
-                orientation = LinearLayout.HORIZONTAL
-                gravity = Gravity.CENTER_VERTICAL
-                setPadding(dp(10), dp(8), dp(10), dp(8))
+            val wrapper = LinearLayout(this).apply {
+                orientation = LinearLayout.VERTICAL
                 background = ContextCompat.getDrawable(this@SettingsActivity, R.drawable.entry_row_bg)
                 layoutParams = LinearLayout.LayoutParams(
                     LinearLayout.LayoutParams.MATCH_PARENT,
@@ -1100,27 +1238,80 @@ class SettingsActivity : AppCompatActivity() {
                 ).apply { bottomMargin = dp(4) }
             }
 
-            row.addView(TextView(this).apply {
+            val headerRow = LinearLayout(this).apply {
+                orientation = LinearLayout.HORIZONTAL
+                gravity = Gravity.CENTER_VERTICAL
+                setPadding(dp(10), dp(8), dp(10), dp(8))
+                isClickable = true
+                isFocusable = true
+            }
+            val arrow = TextView(this).apply {
+                text = "▶"
+                setTextColor(ThemeManager.color(C.ACCENT))
+                textSize = 12f
+                setPadding(0, 0, dp(6), 0)
+            }
+            headerRow.addView(arrow)
+            headerRow.addView(TextView(this).apply {
                 text = name
                 setTextColor(ThemeManager.color(C.TEXT))
                 textSize = 14f
+                setTypeface(null, Typeface.BOLD)
                 layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
             })
+            val charCount = html.length
+            headerRow.addView(TextView(this).apply {
+                text = "${charCount} chars"
+                setTextColor(ThemeManager.color(C.TEXT_SECONDARY))
+                textSize = 10f
+                setPadding(dp(4), 0, 0, 0)
+            })
+            wrapper.addView(headerRow)
 
-            row.addView(Button(this).apply {
-                text = "✏️"
-                textSize = 14f
+            val body = LinearLayout(this).apply {
+                orientation = LinearLayout.VERTICAL
+                setPadding(dp(14), dp(4), dp(10), dp(8))
+                visibility = View.GONE
+            }
+
+            // HTML preview
+            if (html.isNotEmpty()) {
+                val preview = if (html.length > 120) html.substring(0, 120) + "…" else html
+                body.addView(TextView(this).apply {
+                    text = preview
+                    setTextColor(ThemeManager.color(C.TEXT_SECONDARY))
+                    textSize = 10f
+                    typeface = Typeface.MONOSPACE
+                    setPadding(0, 0, 0, dp(6))
+                })
+            }
+
+            // Action buttons
+            val btnRow = LinearLayout(this).apply {
+                orientation = LinearLayout.HORIZONTAL
+                gravity = Gravity.END
+                setPadding(0, dp(4), 0, 0)
+            }
+            btnRow.addView(Button(this).apply {
+                text = "✏️ Edit"
+                textSize = 12f
+                isAllCaps = false
                 setBackgroundColor(Color.TRANSPARENT)
-                layoutParams = LinearLayout.LayoutParams(dp(36), dp(36))
+                setTextColor(ThemeManager.color(C.ACCENT))
+                layoutParams = LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.WRAP_CONTENT, dp(34)
+                ).apply { marginEnd = dp(4) }
                 setOnClickListener { editReportTemplateDialog(settings, tpl) }
             })
-
-            row.addView(Button(this).apply {
-                text = "✕"
-                textSize = 14f
-                setTextColor(ThemeManager.color(C.ERROR))
+            btnRow.addView(Button(this).apply {
+                text = "✕ Delete"
+                textSize = 12f
+                isAllCaps = false
                 setBackgroundColor(Color.TRANSPARENT)
-                layoutParams = LinearLayout.LayoutParams(dp(36), dp(36))
+                setTextColor(ThemeManager.color(C.ERROR))
+                layoutParams = LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.WRAP_CONTENT, dp(34)
+                )
                 setOnClickListener {
                     AlertDialog.Builder(this@SettingsActivity)
                         .setMessage("Delete report template \"$name\"?")
@@ -1138,8 +1329,16 @@ class SettingsActivity : AppCompatActivity() {
                         .show()
                 }
             })
+            body.addView(btnRow)
+            wrapper.addView(body)
 
-            contentContainer.addView(row)
+            headerRow.setOnClickListener {
+                val expanded = body.visibility != View.VISIBLE
+                body.visibility = if (expanded) View.VISIBLE else View.GONE
+                arrow.text = if (expanded) "▼" else "▶"
+            }
+
+            contentContainer.addView(wrapper)
         }
     }
 
