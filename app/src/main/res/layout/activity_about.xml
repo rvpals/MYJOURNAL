@@ -183,6 +183,24 @@
             </LinearLayout>
         </LinearLayout>
 
+        <!-- What's New Button -->
+        <TextView
+            android:id="@+id/about_whats_new_btn"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:text="What's New"
+            android:textSize="15sp"
+            android:textStyle="bold"
+            android:textColor="#ffffff"
+            android:paddingStart="32dp"
+            android:paddingEnd="32dp"
+            android:paddingTop="10dp"
+            android:paddingBottom="10dp"
+            android:background="@drawable/btn_accent"
+            android:clickable="true"
+            android:focusable="true" />
+
         <!-- Back Button -->
         <TextView
             android:id="@+id/about_back_btn"

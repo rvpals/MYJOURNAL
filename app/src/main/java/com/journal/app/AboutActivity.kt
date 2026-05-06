@@ -3,7 +3,9 @@ package com.journal.app
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
+import android.widget.ScrollView
 import android.widget.TextView
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 
 class AboutActivity : AppCompatActivity() {
@@ -58,6 +60,22 @@ class AboutActivity : AppCompatActivity() {
             }
         }
 
+        findViewById<android.view.View>(R.id.about_whats_new_btn).setOnClickListener {
+            val tv = TextView(this).apply {
+                text = buildChangelog()
+                textSize = 13f
+                setTextColor(0xFF2c3145.toInt())
+                setPadding(48, 32, 48, 32)
+                setLineSpacing(0f, 1.4f)
+            }
+            val scroll = ScrollView(this).apply { addView(tv) }
+            AlertDialog.Builder(this)
+                .setTitle("What's New")
+                .setView(scroll)
+                .setPositiveButton("Close", null)
+                .show()
+        }
+
         findViewById<android.view.View>(R.id.about_back_btn).setOnClickListener { finish() }
     }
 
@@ -68,5 +86,77 @@ class AboutActivity : AppCompatActivity() {
             return
         }
     }
+
+    private fun buildChangelog(): String = """
+v1.9.0 (2026-05-05)
+• Dashboard template shortcuts — one-tap new entry with pre-fill
+• Pre-fill template category picker (multi-select dialog)
+• Fix: ranked panel "+N more" now expands inline
+• Collapsible panels in Prefs tab
+• Dashboard & Ranking moved to Dashboard tab
+• Removed stale components from dashboard settings
+• Edit/Delete button sizing fix across Settings
+
+v1.8.2 (2026-05-04)
+• Categories field in pre-fill templates
+• Fix: template title not populating after apply
+
+v1.8.1 (2026-05-04)
+• Fix: pre-fill template title overwritten by form sync
+• Centered dashboard panel headers
+
+v1.8.0 (2026-05-04)
+• Custom view filters in Entry List and Reports
+• Pre-fill templates in entry form (📋 button)
+• Collapsible template items in Settings
+
+v1.7.0 (2026-05-03)
+• Collapsible dashboard panels (Recent, Tags, Categories, Places, Inspiration)
+• Fix: dashboard refresh after entry save/delete
+
+v1.6.0 (2026-05-02)
+• Search term highlighting
+• Collapsible template sections
+• Daily Inspiration decorative styling
+• Fix: SQL Library load crash
+
+v1.5.0 (2026-04-28)
+• Fully native app — all 14 screens are Kotlin activities
+• WebView and web SPA removed
+• ServiceProvider + DashboardDataBuilder architecture
+• 12 themes with runtime ThemeManager
+• App font customization (family + size)
+• SQL Library (save/load/edit/delete queries)
+• Auto GPS & weather on new entry
+• Dashboard component settings (toggle/reorder)
+• Today in History panel
+• Daily Inspiration panel
+• Widget color picker and icon support
+• CSV mapping with test preview
+
+v1.4.0 (2026-04-03)
+• Native Login, Dashboard, Settings activities
+• Styled Android drawables
+• Entry list with collapsible filters
+
+v1.3.1 (2026-03-27)
+• Pin/unpin entries
+• Biometric authentication
+• Date/time format settings
+• Entry viewer font customization
+
+v1.2.0 (2026-03-25)
+• Custom Views with AND/OR/NOT logic
+• Pre-fill templates
+• CSV import with column mapping
+• Batch deletion
+
+v1.1.0 (2026-03-20)
+• SQL Explorer
+• 4 new themes (total: 12)
+
+v1.0.0
+• Initial release — encrypted journal with multi-journal support
+""".trimIndent()
 
 }

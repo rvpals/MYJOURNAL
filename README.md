@@ -20,6 +20,7 @@ A fully native Kotlin Android app for keeping a personal journal with rich text 
 - **Image attachments** — Camera capture, gallery picker, base64 storage with thumbnails
 - **Weather tracking** — Open-Meteo API integration, GPS-based, optional auto-populate on new entry
 - **Dashboard** — Stats, pinned entries, search, ranked panels (collapsible with expand), configurable widgets, template shortcuts, Today in History, Daily Inspiration
+- **What's New** — In-app changelog accessible from About screen
 - **App font customization** — Font family (9 options) and size scale across all screens
 - **Custom views** — Saved filter/sort/group combinations, usable as filter presets in Entry List and Reports
 - **Pre-fill templates** — Auto-populate new entries with saved field defaults (date, time, title, content, tags, categories); optional dashboard shortcuts for one-tap entry creation

@@ -179,8 +179,13 @@ class SettingsActivity : AppCompatActivity() {
 
     private fun buildPrefsTab() {
         val settings = try { JSONObject(db.getSettings()) } catch (_: Exception) { JSONObject() }
+        val prevContainer = contentContainer
 
-        buildSectionHeader("⚙️  Preferences")
+        // Preferences panel
+        val prefsBody = buildCollapsibleSection("⚙️  Preferences", bs.get("prefs_preferences_collapsed") != "1") {
+            bs.set("prefs_preferences_collapsed", if (it) "0" else "1")
+        }
+        contentContainer = prefsBody
         buildToggle("Auto-open last journal", bs.get("auto_open_last_journal") == "true") { checked ->
             bs.set("auto_open_last_journal", if (checked) "true" else "false")
         }
@@ -193,11 +198,6 @@ class SettingsActivity : AppCompatActivity() {
         buildToggle("Collapse Misc Info by default", bs.get("ev_misc_collapsed") == "1") { checked ->
             bs.set("ev_misc_collapsed", if (checked) "1" else "0")
         }
-        buildToggle("Auto populate GPS & weather on new entry", bs.get("auto_gps_weather") == "true") { checked ->
-            bs.set("auto_gps_weather", if (checked) "true" else "false")
-        }
-
-        // Biometric toggles
         if (isBiometricSupported()) {
             val hasCred = hasBiometricCredential()
             buildToggle("Fingerprint unlock for this journal", hasCred) { checked ->
@@ -209,20 +209,15 @@ class SettingsActivity : AppCompatActivity() {
                 }
             }
         }
+        contentContainer = prevContainer
 
         buildSpacer()
 
-        // Geocoding provider
-        val geocodingOptions = listOf("photon" to "Komoot Photon (free)", "nominatim" to "Nominatim / OSM (free)", "google" to "Google (API key)")
-        val currentGeo = bs.get("geocoding_provider") ?: "photon"
-        buildSpinner("Geocoding Provider", geocodingOptions.map { it.second }, geocodingOptions.indexOfFirst { it.first == currentGeo }.coerceAtLeast(0)) { idx ->
-            bs.set("geocoding_provider", geocodingOptions[idx].first)
+        // Date Time Format panel
+        val dateBody = buildCollapsibleSection("📅  Date Time Format", bs.get("prefs_datetime_collapsed") != "1") {
+            bs.set("prefs_datetime_collapsed", if (it) "0" else "1")
         }
-
-        buildSpacer()
-
-        // Date & Time format
-        buildSectionHeader("📅  Date & Time Display")
+        contentContainer = dateBody
         val dateFmts = listOf(
             "MMMM d, yyyy" to "April 27, 2026",
             "MMM d, yyyy" to "Apr 27, 2026",
@@ -235,28 +230,20 @@ class SettingsActivity : AppCompatActivity() {
         buildSpinner("Date Format", dateFmts.map { it.second }, dateFmts.indexOfFirst { it.first == currentDateFmt }.coerceAtLeast(0)) { idx ->
             bs.set("ev_date_format", dateFmts[idx].first)
         }
-
         val timeFmts = listOf("h:mm a" to "2:30 PM", "HH:mm" to "14:30")
         val currentTimeFmt = bs.get("ev_time_format") ?: "h:mm a"
         buildSpinner("Time Format", timeFmts.map { it.second }, timeFmts.indexOfFirst { it.first == currentTimeFmt }.coerceAtLeast(0)) { idx ->
             bs.set("ev_time_format", timeFmts[idx].first)
         }
+        contentContainer = prevContainer
 
         buildSpacer()
 
-        // Dashboard & ranking
-        buildSectionHeader("📊  Dashboard & Ranking")
-        buildNumberInput("Max Pinned Entries", bs.get("max_pinned_entries")?.toIntOrNull() ?: 10, 1, 100) { value ->
-            bs.set("max_pinned_entries", value.toString())
+        // Default Entry List Order panel
+        val sortBody = buildCollapsibleSection("📋  Default Entry List Order", bs.get("prefs_sort_collapsed") != "1") {
+            bs.set("prefs_sort_collapsed", if (it) "0" else "1")
         }
-        buildNumberInput("Max Entries in Ranking Cards", bs.get("max_ranking_entries")?.toIntOrNull() ?: 5, 1, 100) { value ->
-            bs.set("max_ranking_entries", value.toString())
-        }
-
-        buildSpacer()
-
-        // Default entry list order
-        buildSectionHeader("📋  Default Entry List Order")
+        contentContainer = sortBody
         val sortFields = listOf(
             "date" to "Date", "time" to "Time", "title" to "Title",
             "content" to "Content", "categories" to "Categories", "tags" to "Tags",
@@ -266,19 +253,20 @@ class SettingsActivity : AppCompatActivity() {
         buildSpinner("Sort By", sortFields.map { it.second }, sortFields.indexOfFirst { it.first == currentSortField }.coerceAtLeast(0)) { idx ->
             bs.set("default_entry_sort_field", sortFields[idx].first)
         }
-
         val sortDirs = listOf("desc" to "Newest First", "asc" to "Oldest First")
         val currentSortDir = bs.get("default_entry_sort_dir") ?: "desc"
         buildSpinner("Direction", sortDirs.map { it.second }, sortDirs.indexOfFirst { it.first == currentSortDir }.coerceAtLeast(0)) { idx ->
             bs.set("default_entry_sort_dir", sortDirs[idx].first)
         }
+        contentContainer = prevContainer
 
         buildSpacer()
 
-        // Display & Appearance
-        buildSectionHeader("🎨  Display & Appearance")
-
-        // Entry list fields
+        // Display & Appearance panel
+        val displayBody = buildCollapsibleSection("🎨  Display & Appearance", bs.get("prefs_display_collapsed") != "1") {
+            bs.set("prefs_display_collapsed", if (it) "0" else "1")
+        }
+        contentContainer = displayBody
         buildLabel("Entry List Fields")
         val fieldDefs = listOf(
             "date" to "Date", "time" to "Time", "title" to "Title",
@@ -293,7 +281,6 @@ class SettingsActivity : AppCompatActivity() {
         val entryListFields = try {
             settings.optJSONObject("entryListFields") ?: JSONObject()
         } catch (_: Exception) { JSONObject() }
-
         for ((key, label) in fieldDefs) {
             val defaultVal = fieldDefaults[key] ?: true
             val isChecked = if (entryListFields.has(key)) entryListFields.optBoolean(key, defaultVal) else defaultVal
@@ -304,10 +291,23 @@ class SettingsActivity : AppCompatActivity() {
                 db.setSettings(JSONObject().apply { put("entryListFields", fields) }.toString())
             }
         }
+        contentContainer = prevContainer
 
         buildSpacer()
 
-        // Weather location
+        // GPS Weather etc panel
+        val gpsBody = buildCollapsibleSection("🌍  GPS Weather etc", bs.get("prefs_gps_collapsed") != "1") {
+            bs.set("prefs_gps_collapsed", if (it) "0" else "1")
+        }
+        contentContainer = gpsBody
+        buildToggle("Auto populate GPS & weather on new entry", bs.get("auto_gps_weather") == "true") { checked ->
+            bs.set("auto_gps_weather", if (checked) "true" else "false")
+        }
+        val geocodingOptions = listOf("photon" to "Komoot Photon (free)", "nominatim" to "Nominatim / OSM (free)", "google" to "Google (API key)")
+        val currentGeo = bs.get("geocoding_provider") ?: "photon"
+        buildSpinner("Geocoding Provider", geocodingOptions.map { it.second }, geocodingOptions.indexOfFirst { it.first == currentGeo }.coerceAtLeast(0)) { idx ->
+            bs.set("geocoding_provider", geocodingOptions[idx].first)
+        }
         buildLabel("Weather Location")
         val weatherLocName = bs.get("weather_location_name")
         if (!weatherLocName.isNullOrEmpty()) {
@@ -320,13 +320,12 @@ class SettingsActivity : AppCompatActivity() {
             })
         }
         buildWeatherSearch()
-
         val tempUnits = listOf("fahrenheit" to "°F (Fahrenheit)", "celsius" to "°C (Celsius)")
         val currentTempUnit = bs.get("weather_temp_unit") ?: "fahrenheit"
         buildSpinner("Temperature Unit", tempUnits.map { it.second }, tempUnits.indexOfFirst { it.first == currentTempUnit }.coerceAtLeast(0)) { idx ->
             bs.set("weather_temp_unit", tempUnits[idx].first)
         }
-
+        contentContainer = prevContainer
     }
 
     private var fontPreview: TextView? = null
@@ -539,7 +538,7 @@ class SettingsActivity : AppCompatActivity() {
                 setBackgroundColor(Color.TRANSPARENT)
                 setTextColor(ThemeManager.color(C.ACCENT))
                 layoutParams = LinearLayout.LayoutParams(
-                    LinearLayout.LayoutParams.WRAP_CONTENT, dp(34)
+                    LinearLayout.LayoutParams.WRAP_CONTENT, dp(38)
                 ).apply { marginEnd = dp(4) }
                 setOnClickListener { launchCustomViewEditor(view.optString("id")) }
             })
@@ -550,7 +549,7 @@ class SettingsActivity : AppCompatActivity() {
                 setBackgroundColor(Color.TRANSPARENT)
                 setTextColor(ThemeManager.color(C.ERROR))
                 layoutParams = LinearLayout.LayoutParams(
-                    LinearLayout.LayoutParams.WRAP_CONTENT, dp(34)
+                    LinearLayout.LayoutParams.WRAP_CONTENT, dp(38)
                 )
                 setOnClickListener {
                     AlertDialog.Builder(this@SettingsActivity)
@@ -1041,7 +1040,7 @@ class SettingsActivity : AppCompatActivity() {
                 setBackgroundColor(Color.TRANSPARENT)
                 setTextColor(ThemeManager.color(C.ACCENT))
                 layoutParams = LinearLayout.LayoutParams(
-                    LinearLayout.LayoutParams.WRAP_CONTENT, dp(34)
+                    LinearLayout.LayoutParams.WRAP_CONTENT, dp(38)
                 ).apply { marginEnd = dp(4) }
                 setOnClickListener { editEntryTemplateDialog(settings, tpl) }
             })
@@ -1052,7 +1051,7 @@ class SettingsActivity : AppCompatActivity() {
                 setBackgroundColor(Color.TRANSPARENT)
                 setTextColor(ThemeManager.color(C.ERROR))
                 layoutParams = LinearLayout.LayoutParams(
-                    LinearLayout.LayoutParams.WRAP_CONTENT, dp(34)
+                    LinearLayout.LayoutParams.WRAP_CONTENT, dp(38)
                 )
                 setOnClickListener {
                     AlertDialog.Builder(this@SettingsActivity)
@@ -1065,6 +1064,7 @@ class SettingsActivity : AppCompatActivity() {
                                 if (t != null && t.optString("id") != id) updated.put(t)
                             }
                             db.setSettings(JSONObject().apply { put("entryTemplates", updated) }.toString())
+                            DashboardActivity.needsRefresh = true
                             showTab("templates")
                         }
                         .setNegativeButton("Cancel", null)
@@ -1147,16 +1147,53 @@ class SettingsActivity : AppCompatActivity() {
         val contentInput = makeDialogInput("Default content", tpl.optString("content"), multiLine = true)
         container.addView(contentInput)
 
-        val categoriesInput = makeDialogInput("Categories (comma-separated)",
-            jsonArrayToStr(tpl.optJSONArray("categories")))
-        container.addView(categoriesInput)
+        val selectedCats = mutableSetOf<String>()
+        val tplCats = tpl.optJSONArray("categories")
+        if (tplCats != null) for (i in 0 until tplCats.length()) {
+            val c = tplCats.optString(i, "").trim()
+            if (c.isNotEmpty()) selectedCats.add(c)
+        }
+        val allCats = try {
+            val arr = JSONArray(db.getCategories())
+            (0 until arr.length()).map { arr.getString(it) }
+        } catch (_: Exception) { listOf() }
+
+        val catDisplay = EditText(this).apply {
+            hint = "Categories (tap to select)"
+            setText(selectedCats.joinToString(", "))
+            isFocusable = false
+            isClickable = true
+            setTextColor(ThemeManager.color(C.TEXT))
+            setHintTextColor(ThemeManager.color(C.TEXT_SECONDARY))
+            textSize = 14f
+            setPadding(dp(12), dp(10), dp(12), dp(10))
+            background = ContextCompat.getDrawable(this@SettingsActivity, R.drawable.input_bg)
+            layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT
+            ).apply { bottomMargin = dp(8) }
+            setOnClickListener {
+                val checked = BooleanArray(allCats.size) { allCats[it] in selectedCats }
+                AlertDialog.Builder(this@SettingsActivity)
+                    .setTitle("Select Categories")
+                    .setMultiChoiceItems(allCats.toTypedArray(), checked) { _, which, isChecked ->
+                        if (isChecked) selectedCats.add(allCats[which])
+                        else selectedCats.remove(allCats[which])
+                    }
+                    .setPositiveButton("OK") { _, _ ->
+                        setText(selectedCats.joinToString(", "))
+                    }
+                    .setNegativeButton("Cancel", null)
+                    .show()
+            }
+        }
+        container.addView(catDisplay)
 
         val tagsInput = makeDialogInput("Tags (comma-separated)",
             jsonArrayToStr(tpl.optJSONArray("tags")))
         container.addView(tagsInput)
 
         AlertDialog.Builder(this)
-            .setTitle(if (isNew) "New Entry Template" else "Edit Template")
+            .setTitle(if (isNew) "New Prefill Template" else "Edit Prefill Template")
             .setView(scroll)
             .setPositiveButton("Save") { _, _ ->
                 val name = nameInput.text.toString().trim()
@@ -1171,9 +1208,8 @@ class SettingsActivity : AppCompatActivity() {
                 tpl.put("dashboardShortcut", dashShortcutCb.isChecked)
                 tpl.put("title", titleInput.text.toString())
                 tpl.put("content", contentInput.text.toString())
-                val catStr = categoriesInput.text.toString()
                 val catArr = JSONArray()
-                catStr.split(",").map { it.trim() }.filter { it.isNotEmpty() }.forEach { catArr.put(it) }
+                selectedCats.forEach { catArr.put(it) }
                 tpl.put("categories", catArr)
                 val tagStr = tagsInput.text.toString()
                 val tagArr = JSONArray()
@@ -1192,6 +1228,7 @@ class SettingsActivity : AppCompatActivity() {
                     }
                 }
                 db.setSettings(JSONObject().apply { put("entryTemplates", allTpls) }.toString())
+                DashboardActivity.needsRefresh = true
                 showTab("templates")
             }
             .setNegativeButton("Cancel", null)
@@ -1218,7 +1255,7 @@ class SettingsActivity : AppCompatActivity() {
         <div>Date: <%DATE%> <%TIME%></div>
         <div>Categories: <%CATEGORIES%></div>
     </div>
-    <div class="content"><%RICH_CONTENT%></div>
+    <div class="content"><%CONTENT%></div>
 </body>
 </html>"""
 
@@ -1240,7 +1277,7 @@ class SettingsActivity : AppCompatActivity() {
 
         // Available tags info
         contentContainer.addView(TextView(this).apply {
-            text = "Tags: <%TITLE%> <%DATE%> <%TIME%> <%CONTENT%> <%RICH_CONTENT%> <%CATEGORIES%> <%TAGS%> <%WEATHER%> <%PLACES%> <%ID%> <%DT_CREATED%> <%DT_UPDATED%>"
+            text = "Tags: <%TITLE%> <%DATE%> <%TIME%> <%CONTENT%> <%CATEGORIES%> <%TAGS%> <%WEATHER%> <%PLACES%> <%ID%> <%DT_CREATED%> <%DT_UPDATED%>"
             setTextColor(ThemeManager.color(C.TEXT_SECONDARY))
             textSize = 10f
             setPadding(dp(4), dp(0), dp(4), dp(8))
@@ -1322,7 +1359,7 @@ class SettingsActivity : AppCompatActivity() {
                 setBackgroundColor(Color.TRANSPARENT)
                 setTextColor(ThemeManager.color(C.ACCENT))
                 layoutParams = LinearLayout.LayoutParams(
-                    LinearLayout.LayoutParams.WRAP_CONTENT, dp(34)
+                    LinearLayout.LayoutParams.WRAP_CONTENT, dp(38)
                 ).apply { marginEnd = dp(4) }
                 setOnClickListener { editReportTemplateDialog(settings, tpl) }
             })
@@ -1333,7 +1370,7 @@ class SettingsActivity : AppCompatActivity() {
                 setBackgroundColor(Color.TRANSPARENT)
                 setTextColor(ThemeManager.color(C.ERROR))
                 layoutParams = LinearLayout.LayoutParams(
-                    LinearLayout.LayoutParams.WRAP_CONTENT, dp(34)
+                    LinearLayout.LayoutParams.WRAP_CONTENT, dp(38)
                 )
                 setOnClickListener {
                     AlertDialog.Builder(this@SettingsActivity)
@@ -1545,7 +1582,7 @@ class SettingsActivity : AppCompatActivity() {
                 text = "✏️"
                 textSize = 14f
                 setBackgroundColor(Color.TRANSPARENT)
-                layoutParams = LinearLayout.LayoutParams(dp(36), dp(36))
+                layoutParams = LinearLayout.LayoutParams(dp(40), dp(40))
                 setOnClickListener { launchWidgetEditor(w.optString("id")) }
             })
 
@@ -1554,7 +1591,7 @@ class SettingsActivity : AppCompatActivity() {
                 textSize = 14f
                 setTextColor(ThemeManager.color(C.ERROR))
                 setBackgroundColor(Color.TRANSPARENT)
-                layoutParams = LinearLayout.LayoutParams(dp(36), dp(36))
+                layoutParams = LinearLayout.LayoutParams(dp(40), dp(40))
                 setOnClickListener {
                     AlertDialog.Builder(this@SettingsActivity)
                         .setMessage("Delete widget \"$name\"?")
@@ -2114,7 +2151,7 @@ class SettingsActivity : AppCompatActivity() {
                 text = "✏️"
                 textSize = 14f
                 setBackgroundColor(Color.TRANSPARENT)
-                layoutParams = LinearLayout.LayoutParams(dp(36), dp(36))
+                layoutParams = LinearLayout.LayoutParams(dp(40), dp(40))
                 setOnClickListener { editCategoryDialog(name, desc) }
             })
 
@@ -2124,7 +2161,7 @@ class SettingsActivity : AppCompatActivity() {
                 textSize = 14f
                 setTextColor(ThemeManager.color(C.ERROR))
                 setBackgroundColor(Color.TRANSPARENT)
-                layoutParams = LinearLayout.LayoutParams(dp(36), dp(36))
+                layoutParams = LinearLayout.LayoutParams(dp(40), dp(40))
                 setOnClickListener { confirmDeleteCategory(name) }
             })
 
@@ -2297,7 +2334,7 @@ class SettingsActivity : AppCompatActivity() {
                 text = "✏️"
                 textSize = 14f
                 setBackgroundColor(Color.TRANSPARENT)
-                layoutParams = LinearLayout.LayoutParams(dp(36), dp(36))
+                layoutParams = LinearLayout.LayoutParams(dp(40), dp(40))
                 setOnClickListener { editTagDialog(name, desc) }
             })
 
@@ -2397,7 +2434,7 @@ class SettingsActivity : AppCompatActivity() {
                 text = "✏️"
                 textSize = 14f
                 setBackgroundColor(Color.TRANSPARENT)
-                layoutParams = LinearLayout.LayoutParams(dp(36), dp(36))
+                layoutParams = LinearLayout.LayoutParams(dp(40), dp(40))
                 setOnClickListener { editInspirationDialog(id, quote, source) }
             })
 
@@ -2406,7 +2443,7 @@ class SettingsActivity : AppCompatActivity() {
                 textSize = 14f
                 setTextColor(ThemeManager.color(C.ERROR))
                 setBackgroundColor(Color.TRANSPARENT)
-                layoutParams = LinearLayout.LayoutParams(dp(36), dp(36))
+                layoutParams = LinearLayout.LayoutParams(dp(40), dp(40))
                 setOnClickListener {
                     AlertDialog.Builder(this@SettingsActivity)
                         .setMessage("Delete this quote?")
@@ -3608,6 +3645,7 @@ class SettingsActivity : AppCompatActivity() {
     )
 
     private fun loadDashboardComponents(): MutableList<Pair<String, Boolean>> {
+        val validIds = defaultDashboardComponents.map { it.first }.toSet()
         val json = bs.get("dashboard_components")
         if (json != null) {
             try {
@@ -3615,7 +3653,8 @@ class SettingsActivity : AppCompatActivity() {
                 val result = mutableListOf<Pair<String, Boolean>>()
                 for (i in 0 until arr.length()) {
                     val obj = arr.getJSONObject(i)
-                    result.add(obj.getString("id") to obj.optBoolean("enabled", true))
+                    val id = obj.getString("id")
+                    if (id in validIds) result.add(id to obj.optBoolean("enabled", true))
                 }
                 val existingIds = result.map { it.first }.toSet()
                 for ((id, _) in defaultDashboardComponents) {
@@ -3949,6 +3988,25 @@ class SettingsActivity : AppCompatActivity() {
     }
 
     private fun buildDashboardTab() {
+        val prevContainer = contentContainer
+
+        // Dashboard & Ranking panel
+        val rankBody = buildCollapsibleSection("📊  Dashboard & Ranking", bs.get("dash_ranking_collapsed") != "1") {
+            bs.set("dash_ranking_collapsed", if (it) "0" else "1")
+        }
+        contentContainer = rankBody
+        buildNumberInput("Max Pinned Entries", bs.get("max_pinned_entries")?.toIntOrNull() ?: 10, 1, 100) { value ->
+            bs.set("max_pinned_entries", value.toString())
+            DashboardActivity.needsRefresh = true
+        }
+        buildNumberInput("Max Entries in Ranking Cards", bs.get("max_ranking_entries")?.toIntOrNull() ?: 5, 1, 100) { value ->
+            bs.set("max_ranking_entries", value.toString())
+            DashboardActivity.needsRefresh = true
+        }
+        contentContainer = prevContainer
+
+        buildSpacer()
+
         val components = loadDashboardComponents()
 
         buildSectionHeader("📊  Dashboard Components")

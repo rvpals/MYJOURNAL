@@ -15,7 +15,7 @@ summary: "Project architecture reference — directory structure, tech stack, da
 
 Fully native Android encrypted journal app. All 14 screens are native Kotlin activities. Services (crypto, database, bootstrap, weather) are managed by a `ServiceProvider` singleton. All data stored locally in AES-256-GCM encrypted SQLCipher database.
 
-**App Name:** My Journal | **Version:** 1.9.0 | **Package:** com.journal.app | **Min SDK:** 24 | **Target SDK:** 34
+**App Name:** My Journal | **Version:** 1.9.1 | **Package:** com.journal.app | **Min SDK:** 24 | **Target SDK:** 34
 
 ## Project Structure
 
@@ -29,7 +29,7 @@ MYJOURNAL/
 │   │   │   ├── LoginActivity.kt         # Entry point: journal select, password, biometric login
 │   │   │   ├── DashboardActivity.kt     # Native dashboard (stats, ranked lists, pinned/recent, widgets, hamburger menu)
 │   │   │   ├── CalendarActivity.kt      # Native calendar view
-│   │   │   ├── AboutActivity.kt         # App info screen
+│   │   │   ├── AboutActivity.kt         # App info screen with "What's New" changelog dialog
 │   │   │   ├── SearchActivity.kt        # Native full-text search screen with term highlighting
 │   │   │   ├── EntryViewerActivity.kt   # Native entry viewer with font settings
 │   │   │   ├── EntryListActivity.kt     # Native entry list (collapsible filters, custom view filter, order-by dropdowns, alternating rows, search, sort, paginate, batch delete)
@@ -132,7 +132,7 @@ Light, Dark, Ocean, Midnight, Forest, Amethyst, Aurora, Lavender, Frost, Navy, S
 - **Bootstrap store** — all key-value storage uses BootstrapService (SharedPreferences wrapper)
 - **Large data to activities** — SearchActivity, CalendarActivity use static `companion object` holders for entry data (avoids TransactionTooLargeException)
 - **Dashboard component settings** — Settings > Dashboard tab allows toggling/reordering 12 components; stored in BootstrapService as `dashboard_components` JSON
-- **Dashboard auto-refresh** — `DashboardActivity.needsRefresh` static flag; set after erase all entries, CSV import completion, widget save/delete, category icon change, or entry save/delete; checked in `onResume()` to rebuild dashboard data
+- **Dashboard auto-refresh** — `DashboardActivity.needsRefresh` static flag; set after erase all entries, CSV import completion, widget save/delete, category icon change, entry save/delete, or template save/delete; checked in `onResume()` to rebuild dashboard data
 - **DashboardActivity navigation** — hamburger menu (☰) in top navbar with PopupMenu (Entries, Calendar, Reports, Explorer, Settings, About); no bottom nav bar
 - **File exports** — `ServiceProvider.saveFileToDownloads()` via MediaStore scoped storage (API 29+)
 - **Auto GPS & weather** — Optional setting (`auto_gps_weather` in BootstrapService) to auto-populate GPS location and weather when creating a new entry; silently skips if location permission not granted or GPS disabled
@@ -150,4 +150,6 @@ Light, Dark, Ocean, Midnight, Forest, Amethyst, Aurora, Lavender, Frost, Navy, S
 - **Pre-fill template dashboard shortcuts** — Templates with "Create a dashboard shortcut" checkbox enabled appear as small buttons in a dedicated dashboard panel; clicking launches new entry with template auto-applied
 - **Search term highlighting** — SearchActivity highlights matching terms in title and content snippet using semi-transparent accent background spans
 - **Collapsible dashboard panels** — Recent Entries, Top Tags, Top Categories, Top Places, Daily Inspiration panels have ▶/▼ toggle headers; collapse state persisted in BootstrapService (`dash_*_collapsed` keys)
+- **Collapsible Prefs tab sections** — Preferences, Date Time Format, Default Entry List Order, Display & Appearance, GPS Weather sections are collapsible panels in Prefs tab; state persisted in BootstrapService
+- **About screen "What's New"** — Button opens AlertDialog with full changelog history
 - **Daily Inspiration decorative panel** — Double accent border with layered insets, 3D drop shadow via LayerDrawable + elevation
