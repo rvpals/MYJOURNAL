@@ -74,6 +74,13 @@ class DashboardActivity : AppCompatActivity() {
         populateCategoriesPanel()
         populateRankedPanel(R.id.places_list, R.id.panel_places, R.id.places_header, "topPlaces", "placeName", "dash_places_collapsed", "📍 Top Places")
         populateInspiration()
+
+        listOf(
+            R.id.panel_prefill_shortcuts, R.id.panel_pinned, R.id.panel_recent,
+            R.id.panel_today_history, R.id.panel_tags, R.id.panel_categories,
+            R.id.panel_places, R.id.panel_inspiration
+        ).forEach { style3DPanel(findViewById(it)) }
+
         applyDashboardComponentSettings()
     }
 
@@ -293,6 +300,7 @@ class DashboardActivity : AppCompatActivity() {
     private fun populatePrefillShortcuts() {
         val panel = findViewById<LinearLayout>(R.id.panel_prefill_shortcuts)
         val list = findViewById<LinearLayout>(R.id.prefill_shortcuts_list)
+        val header = findViewById<TextView>(R.id.prefill_shortcuts_header)
 
         val db = ServiceProvider.databaseService ?: run { panel.visibility = View.GONE; return }
         val settings = try { JSONObject(db.getSettings()) } catch (_: Exception) { panel.visibility = View.GONE; return }
@@ -310,31 +318,23 @@ class DashboardActivity : AppCompatActivity() {
         }
 
         panel.visibility = View.VISIBLE
+        setupCollapsibleHeader(header, list, "dash_prefill_collapsed", "📋 Pre-fill Templates")
         list.removeAllViews()
-
-        val flowInner = LinearLayout(this).apply {
-            orientation = LinearLayout.HORIZONTAL
-            layoutParams = LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.WRAP_CONTENT,
-                LinearLayout.LayoutParams.WRAP_CONTENT
-            )
-        }
 
         for (tpl in shortcuts) {
             val name = tpl.optString("name", "")
-            val displayName = if (name.length > 15) name.substring(0, 15) + "…" else name
             val tplId = tpl.optString("id", "")
 
             val btn = Button(this).apply {
-                text = displayName
+                text = name
                 setTextColor(ThemeManager.color(C.TEXT))
-                setTextSize(TypedValue.COMPLEX_UNIT_SP, 11f)
+                setTextSize(TypedValue.COMPLEX_UNIT_SP, 13f)
                 background = ContextCompat.getDrawable(this@DashboardActivity, R.drawable.btn_secondary)
                 isAllCaps = false
-                setPadding(dp(10), dp(6), dp(10), dp(6))
+                setPadding(dp(12), dp(8), dp(12), dp(8))
                 layoutParams = LinearLayout.LayoutParams(
-                    LinearLayout.LayoutParams.WRAP_CONTENT, dp(34)
-                ).apply { marginEnd = dp(6); bottomMargin = dp(4) }
+                    LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT
+                ).apply { bottomMargin = dp(6) }
                 setOnClickListener {
                     EntryFormActivity.databaseService = ServiceProvider.databaseService
                     EntryFormActivity.bootstrapService = ServiceProvider.bootstrapService
@@ -343,17 +343,8 @@ class DashboardActivity : AppCompatActivity() {
                     startActivity(Intent(this@DashboardActivity, EntryFormActivity::class.java))
                 }
             }
-            flowInner.addView(btn)
+            list.addView(btn)
         }
-
-        val hScroll = android.widget.HorizontalScrollView(this).apply {
-            layoutParams = LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT
-            )
-            isHorizontalScrollBarEnabled = false
-            addView(flowInner)
-        }
-        list.addView(hScroll)
     }
 
     // ========== Widgets ==========
@@ -559,6 +550,29 @@ class DashboardActivity : AppCompatActivity() {
             header.text = "${if (nowCollapsed) "▶" else "▼"} $title"
             bs.set(prefKey, if (nowCollapsed) "1" else "0")
         }
+    }
+
+    private fun style3DPanel(panel: View) {
+        val cardBg = ThemeManager.color(C.CARD_BG)
+        val borderColor = ThemeManager.color(C.CARD_BORDER)
+        val shadowColor = (borderColor and 0x00FFFFFF) or 0x40000000
+
+        val shadow = GradientDrawable().apply {
+            shape = GradientDrawable.RECTANGLE
+            cornerRadius = dp(16).toFloat()
+            setColor(shadowColor)
+        }
+        val border = GradientDrawable().apply {
+            shape = GradientDrawable.RECTANGLE
+            cornerRadius = dp(14).toFloat()
+            setColor(cardBg)
+            setStroke(dp(1), borderColor)
+        }
+        val layered = LayerDrawable(arrayOf(shadow, border))
+        layered.setLayerInset(0, dp(2), dp(3), 0, 0)
+        layered.setLayerInset(1, 0, 0, dp(2), dp(3))
+        panel.background = layered
+        panel.elevation = dp(4).toFloat()
     }
 
     // ========== Recent Entries ==========
@@ -1018,7 +1032,8 @@ class DashboardActivity : AppCompatActivity() {
             if (iconData.isNotEmpty() && iconData != "null") {
                 val iv = ImageView(this).apply {
                     layoutParams = LinearLayout.LayoutParams(dp(48), dp(48)).apply { bottomMargin = dp(4) }
-                    scaleType = ImageView.ScaleType.CENTER_CROP
+                    scaleType = ImageView.ScaleType.FIT_CENTER
+                    adjustViewBounds = true
                 }
                 try {
                     val dataUrl = iconData.removeSurrounding("\"")
@@ -1160,7 +1175,8 @@ class DashboardActivity : AppCompatActivity() {
             if (iconData.isNotEmpty() && iconData != "null") {
                 val iv = ImageView(this).apply {
                     layoutParams = LinearLayout.LayoutParams(dp(24), dp(24)).apply { marginEnd = dp(8) }
-                    scaleType = ImageView.ScaleType.CENTER_CROP
+                    scaleType = ImageView.ScaleType.FIT_CENTER
+                    adjustViewBounds = true
                 }
                 try {
                     val dataUrl = iconData.removeSurrounding("\"")

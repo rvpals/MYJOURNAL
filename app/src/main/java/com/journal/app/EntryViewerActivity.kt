@@ -92,12 +92,232 @@ class EntryViewerActivity : AppCompatActivity() {
         setupActions()
         setupMiscToggle()
         setupSwipe()
+        setupTabs()
         loadAndShowEntry()
     }
 
     private fun setupNavbar() {
         findViewById<Button>(R.id.btn_back).setOnClickListener { finish() }
         findViewById<Button>(R.id.ev_btn_back_bottom).setOnClickListener { finish() }
+    }
+
+    private fun setupTabs() {
+        val tabEntry = findViewById<Button>(R.id.ev_tab_entry)
+        val tabAttach = findViewById<Button>(R.id.ev_tab_attachments)
+        tabEntry.setOnClickListener { showTab("entry") }
+        tabAttach.setOnClickListener { showTab("attachments") }
+    }
+
+    private fun showTab(tab: String) {
+        val tabEntry = findViewById<Button>(R.id.ev_tab_entry)
+        val tabAttach = findViewById<Button>(R.id.ev_tab_attachments)
+        val entryScroll = findViewById<View>(R.id.ev_entry_scroll)
+        val attachScroll = findViewById<View>(R.id.ev_attachments_scroll)
+
+        if (tab == "entry") {
+            tabEntry.background = ContextCompat.getDrawable(this, R.drawable.btn_accent)
+            tabEntry.setTextColor(ThemeManager.color(C.CARD_BG))
+            tabAttach.background = ContextCompat.getDrawable(this, R.drawable.btn_secondary)
+            tabAttach.setTextColor(ThemeManager.color(C.TEXT))
+            entryScroll.visibility = View.VISIBLE
+            attachScroll.visibility = View.GONE
+        } else {
+            tabAttach.background = ContextCompat.getDrawable(this, R.drawable.btn_accent)
+            tabAttach.setTextColor(ThemeManager.color(C.CARD_BG))
+            tabEntry.background = ContextCompat.getDrawable(this, R.drawable.btn_secondary)
+            tabEntry.setTextColor(ThemeManager.color(C.TEXT))
+            entryScroll.visibility = View.GONE
+            attachScroll.visibility = View.VISIBLE
+            buildAttachmentsTab()
+        }
+    }
+
+    private fun buildAttachmentsTab() {
+        val container = findViewById<LinearLayout>(R.id.ev_attachments_container)
+        container.removeAllViews()
+
+        val db = databaseService ?: return
+        val json = db.getAttachmentsByEntry(currentEntryId)
+        val arr = try { org.json.JSONArray(json) } catch (_: Exception) { org.json.JSONArray() }
+
+        if (arr.length() == 0) {
+            container.addView(android.widget.TextView(this).apply {
+                text = "No attachments"
+                setTextColor(ThemeManager.color(C.TEXT_SECONDARY))
+                setTextSize(android.util.TypedValue.COMPLEX_UNIT_SP, 14f)
+                setPadding(dp(4), dp(12), dp(4), dp(12))
+            })
+            container.addView(Button(this).apply {
+                text = "📎 Add Attachments"
+                textSize = 13f
+                isAllCaps = false
+                setTextColor(ThemeManager.color(C.CARD_BG))
+                background = ContextCompat.getDrawable(this@EntryViewerActivity, R.drawable.btn_accent)
+                layoutParams = LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.MATCH_PARENT, dp(42)
+                )
+                setOnClickListener { openAttachmentScreen() }
+            })
+            return
+        }
+
+        val attachment = arr.getJSONObject(0)
+        val attachId = attachment.optString("id", "")
+        val filename = attachment.optString("filename", "")
+        val attachDir = ServiceProvider.bootstrapService?.get("attachments_path")
+
+        // Show file list from zip
+        if (attachDir != null) {
+            val dirUri = android.net.Uri.parse(attachDir)
+            val dir = androidx.documentfile.provider.DocumentFile.fromTreeUri(this, dirUri)
+            val zipFile = dir?.findFile(filename)
+            if (zipFile != null) {
+                try {
+                    val fileNames = mutableListOf<String>()
+                    contentResolver.openInputStream(zipFile.uri)?.use { input ->
+                        java.util.zip.ZipInputStream(input).use { zis ->
+                            var entry = zis.nextEntry
+                            while (entry != null) {
+                                if (!entry.isDirectory) fileNames.add(entry.name)
+                                entry = zis.nextEntry
+                            }
+                        }
+                    }
+
+                    container.addView(android.widget.TextView(this).apply {
+                        text = "Files (${fileNames.size})"
+                        setTextColor(ThemeManager.color(C.ACCENT))
+                        setTextSize(android.util.TypedValue.COMPLEX_UNIT_SP, 14f)
+                        setTypeface(null, android.graphics.Typeface.BOLD)
+                        setPadding(0, 0, 0, dp(6))
+                    })
+
+                    for ((idx, name) in fileNames.withIndex()) {
+                        val rowBg = if (idx % 2 == 0) ThemeManager.color(C.CARD_BG) else ThemeManager.color(C.INPUT_BG)
+                        val row = LinearLayout(this).apply {
+                            orientation = LinearLayout.HORIZONTAL
+                            setBackgroundColor(rowBg)
+                            setPadding(dp(8), dp(8), dp(8), dp(8))
+                            gravity = android.view.Gravity.CENTER_VERTICAL
+                            layoutParams = LinearLayout.LayoutParams(
+                                LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT
+                            )
+                            isClickable = true
+                            isFocusable = true
+                            setOnClickListener { launchFileFromZip(zipFile.uri, name) }
+                        }
+                        row.addView(android.widget.TextView(this).apply {
+                            text = "📄 $name"
+                            setTextColor(ThemeManager.color(C.TEXT))
+                            setTextSize(android.util.TypedValue.COMPLEX_UNIT_SP, 13f)
+                            layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
+                        })
+                        row.addView(android.widget.TextView(this).apply {
+                            text = "double-tap to open"
+                            setTextColor(ThemeManager.color(C.TEXT_SECONDARY))
+                            setTextSize(android.util.TypedValue.COMPLEX_UNIT_SP, 10f)
+                        })
+                        container.addView(row)
+                    }
+                } catch (_: Exception) {
+                    container.addView(android.widget.TextView(this).apply {
+                        text = "Error reading zip file"
+                        setTextColor(ThemeManager.color(C.ERROR))
+                        setTextSize(android.util.TypedValue.COMPLEX_UNIT_SP, 13f)
+                    })
+                }
+            }
+        }
+
+        // Buttons
+        val btnRow = LinearLayout(this).apply {
+            orientation = LinearLayout.HORIZONTAL
+            layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT
+            ).apply { topMargin = dp(12) }
+        }
+        btnRow.addView(Button(this).apply {
+            text = "✏️ Edit"
+            textSize = 12f
+            isAllCaps = false
+            setTextColor(ThemeManager.color(C.CARD_BG))
+            background = ContextCompat.getDrawable(this@EntryViewerActivity, R.drawable.btn_accent)
+            layoutParams = LinearLayout.LayoutParams(0, dp(38), 1f).apply { marginEnd = dp(4) }
+            setOnClickListener { openAttachmentScreen() }
+        })
+        btnRow.addView(Button(this).apply {
+            text = "🗑️ Delete Zip"
+            textSize = 12f
+            isAllCaps = false
+            setTextColor(ThemeManager.color(C.CARD_BG))
+            background = ContextCompat.getDrawable(this@EntryViewerActivity, R.drawable.btn_delete)
+            layoutParams = LinearLayout.LayoutParams(0, dp(38), 1f)
+            setOnClickListener { deleteAttachmentZip(attachId, filename) }
+        })
+        container.addView(btnRow)
+    }
+
+    private fun launchFileFromZip(zipUri: android.net.Uri, fileName: String) {
+        try {
+            val cacheDir = java.io.File(cacheDir, "attachments")
+            cacheDir.mkdirs()
+            val outFile = java.io.File(cacheDir, fileName)
+
+            contentResolver.openInputStream(zipUri)?.use { input ->
+                java.util.zip.ZipInputStream(input).use { zis ->
+                    var entry = zis.nextEntry
+                    while (entry != null) {
+                        if (entry.name == fileName) {
+                            outFile.outputStream().use { fos -> zis.copyTo(fos) }
+                            break
+                        }
+                        entry = zis.nextEntry
+                    }
+                }
+            }
+
+            val uri = androidx.core.content.FileProvider.getUriForFile(
+                this, "$packageName.fileprovider", outFile
+            )
+            val mime = contentResolver.getType(uri) ?: "*/*"
+            val intent = android.content.Intent(android.content.Intent.ACTION_VIEW).apply {
+                setDataAndType(uri, mime)
+                addFlags(android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION)
+            }
+            startActivity(intent)
+        } catch (e: Exception) {
+            android.widget.Toast.makeText(this, "Cannot open file: ${e.message}", android.widget.Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    private fun deleteAttachmentZip(attachId: String, filename: String) {
+        android.app.AlertDialog.Builder(this)
+            .setMessage("Delete this attachment zip and its record?")
+            .setPositiveButton("Delete") { _, _ ->
+                val db = databaseService ?: return@setPositiveButton
+                db.deleteAttachment(attachId)
+
+                val attachDir = ServiceProvider.bootstrapService?.get("attachments_path")
+                if (attachDir != null) {
+                    val dirUri = android.net.Uri.parse(attachDir)
+                    val dir = androidx.documentfile.provider.DocumentFile.fromTreeUri(this, dirUri)
+                    dir?.findFile(filename)?.delete()
+                }
+
+                buildAttachmentsTab()
+            }
+            .setNegativeButton("Cancel", null)
+            .show()
+    }
+
+    private fun openAttachmentScreen() {
+        val entry = currentEntry ?: return
+        AttachmentActivity.databaseService = databaseService
+        AttachmentActivity.bootstrapService = ServiceProvider.bootstrapService
+        AttachmentActivity.pendingEntryId = currentEntryId
+        AttachmentActivity.pendingEntryTitle = entry.optString("title", "")
+        AttachmentActivity.pendingEntryDate = entry.optString("date", "")
+        startActivity(android.content.Intent(this, AttachmentActivity::class.java))
     }
 
     private fun setupActions() {
@@ -652,7 +872,10 @@ class EntryViewerActivity : AppCompatActivity() {
 
     private fun formatTime(timeStr: String): String {
         return try {
-            val d = java.text.SimpleDateFormat("HH:mm", java.util.Locale.US).parse(timeStr) ?: return timeStr
+            val normalized = if (!timeStr.contains(":") && timeStr.length in 3..4) {
+                timeStr.padStart(4, '0').let { "${it.substring(0, 2)}:${it.substring(2)}" }
+            } else timeStr
+            val d = java.text.SimpleDateFormat("HH:mm", java.util.Locale.US).parse(normalized) ?: return timeStr
             java.text.SimpleDateFormat(timeFormat, java.util.Locale.US).format(d)
         } catch (_: Exception) { timeStr }
     }

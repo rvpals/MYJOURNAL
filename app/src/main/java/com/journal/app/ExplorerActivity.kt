@@ -1378,17 +1378,23 @@ class ExplorerActivity : AppCompatActivity() {
     }
 
     private fun buildTable(headers: List<String>, rows: List<List<String>>): LinearLayout {
+        val borderColor = ThemeManager.color(C.CARD_BORDER)
+        val altColor = ServiceProvider.bootstrapService?.get("alt_row_bg_color")?.let {
+            try { android.graphics.Color.parseColor(it) } catch (_: Exception) { null }
+        } ?: ThemeManager.color(C.INPUT_BG)
+
         val table = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
-            background = ContextCompat.getDrawable(this@ExplorerActivity, R.drawable.input_bg)
-            setPadding(dp(2), dp(2), dp(2), dp(2))
+            background = android.graphics.drawable.GradientDrawable().apply {
+                setStroke(dp(1), borderColor)
+                cornerRadius = dp(4).toFloat()
+            }
         }
 
         // Header row
         val headerRow = LinearLayout(this).apply {
             orientation = LinearLayout.HORIZONTAL
             setBackgroundColor(ThemeManager.color(C.CARD_BG))
-            setPadding(dp(4), dp(6), dp(4), dp(6))
         }
         for (h in headers) {
             headerRow.addView(TextView(this).apply {
@@ -1396,31 +1402,38 @@ class ExplorerActivity : AppCompatActivity() {
                 setTextColor(ThemeManager.color(C.ACCENT))
                 textSize = 11f
                 setTypeface(null, Typeface.BOLD)
-                setPadding(dp(6), dp(2), dp(6), dp(2))
+                setPadding(dp(6), dp(6), dp(6), dp(6))
                 minWidth = dp(60)
                 maxWidth = dp(160)
                 maxLines = 1
                 ellipsize = TextUtils.TruncateAt.END
+                background = android.graphics.drawable.GradientDrawable().apply {
+                    setStroke(dp(1), borderColor)
+                }
             })
         }
         table.addView(headerRow)
 
         // Data rows
-        for (row in rows) {
+        for ((rowIdx, row) in rows.withIndex()) {
+            val rowBg = if (rowIdx % 2 == 0) ThemeManager.color(C.CARD_BG) else altColor
             val dataRow = LinearLayout(this).apply {
                 orientation = LinearLayout.HORIZONTAL
-                setPadding(dp(4), dp(4), dp(4), dp(4))
+                setBackgroundColor(rowBg)
             }
             for (cell in row) {
                 dataRow.addView(TextView(this).apply {
                     text = cell
                     setTextColor(ThemeManager.color(C.TEXT))
                     textSize = 11f
-                    setPadding(dp(6), dp(2), dp(6), dp(2))
+                    setPadding(dp(6), dp(4), dp(6), dp(4))
                     minWidth = dp(60)
                     maxWidth = dp(160)
                     maxLines = 2
                     ellipsize = TextUtils.TruncateAt.END
+                    background = android.graphics.drawable.GradientDrawable().apply {
+                        setStroke(dp(1), borderColor)
+                    }
                 })
             }
             table.addView(dataRow)
@@ -1430,16 +1443,22 @@ class ExplorerActivity : AppCompatActivity() {
     }
 
     private fun buildClickableTable(headers: List<String>, rows: List<Pair<Int, List<String>>>, onRowClick: (Int) -> Unit): LinearLayout {
+        val borderColor = ThemeManager.color(C.CARD_BORDER)
+        val altColor = ServiceProvider.bootstrapService?.get("alt_row_bg_color")?.let {
+            try { android.graphics.Color.parseColor(it) } catch (_: Exception) { null }
+        } ?: ThemeManager.color(C.INPUT_BG)
+
         val table = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
-            background = ContextCompat.getDrawable(this@ExplorerActivity, R.drawable.input_bg)
-            setPadding(dp(2), dp(2), dp(2), dp(2))
+            background = android.graphics.drawable.GradientDrawable().apply {
+                setStroke(dp(1), borderColor)
+                cornerRadius = dp(4).toFloat()
+            }
         }
 
         val headerRow = LinearLayout(this).apply {
             orientation = LinearLayout.HORIZONTAL
             setBackgroundColor(ThemeManager.color(C.CARD_BG))
-            setPadding(dp(4), dp(6), dp(4), dp(6))
         }
         for (h in headers) {
             headerRow.addView(TextView(this).apply {
@@ -1447,22 +1466,27 @@ class ExplorerActivity : AppCompatActivity() {
                 setTextColor(ThemeManager.color(C.ACCENT))
                 textSize = 11f
                 setTypeface(null, Typeface.BOLD)
-                setPadding(dp(6), dp(2), dp(6), dp(2))
+                setPadding(dp(6), dp(6), dp(6), dp(6))
                 minWidth = dp(60)
                 maxWidth = dp(160)
                 maxLines = 1
                 ellipsize = TextUtils.TruncateAt.END
+                background = android.graphics.drawable.GradientDrawable().apply {
+                    setStroke(dp(1), borderColor)
+                }
             })
         }
         table.addView(headerRow)
 
+        var rowCounter = 0
         for ((idx, rowData) in rows) {
+            val rowBg = if (rowCounter % 2 == 0) ThemeManager.color(C.CARD_BG) else altColor
+            rowCounter++
             val dataRow = LinearLayout(this).apply {
                 orientation = LinearLayout.HORIZONTAL
-                setPadding(dp(4), dp(4), dp(4), dp(4))
+                setBackgroundColor(rowBg)
                 isClickable = true
                 isFocusable = true
-                background = ContextCompat.getDrawable(this@ExplorerActivity, R.drawable.entry_row_bg)
                 setOnClickListener { onRowClick(idx) }
             }
             for (cell in rowData) {
@@ -1470,11 +1494,14 @@ class ExplorerActivity : AppCompatActivity() {
                     text = cell
                     setTextColor(ThemeManager.color(C.TEXT))
                     textSize = 11f
-                    setPadding(dp(6), dp(2), dp(6), dp(2))
+                    setPadding(dp(6), dp(4), dp(6), dp(4))
                     minWidth = dp(60)
                     maxWidth = dp(160)
                     maxLines = 2
                     ellipsize = TextUtils.TruncateAt.END
+                    background = android.graphics.drawable.GradientDrawable().apply {
+                        setStroke(dp(1), borderColor)
+                    }
                 })
             }
             table.addView(dataRow)

@@ -493,6 +493,20 @@ summary: "Remaining backlog, test checklist, version-by-version completion histo
 - [x] Shared `setupCollapsibleHeader()` helper in DashboardActivity for consistent collapsible behavior
 - [x] Fix: Dashboard not refreshing after entry save/delete — `EntryFormActivity` now sets `DashboardActivity.needsRefresh = true` in both `saveEntry()` and `confirmDelete()`
 
+### v2.0.0 (2026-05-06, file attachments + UI improvements)
+- [x] File attachment system: new `attachments` table (id, filename, hash, size, dtAdded, dtUpdated, link_entry_id FK)
+- [x] AttachmentActivity: new screen for managing file attachments per entry — Add Files, Save (creates zip with SHA-256 hash), Download Zip, View Entry buttons; file grid with per-file delete; edit renames old zip, creates new, deletes old on success
+- [x] Settings > Data tab: "Application Data Path" and "Attachments Path" folder pickers via ACTION_OPEN_DOCUMENT_TREE with persistable URI permissions
+- [x] EntryViewerActivity: Entry/Attachments tab bar; Attachments tab lists zip contents, tap to extract and open via FileProvider; Edit and Delete Zip buttons
+- [x] EntryFormActivity: 📎 attachment button in navbar for existing entries opens AttachmentActivity
+- [x] Database schema version 3 with upgrade migration
+- [x] FileProvider updated with cache-path for extracted attachment files
+- [x] Collapsible pre-fill template panel on dashboard with full-width shortcut buttons
+- [x] 3D shadow styling on all collapsible dashboard panels (LayerDrawable shadow + elevation)
+- [x] SQL Explorer result grids: visible row/column borders (CARD_BORDER) and alternating row colors
+- [x] Category icon resize: proportional scaling (preserves aspect ratio) on save and display (FIT_CENTER)
+- [x] Fix: Entry viewer time format — handles stored times without colon (e.g., "121" → "01:21")
+
 ### v1.9.0 (2026-05-05, dashboard template shortcuts + ranked panel fix)
 - [x] Pre-fill template dashboard shortcuts: "Create a dashboard shortcut" checkbox in template editor; templates with shortcut enabled appear as small buttons in a new dashboard panel; clicking opens new entry with template auto-applied
 - [x] Dashboard components increased from 11 to 12 (added Pre-fill Templates panel)

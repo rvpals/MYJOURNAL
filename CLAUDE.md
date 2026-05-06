@@ -13,9 +13,9 @@ summary: "Project architecture reference — directory structure, tech stack, da
 
 ## Overview
 
-Fully native Android encrypted journal app. All 14 screens are native Kotlin activities. Services (crypto, database, bootstrap, weather) are managed by a `ServiceProvider` singleton. All data stored locally in AES-256-GCM encrypted SQLCipher database.
+Fully native Android encrypted journal app. All 15 screens are native Kotlin activities. Services (crypto, database, bootstrap, weather) are managed by a `ServiceProvider` singleton. All data stored locally in AES-256-GCM encrypted SQLCipher database.
 
-**App Name:** My Journal | **Version:** 1.9.1 | **Package:** com.journal.app | **Min SDK:** 24 | **Target SDK:** 34
+**App Name:** My Journal | **Version:** 2.0.0 | **Package:** com.journal.app | **Min SDK:** 24 | **Target SDK:** 34
 
 ## Project Structure
 
@@ -24,8 +24,8 @@ MYJOURNAL/
 ├── app/
 │   ├── build.gradle                # Android build config (compileSdk 34, minSdk 24)
 │   ├── src/main/
-│   │   ├── AndroidManifest.xml     # 14 activities, permissions (internet, location, camera, biometric)
-│   │   ├── java/com/journal/app/    # All Kotlin sources (21 files)
+│   │   ├── AndroidManifest.xml     # 15 activities, permissions (internet, location, camera, biometric)
+│   │   ├── java/com/journal/app/    # All Kotlin sources (22 files)
 │   │   │   ├── LoginActivity.kt         # Entry point: journal select, password, biometric login
 │   │   │   ├── DashboardActivity.kt     # Native dashboard (stats, ranked lists, pinned/recent, widgets, hamburger menu)
 │   │   │   ├── CalendarActivity.kt      # Native calendar view
@@ -40,6 +40,7 @@ MYJOURNAL/
 │   │   │   ├── WidgetEditorActivity.kt  # Native widget editor (header/filters/functions tabs, preview)
 │   │   │   ├── CustomViewEditorActivity.kt # Native custom view editor (conditions, groupBy, orderBy, display)
 │   │   │   ├── CsvMappingActivity.kt    # Native CSV import mapping screen (file picker, test preview, result grid)
+│   │   │   ├── AttachmentActivity.kt   # Native file attachment screen (add/save/download zip, file grid, entry link)
 │   │   │   ├── ServiceProvider.kt       # Singleton service holder (replaces old MainActivity.instance)
 │   │   │   ├── DashboardDataBuilder.kt  # Computes dashboard JSON from DatabaseService (stats, streaks, ranked lists, widgets, today in history)
 │   │   │   ├── BootstrapService.kt      # SharedPreferences wrapper
@@ -90,6 +91,7 @@ Output: `app/build/outputs/apk/debug/app-debug.apk`
 **widgets** — id (PK), name, description, bgColor, icon, filters (JSON), functions (JSON), enabledInDashboard, sortOrder, dtCreated, dtUpdated
 **inspiration** — id (PK, autoincrement), quote (TEXT), source (TEXT)
 **sql_library** — id (PK, autoincrement), name (TEXT), description (TEXT), sql_statement (TEXT), dtCreated, dtUpdated
+**attachments** — id (PK), filename, hash (SHA-256), size, dtAdded, dtUpdated, link_entry_id (FK -> entries)
 **settings** — key (PK), value
 **schema_version** — version (INT)
 
@@ -153,3 +155,6 @@ Light, Dark, Ocean, Midnight, Forest, Amethyst, Aurora, Lavender, Frost, Navy, S
 - **Collapsible Prefs tab sections** — Preferences, Date Time Format, Default Entry List Order, Display & Appearance, GPS Weather sections are collapsible panels in Prefs tab; state persisted in BootstrapService
 - **About screen "What's New"** — Button opens AlertDialog with full changelog history
 - **Daily Inspiration decorative panel** — Double accent border with layered insets, 3D drop shadow via LayerDrawable + elevation
+- **File attachments** — AttachmentActivity manages file attachments per entry; files zipped with SHA-256 hash; stored in user-configured attachments folder (SAF DocumentFile); accessible from EntryViewer (Attachments tab) and EntryForm (📎 button)
+- **Attachment storage paths** — `app_data_path` and `attachments_path` settings in BootstrapService; folder selected via `ACTION_OPEN_DOCUMENT_TREE` with persistable URI permissions
+- **EntryViewer tabs** — Entry/Attachments tab bar; Attachments tab lists zip contents, tap to extract and open via FileProvider, Delete Zip removes record + file

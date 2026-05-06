@@ -97,13 +97,13 @@ summary: "Known bugs, platform limitations, fixed issues, and architectural note
 
 ### Fully Native Architecture (2026-04-28+)
 
-- All 14 screens are Kotlin activities. No WebView usage.
+- All 15 screens are Kotlin activities. No WebView usage.
 - **ServiceProvider singleton**: Holds CryptoService, BootstrapService, WeatherService, DatabaseService. Initialized in LoginActivity, accessed by all activities.
 - **ThemeManager singleton**: Runtime theme system with 12 color maps. `ThemeManager.color(C.*)` replaces static XML resources. `applyToActivity()` recolors view tree and schedules typeface application. `fontScaledContext()` provides scaled context for `attachBaseContext`. Theme/font changes detected via `themeVersion` counter.
 - **DashboardDataBuilder**: Computes dashboard JSON natively from DatabaseService.
 - **Login flow**: LoginActivity -> ServiceProvider.init() -> DB open -> ThemeManager.init() -> DashboardDataBuilder.build() -> DashboardActivity.
-- **21 Kotlin source files**: 14 activities + 4 services + ServiceProvider + DashboardDataBuilder + ThemeManager.
-- **Database tables**: entries, images, categories, tags, icons, widgets, inspiration, sql_library, settings, schema_version.
+- **22 Kotlin source files**: 15 activities + 4 services + ServiceProvider + DashboardDataBuilder + ThemeManager.
+- **Database tables**: entries, images, categories, tags, icons, widgets, inspiration, sql_library, attachments, settings, schema_version.
 
 ### UI Patterns (2026-04-29)
 

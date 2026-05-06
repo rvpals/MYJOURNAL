@@ -88,6 +88,18 @@ class AboutActivity : AppCompatActivity() {
     }
 
     private fun buildChangelog(): String = """
+v2.0.0 (2026-05-06)
+• File attachments — attach any files to entries as zip archives
+• New Attachment screen with Add/Save/Download/View Entry buttons
+• Configurable storage paths (app data + attachments) in Settings > Data
+• Entry Viewer: new Attachments tab (view/open/delete zip contents)
+• Entry Form: 📎 button to manage attachments
+• 3D shadow styling on all collapsible dashboard panels
+• SQL Explorer grids: visible cell borders + alternating row colors
+• Category icons: aspect-ratio-preserving resize on save
+• Collapsible pre-fill template panel with full-width buttons
+• Fix: time display without colon (e.g., "121" now shows "1:21 AM")
+
 v1.9.0 (2026-05-05)
 • Dashboard template shortcuts — one-tap new entry with pre-fill
 • Pre-fill template category picker (multi-select dialog)

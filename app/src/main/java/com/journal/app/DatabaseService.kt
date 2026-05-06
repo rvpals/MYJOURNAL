@@ -12,7 +12,7 @@ class DatabaseService(private val context: Context) {
 
     companion object {
         private const val TAG = "DatabaseService"
-        private const val SCHEMA_VERSION = 2
+        private const val SCHEMA_VERSION = 3
         private const val DB_VERSION = 1
     }
 
@@ -132,6 +132,19 @@ class DatabaseService(private val context: Context) {
         """)
         d.execSQL("CREATE TABLE IF NOT EXISTS inspiration (id INTEGER PRIMARY KEY AUTOINCREMENT, quote TEXT NOT NULL, source TEXT DEFAULT '')")
         d.execSQL("CREATE TABLE IF NOT EXISTS sql_library (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL, description TEXT DEFAULT '', sql_statement TEXT NOT NULL, dtCreated TEXT, dtUpdated TEXT)")
+        d.execSQL("""
+            CREATE TABLE IF NOT EXISTS attachments (
+                id TEXT PRIMARY KEY,
+                filename TEXT NOT NULL,
+                hash TEXT DEFAULT '',
+                size INTEGER DEFAULT 0,
+                dtAdded TEXT,
+                dtUpdated TEXT,
+                link_entry_id TEXT,
+                FOREIGN KEY (link_entry_id) REFERENCES entries(id) ON DELETE CASCADE
+            )
+        """)
+        d.execSQL("CREATE INDEX IF NOT EXISTS idx_attachments_entry ON attachments(link_entry_id)")
         d.execSQL("CREATE TABLE IF NOT EXISTS schema_version (version INTEGER PRIMARY KEY)")
         d.execSQL("INSERT OR REPLACE INTO schema_version VALUES ($SCHEMA_VERSION)")
     }
@@ -153,6 +166,19 @@ class DatabaseService(private val context: Context) {
         """)
         d.execSQL("CREATE TABLE IF NOT EXISTS inspiration (id INTEGER PRIMARY KEY AUTOINCREMENT, quote TEXT NOT NULL, source TEXT DEFAULT '')")
         d.execSQL("CREATE TABLE IF NOT EXISTS sql_library (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL, description TEXT DEFAULT '', sql_statement TEXT NOT NULL, dtCreated TEXT, dtUpdated TEXT)")
+        d.execSQL("""
+            CREATE TABLE IF NOT EXISTS attachments (
+                id TEXT PRIMARY KEY,
+                filename TEXT NOT NULL,
+                hash TEXT DEFAULT '',
+                size INTEGER DEFAULT 0,
+                dtAdded TEXT,
+                dtUpdated TEXT,
+                link_entry_id TEXT,
+                FOREIGN KEY (link_entry_id) REFERENCES entries(id) ON DELETE CASCADE
+            )
+        """)
+        d.execSQL("CREATE INDEX IF NOT EXISTS idx_attachments_entry ON attachments(link_entry_id)")
     }
 
     private fun insertDefaults() {
@@ -853,6 +879,66 @@ class DatabaseService(private val context: Context) {
             result.put(obj)
         }
         return result.toString()
+    }
+
+    // ========== Attachments ==========
+
+    fun getAttachmentsByEntry(entryId: String): String {
+        val d = db ?: return "[]"
+        val arr = JSONArray()
+        val cursor = d.rawQuery("SELECT id, filename, hash, size, dtAdded, dtUpdated, link_entry_id FROM attachments WHERE link_entry_id = ?", arrayOf(entryId))
+        while (cursor.moveToNext()) {
+            arr.put(JSONObject().apply {
+                put("id", cursor.getString(0))
+                put("filename", cursor.getString(1) ?: "")
+                put("hash", cursor.getString(2) ?: "")
+                put("size", cursor.getLong(3))
+                put("dtAdded", cursor.getString(4) ?: "")
+                put("dtUpdated", cursor.getString(5) ?: "")
+                put("link_entry_id", cursor.getString(6) ?: "")
+            })
+        }
+        cursor.close()
+        return arr.toString()
+    }
+
+    fun getAttachmentById(id: String): String {
+        val d = db ?: return "{}"
+        val cursor = d.rawQuery("SELECT id, filename, hash, size, dtAdded, dtUpdated, link_entry_id FROM attachments WHERE id = ?", arrayOf(id))
+        val result = if (cursor.moveToFirst()) {
+            JSONObject().apply {
+                put("id", cursor.getString(0))
+                put("filename", cursor.getString(1) ?: "")
+                put("hash", cursor.getString(2) ?: "")
+                put("size", cursor.getLong(3))
+                put("dtAdded", cursor.getString(4) ?: "")
+                put("dtUpdated", cursor.getString(5) ?: "")
+                put("link_entry_id", cursor.getString(6) ?: "")
+            }.toString()
+        } else "{}"
+        cursor.close()
+        return result
+    }
+
+    fun saveAttachment(id: String, filename: String, hash: String, size: Long, entryId: String) {
+        val d = db ?: return
+        val now = java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", java.util.Locale.US).format(java.util.Date())
+        d.execSQL("""
+            INSERT OR REPLACE INTO attachments (id, filename, hash, size, dtAdded, dtUpdated, link_entry_id)
+            VALUES (?, ?, ?, ?, ?, ?, ?)
+        """, arrayOf(id, filename, hash, size, now, now, entryId))
+    }
+
+    fun updateAttachment(id: String, filename: String, hash: String, size: Long) {
+        val d = db ?: return
+        val now = java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", java.util.Locale.US).format(java.util.Date())
+        d.execSQL("UPDATE attachments SET filename = ?, hash = ?, size = ?, dtUpdated = ? WHERE id = ?",
+            arrayOf(filename, hash, size, now, id))
+    }
+
+    fun deleteAttachment(id: String) {
+        val d = db ?: return
+        d.execSQL("DELETE FROM attachments WHERE id = ?", arrayOf(id))
     }
 
     // ========== Helpers ==========

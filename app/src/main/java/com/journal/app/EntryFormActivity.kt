@@ -161,6 +161,9 @@ class EntryFormActivity : AppCompatActivity() {
         if (!isNew) {
             deleteBtn.visibility = View.VISIBLE
             deleteBtn.setOnClickListener { confirmDelete() }
+            val attachBtn = findViewById<Button>(R.id.btn_attach)
+            attachBtn.visibility = View.VISIBLE
+            attachBtn.setOnClickListener { openAttachments() }
         }
 
         findViewById<Button>(R.id.btn_back).setOnClickListener { confirmCancel() }
@@ -1239,6 +1242,15 @@ class EntryFormActivity : AppCompatActivity() {
         DashboardActivity.needsRefresh = true
         setResult(RESULT_OK)
         finish()
+    }
+
+    private fun openAttachments() {
+        AttachmentActivity.databaseService = ServiceProvider.databaseService
+        AttachmentActivity.bootstrapService = ServiceProvider.bootstrapService
+        AttachmentActivity.pendingEntryId = entryId
+        AttachmentActivity.pendingEntryTitle = if (::titleInput.isInitialized) titleInput.text.toString() else ""
+        AttachmentActivity.pendingEntryDate = if (::dateInput.isInitialized) dateInput.text.toString() else ""
+        startActivity(Intent(this, AttachmentActivity::class.java))
     }
 
     private fun confirmDelete() {

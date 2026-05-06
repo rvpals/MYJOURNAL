@@ -39,8 +39,41 @@
             android:ellipsize="end" />
     </LinearLayout>
 
+    <!-- Tab Bar -->
+    <LinearLayout
+        android:id="@+id/ev_tab_bar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:background="@color/login_card_bg"
+        android:paddingHorizontal="12dp"
+        android:paddingVertical="4dp">
+
+        <Button
+            android:id="@+id/ev_tab_entry"
+            android:layout_width="0dp"
+            android:layout_height="36dp"
+            android:layout_weight="1"
+            android:text="Entry"
+            android:textSize="12sp"
+            android:textAllCaps="false"
+            android:background="@drawable/btn_accent"
+            android:layout_marginEnd="4dp" />
+
+        <Button
+            android:id="@+id/ev_tab_attachments"
+            android:layout_width="0dp"
+            android:layout_height="36dp"
+            android:layout_weight="1"
+            android:text="Attachments"
+            android:textSize="12sp"
+            android:textAllCaps="false"
+            android:background="@drawable/btn_secondary" />
+    </LinearLayout>
+
     <!-- Scrollable Content -->
     <ScrollView
+        android:id="@+id/ev_entry_scroll"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"
@@ -224,6 +257,23 @@
             </LinearLayout>
 
         </LinearLayout>
+    </ScrollView>
+
+    <!-- Attachments Tab Content -->
+    <ScrollView
+        android:id="@+id/ev_attachments_scroll"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:fillViewport="true"
+        android:visibility="gone">
+
+        <LinearLayout
+            android:id="@+id/ev_attachments_container"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="12dp" />
     </ScrollView>
 
     <!-- Bottom Bar: Navigation + Actions -->

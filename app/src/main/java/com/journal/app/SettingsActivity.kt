@@ -39,6 +39,7 @@ class SettingsActivity : AppCompatActivity() {
 
         private const val ICON_PICK = 2002
         private const val CSV_PICK = 2003
+        private const val FOLDER_PICK = 2004
     }
 
     private lateinit var db: DatabaseService
@@ -51,6 +52,8 @@ class SettingsActivity : AppCompatActivity() {
     private var activeTab = "prefs"
 
     private var iconPickerTarget: Pair<String, String>? = null
+    private var folderPickerSettingKey: String? = null
+    private var folderPickerDisplay: TextView? = null
 
     override fun attachBaseContext(newBase: android.content.Context) {
         super.attachBaseContext(ThemeManager.fontScaledContext(newBase))
@@ -2518,6 +2521,55 @@ class SettingsActivity : AppCompatActivity() {
     private fun buildDataTab() {
         buildSectionHeader("💾  Data & Security")
 
+        // Storage Paths
+        buildLabel("Application Data Path")
+        val dataPathDisplay = TextView(this).apply {
+            text = bs.get("app_data_path") ?: "(Default: internal app storage)"
+            setTextColor(ThemeManager.color(C.TEXT_SECONDARY))
+            textSize = 12f
+            setPadding(dp(4), dp(2), dp(4), dp(2))
+            layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT
+            ).apply { bottomMargin = dp(4) }
+        }
+        contentContainer.addView(dataPathDisplay)
+        contentContainer.addView(Button(this).apply {
+            text = "Select Data Path"
+            textSize = 13f
+            isAllCaps = false
+            setTextColor(ThemeManager.color(C.TEXT))
+            background = ContextCompat.getDrawable(this@SettingsActivity, R.drawable.btn_secondary)
+            layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT, dp(40)
+            ).apply { bottomMargin = dp(4) }
+            setOnClickListener { pickFolderForSetting("app_data_path", dataPathDisplay) }
+        })
+
+        buildLabel("Attachments Path")
+        val attachPathDisplay = TextView(this).apply {
+            text = bs.get("attachments_path") ?: "(Not set — please select a folder)"
+            setTextColor(ThemeManager.color(C.TEXT_SECONDARY))
+            textSize = 12f
+            setPadding(dp(4), dp(2), dp(4), dp(2))
+            layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT
+            ).apply { bottomMargin = dp(4) }
+        }
+        contentContainer.addView(attachPathDisplay)
+        contentContainer.addView(Button(this).apply {
+            text = "Select Attachments Path"
+            textSize = 13f
+            isAllCaps = false
+            setTextColor(ThemeManager.color(C.TEXT))
+            background = ContextCompat.getDrawable(this@SettingsActivity, R.drawable.btn_secondary)
+            layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT, dp(40)
+            ).apply { bottomMargin = dp(4) }
+            setOnClickListener { pickFolderForSetting("attachments_path", attachPathDisplay) }
+        })
+
+        buildSpacer()
+
         // Export
         buildLabel("Export")
         val exportOptions = listOf(
@@ -3298,7 +3350,28 @@ class SettingsActivity : AppCompatActivity() {
         when (requestCode) {
             ICON_PICK -> handleIconResult(data.data!!)
             CSV_PICK -> handleCsvImport(data.data!!)
+            FOLDER_PICK -> handleFolderResult(data.data!!)
         }
+    }
+
+    @Suppress("DEPRECATION")
+    private fun pickFolderForSetting(settingKey: String, display: TextView) {
+        folderPickerSettingKey = settingKey
+        folderPickerDisplay = display
+        val intent = Intent(Intent.ACTION_OPEN_DOCUMENT_TREE)
+        startActivityForResult(intent, FOLDER_PICK)
+    }
+
+    private fun handleFolderResult(uri: Uri) {
+        val key = folderPickerSettingKey ?: return
+        folderPickerSettingKey = null
+        contentResolver.takePersistableUriPermission(uri,
+            Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION)
+        val path = uri.toString()
+        bs.set(key, path)
+        folderPickerDisplay?.text = path
+        folderPickerDisplay = null
+        Toast.makeText(this, "Path saved", Toast.LENGTH_SHORT).show()
     }
 
     private fun handleIconResult(uri: Uri) {
@@ -3310,15 +3383,13 @@ class SettingsActivity : AppCompatActivity() {
             inputStream.close()
             if (bitmap == null) return
 
-            val sd = 64
-            val small = android.graphics.Bitmap.createScaledBitmap(bitmap, sd, sd, true)
+            val small = scaleToFit(bitmap, 64)
             val smallStream = java.io.ByteArrayOutputStream()
             small.compress(android.graphics.Bitmap.CompressFormat.PNG, 100, smallStream)
             val smallB64 = "data:image/png;base64," + Base64.encodeToString(smallStream.toByteArray(), Base64.NO_WRAP)
             db.setIcon(target.first, target.second, smallB64)
 
-            val hd = 128
-            val large = android.graphics.Bitmap.createScaledBitmap(bitmap, hd, hd, true)
+            val large = scaleToFit(bitmap, 128)
             val largeStream = java.io.ByteArrayOutputStream()
             large.compress(android.graphics.Bitmap.CompressFormat.PNG, 100, largeStream)
             val largeB64 = "data:image/png;base64," + Base64.encodeToString(largeStream.toByteArray(), Base64.NO_WRAP)
@@ -3329,6 +3400,15 @@ class SettingsActivity : AppCompatActivity() {
         } catch (_: Exception) {
             Toast.makeText(this, "Failed to load icon", Toast.LENGTH_SHORT).show()
         }
+    }
+
+    private fun scaleToFit(bitmap: android.graphics.Bitmap, maxSize: Int): android.graphics.Bitmap {
+        val w = bitmap.width
+        val h = bitmap.height
+        val scale = minOf(maxSize.toFloat() / w, maxSize.toFloat() / h)
+        val newW = (w * scale).toInt().coerceAtLeast(1)
+        val newH = (h * scale).toInt().coerceAtLeast(1)
+        return android.graphics.Bitmap.createScaledBitmap(bitmap, newW, newH, true)
     }
 
     // ========== Icon Helpers ==========

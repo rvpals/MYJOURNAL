@@ -1,6 +1,6 @@
 # Database Table Structure
 
-**Engine:** SQLCipher 4.5.6 (encrypted SQLite via `net.zetetic:sqlcipher-android`) | **Schema Version:** 2
+**Engine:** SQLCipher 4.5.6 (encrypted SQLite via `net.zetetic:sqlcipher-android`) | **Schema Version:** 3
 
 ---
 
@@ -145,13 +145,32 @@ Key-value store for all application settings.
 
 ---
 
+### attachments
+
+File attachments linked to journal entries. Files stored as zip archives in user-configured folder.
+
+| Column | Type | Constraints | Description |
+|--------|------|-------------|-------------|
+| id | TEXT | PRIMARY KEY | Unique attachment identifier (generated via `generateId()`) |
+| filename | TEXT | NOT NULL | Zip filename (typically `<id>.zip`) |
+| hash | TEXT | DEFAULT '' | SHA-256 hash of zip contents for integrity verification |
+| size | INTEGER | DEFAULT 0 | Total uncompressed size of files in bytes |
+| dtAdded | TEXT | | ISO 8601 creation timestamp |
+| dtUpdated | TEXT | | ISO 8601 last-updated timestamp |
+| link_entry_id | TEXT | FK -> entries(id) ON DELETE CASCADE | Parent entry |
+
+**Indexes:**
+- `idx_attachments_entry` on `link_entry_id`
+
+---
+
 ### schema_version
 
 Tracks the database schema version for migrations.
 
 | Column | Type | Constraints | Description |
 |--------|------|-------------|-------------|
-| version | INTEGER | PRIMARY KEY | Current schema version (currently 2) |
+| version | INTEGER | PRIMARY KEY | Current schema version (currently 3) |
 
 ---
 
@@ -160,6 +179,9 @@ Tracks the database schema version for migrations.
 ```
 entries (1) ------< images (many)
    |                   FK: images.entryId -> entries.id (CASCADE DELETE)
+   |
+   |----------< attachments (many)
+   |                   FK: attachments.link_entry_id -> entries.id (CASCADE DELETE)
    |
    |-- .categories[]  ...> categories.name     (logical, JSON array)
    |-- .tags[]        ...> tags.name           (logical, JSON array)
@@ -170,6 +192,7 @@ icons(type, name) ...> categories.name         (logical, type='category'/'catego
 widgets                (standalone, references entries via filter criteria at runtime)
 inspiration            (standalone, quotes for Daily Inspiration panel)
 sql_library            (standalone, saved SQL queries for Explorer)
+attachments            (linked to entries via FK, zip files stored externally in attachments_path)
 settings               (standalone key-value store)
 schema_version         (standalone, single row)
 ```
