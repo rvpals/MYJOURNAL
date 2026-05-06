@@ -267,6 +267,32 @@
                 android:visibility="gone"
                 android:layout_marginBottom="12dp" />
 
+            <!-- Pre-fill Template Shortcuts -->
+            <LinearLayout
+                android:id="@+id/panel_prefill_shortcuts"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:layout_marginBottom="12dp"
+                android:visibility="gone">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="📋 Pre-fill Templates"
+                    android:textColor="@color/login_text"
+                    android:textSize="15sp"
+                    android:textStyle="bold"
+                    android:layout_marginBottom="8dp" />
+
+                <LinearLayout
+                    android:id="@+id/prefill_shortcuts_list"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="start" />
+            </LinearLayout>
+
             <!-- Widgets Panel -->
             <LinearLayout
                 android:id="@+id/panel_widgets"

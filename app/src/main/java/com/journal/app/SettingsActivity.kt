@@ -1132,6 +1132,15 @@ class SettingsActivity : AppCompatActivity() {
         }
         container.addView(autoTimeCb)
 
+        val dashShortcutCb = CheckBox(this).apply {
+            text = "Create a dashboard shortcut"
+            isChecked = tpl.optBoolean("dashboardShortcut", false)
+            setTextColor(ThemeManager.color(C.TEXT))
+            textSize = 14f
+            buttonTintList = ThemeManager.colorStateList(C.ACCENT)
+        }
+        container.addView(dashShortcutCb)
+
         val titleInput = makeDialogInput("Default title", tpl.optString("title"))
         container.addView(titleInput)
 
@@ -1159,6 +1168,7 @@ class SettingsActivity : AppCompatActivity() {
                 tpl.put("description", descInput.text.toString().trim())
                 tpl.put("autoDate", autoDateCb.isChecked)
                 tpl.put("autoTime", autoTimeCb.isChecked)
+                tpl.put("dashboardShortcut", dashShortcutCb.isChecked)
                 tpl.put("title", titleInput.text.toString())
                 tpl.put("content", contentInput.text.toString())
                 val catStr = categoriesInput.text.toString()
@@ -3586,6 +3596,7 @@ class SettingsActivity : AppCompatActivity() {
         "weather_streak" to "Weather & Streak",
         "stats" to "Stats Grid",
         "quick_actions" to "Quick Actions",
+        "prefill_shortcuts" to "Pre-fill Templates",
         "widgets" to "Widgets",
         "pinned" to "Pinned Entries",
         "recent" to "Recent Entries",

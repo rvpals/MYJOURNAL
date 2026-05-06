@@ -82,7 +82,7 @@ summary: "Remaining backlog, test checklist, version-by-version completion histo
 - [x] **Dashboard weather** — Inset 3D styling, click to navigate to Settings > Weather Location (verified 2026-04-06)
 - [x] **Quick actions** — Pinned custom views on dashboard (verified 2026-04-06)
 - [ ] **Today in History** — Verify panel shows entries from same month/day in past years, displays title + 20-char content preview + "N year(s) ago" badge, hidden when no matches, entries clickable to viewer
-- [ ] **Dashboard component settings** — Toggle components on/off in Settings > Dashboard (11 components including Today in History, Daily Inspiration), verify hidden components disappear from dashboard
+- [ ] **Dashboard component settings** — Toggle components on/off in Settings > Dashboard (12 components including Pre-fill Templates, Today in History, Daily Inspiration), verify hidden components disappear from dashboard
 - [ ] **Dashboard component reorder** — Reorder components via arrows in Settings > Dashboard, verify new order on dashboard
 - [ ] **Daily Inspiration panel** — Shows random quote from inspiration table, refresh button loads new quote, ✏️ edit button opens Settings > Metadata, empty state shows prompt
 - [ ] **Top Categories card view** — Toggle ☰/▦ icon switches between list and card view, card view shows category icons in 3-column grid
@@ -492,6 +492,11 @@ summary: "Remaining backlog, test checklist, version-by-version completion histo
 - [x] Collapsible dashboard panels: Recent Entries, Top Tags, Top Categories, Top Places, Daily Inspiration — ▶/▼ toggle headers with collapse state persisted in BootstrapService (`dash_*_collapsed` keys)
 - [x] Shared `setupCollapsibleHeader()` helper in DashboardActivity for consistent collapsible behavior
 - [x] Fix: Dashboard not refreshing after entry save/delete — `EntryFormActivity` now sets `DashboardActivity.needsRefresh = true` in both `saveEntry()` and `confirmDelete()`
+
+### v1.9.0 (2026-05-05, dashboard template shortcuts + ranked panel fix)
+- [x] Pre-fill template dashboard shortcuts: "Create a dashboard shortcut" checkbox in template editor; templates with shortcut enabled appear as small buttons in a new dashboard panel; clicking opens new entry with template auto-applied
+- [x] Dashboard components increased from 11 to 12 (added Pre-fill Templates panel)
+- [x] Fix: Dashboard ranked panel "+N more" links now expand inline instead of navigating to entry list
 
 ### v1.8.2 (2026-05-04, categories in pre-fill templates + title fix)
 - [x] Pre-fill template editor: added Categories input field (comma-separated) alongside existing Tags field

@@ -65,6 +65,7 @@ class DashboardActivity : AppCompatActivity() {
         populateWeatherStreak()
         populateStats()
         populateQuickActions()
+        populatePrefillShortcuts()
         populateWidgets()
         populatePinnedEntries()
         populateRecentEntries()
@@ -86,6 +87,7 @@ class DashboardActivity : AppCompatActivity() {
             "weather_streak" to findViewById<View>(R.id.weather_streak_row),
             "stats" to findViewById<View>(R.id.stats_container),
             "quick_actions" to findViewById<View>(R.id.quick_actions),
+            "prefill_shortcuts" to findViewById<View>(R.id.panel_prefill_shortcuts),
             "widgets" to findViewById<View>(R.id.panel_widgets),
             "pinned" to findViewById<View>(R.id.panel_pinned),
             "recent" to findViewById<View>(R.id.panel_recent),
@@ -97,7 +99,7 @@ class DashboardActivity : AppCompatActivity() {
         )
 
         val defaultOrder = listOf(
-            "weather_streak", "stats", "quick_actions", "widgets",
+            "weather_streak", "stats", "quick_actions", "prefill_shortcuts", "widgets",
             "pinned", "recent", "today_history", "tags", "categories", "places", "inspiration"
         )
 
@@ -284,6 +286,74 @@ class DashboardActivity : AppCompatActivity() {
             }
             container.addView(btn)
         }
+    }
+
+    // ========== Pre-fill Template Shortcuts ==========
+
+    private fun populatePrefillShortcuts() {
+        val panel = findViewById<LinearLayout>(R.id.panel_prefill_shortcuts)
+        val list = findViewById<LinearLayout>(R.id.prefill_shortcuts_list)
+
+        val db = ServiceProvider.databaseService ?: run { panel.visibility = View.GONE; return }
+        val settings = try { JSONObject(db.getSettings()) } catch (_: Exception) { panel.visibility = View.GONE; return }
+        val templates = settings.optJSONArray("entryTemplates") ?: run { panel.visibility = View.GONE; return }
+
+        val shortcuts = mutableListOf<JSONObject>()
+        for (i in 0 until templates.length()) {
+            val tpl = templates.optJSONObject(i) ?: continue
+            if (tpl.optBoolean("dashboardShortcut", false)) shortcuts.add(tpl)
+        }
+
+        if (shortcuts.isEmpty()) {
+            panel.visibility = View.GONE
+            return
+        }
+
+        panel.visibility = View.VISIBLE
+        list.removeAllViews()
+
+        val flowInner = LinearLayout(this).apply {
+            orientation = LinearLayout.HORIZONTAL
+            layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.WRAP_CONTENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            )
+        }
+
+        for (tpl in shortcuts) {
+            val name = tpl.optString("name", "")
+            val displayName = if (name.length > 15) name.substring(0, 15) + "…" else name
+            val tplId = tpl.optString("id", "")
+
+            val btn = Button(this).apply {
+                text = displayName
+                setTextColor(ThemeManager.color(C.TEXT))
+                setTextSize(TypedValue.COMPLEX_UNIT_SP, 11f)
+                background = ContextCompat.getDrawable(this@DashboardActivity, R.drawable.btn_secondary)
+                isAllCaps = false
+                setPadding(dp(10), dp(6), dp(10), dp(6))
+                layoutParams = LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.WRAP_CONTENT, dp(34)
+                ).apply { marginEnd = dp(6); bottomMargin = dp(4) }
+                setOnClickListener {
+                    EntryFormActivity.databaseService = ServiceProvider.databaseService
+                    EntryFormActivity.bootstrapService = ServiceProvider.bootstrapService
+                    EntryFormActivity.weatherService = ServiceProvider.weatherService
+                    EntryFormActivity.pendingTemplateId = tplId
+                    startActivity(Intent(this@DashboardActivity, EntryFormActivity::class.java))
+                }
+            }
+            flowInner.addView(btn)
+        }
+
+        val hScroll = android.widget.HorizontalScrollView(this).apply {
+            layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT
+            )
+            isHorizontalScrollBarEnabled = false
+            addView(flowInner)
+        }
+        list.addView(hScroll)
     }
 
     // ========== Widgets ==========
@@ -879,7 +949,16 @@ class DashboardActivity : AppCompatActivity() {
                     setTextColor(ThemeManager.color(C.ACCENT))
                     setTextSize(TypedValue.COMPLEX_UNIT_SP, 12f)
                     setPadding(dp(6), dp(6), dp(6), dp(2))
-                    setOnClickListener { openFilteredEntryList(null, null) }
+                    setOnClickListener {
+                        list.removeView(this)
+                        for (i in 10 until items.length()) {
+                            val item = items.optJSONObject(i) ?: continue
+                            val n = item.optString("name", "")
+                            val c = item.optInt("count", 0)
+                            val cl: String? = if (item.has("color")) item.optString("color") else null
+                            list.addView(createRankedRow(n, c, cl, i + 1, "categories"))
+                        }
+                    }
                 })
             }
         }
@@ -1023,7 +1102,16 @@ class DashboardActivity : AppCompatActivity() {
                 setTextColor(ThemeManager.color(C.ACCENT))
                 setTextSize(TypedValue.COMPLEX_UNIT_SP, 12f)
                 setPadding(dp(6), dp(6), dp(6), dp(2))
-                setOnClickListener { openFilteredEntryList(null, null) }
+                setOnClickListener {
+                    list.removeView(this)
+                    for (i in 10 until items.length()) {
+                        val item = items.optJSONObject(i) ?: continue
+                        val n = item.optString("name", "")
+                        val c = item.optInt("count", 0)
+                        val cl: String? = if (item.has("color")) item.optString("color") else null
+                        list.addView(createRankedRow(n, c, cl, i + 1, filterField))
+                    }
+                }
             }
             list.addView(more)
         }

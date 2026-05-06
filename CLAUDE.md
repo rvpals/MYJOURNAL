@@ -15,7 +15,7 @@ summary: "Project architecture reference — directory structure, tech stack, da
 
 Fully native Android encrypted journal app. All 14 screens are native Kotlin activities. Services (crypto, database, bootstrap, weather) are managed by a `ServiceProvider` singleton. All data stored locally in AES-256-GCM encrypted SQLCipher database.
 
-**App Name:** My Journal | **Version:** 1.8.2 | **Package:** com.journal.app | **Min SDK:** 24 | **Target SDK:** 34
+**App Name:** My Journal | **Version:** 1.9.0 | **Package:** com.journal.app | **Min SDK:** 24 | **Target SDK:** 34
 
 ## Project Structure
 
@@ -131,7 +131,7 @@ Light, Dark, Ocean, Midnight, Forest, Amethyst, Aurora, Lavender, Frost, Navy, S
 - **Encryption everywhere** — SQLCipher auto-encrypts DB files
 - **Bootstrap store** — all key-value storage uses BootstrapService (SharedPreferences wrapper)
 - **Large data to activities** — SearchActivity, CalendarActivity use static `companion object` holders for entry data (avoids TransactionTooLargeException)
-- **Dashboard component settings** — Settings > Dashboard tab allows toggling/reordering 11 components; stored in BootstrapService as `dashboard_components` JSON
+- **Dashboard component settings** — Settings > Dashboard tab allows toggling/reordering 12 components; stored in BootstrapService as `dashboard_components` JSON
 - **Dashboard auto-refresh** — `DashboardActivity.needsRefresh` static flag; set after erase all entries, CSV import completion, widget save/delete, category icon change, or entry save/delete; checked in `onResume()` to rebuild dashboard data
 - **DashboardActivity navigation** — hamburger menu (☰) in top navbar with PopupMenu (Entries, Calendar, Reports, Explorer, Settings, About); no bottom nav bar
 - **File exports** — `ServiceProvider.saveFileToDownloads()` via MediaStore scoped storage (API 29+)
@@ -147,6 +147,7 @@ Light, Dark, Ocean, Midnight, Forest, Amethyst, Aurora, Lavender, Frost, Navy, S
 - **Collapsible template sections** — Custom Views, Pre-fill Templates, and Report Templates in Templates tab are collapsible; state persisted in BootstrapService
 - **Collapsible template items** — Individual items within each template section (Custom Views, Pre-fill Templates, Report Templates) are collapsible panels with ▶/▼ toggle; header shows name + summary, body shows details and Edit/Delete buttons
 - **Pre-fill templates in entry form** — 📋 button in navbar (new entries only) opens picker dialog; applies template's auto-date, auto-time, title, content, tags, categories to the form
+- **Pre-fill template dashboard shortcuts** — Templates with "Create a dashboard shortcut" checkbox enabled appear as small buttons in a dedicated dashboard panel; clicking launches new entry with template auto-applied
 - **Search term highlighting** — SearchActivity highlights matching terms in title and content snippet using semi-transparent accent background spans
 - **Collapsible dashboard panels** — Recent Entries, Top Tags, Top Categories, Top Places, Daily Inspiration panels have ▶/▼ toggle headers; collapse state persisted in BootstrapService (`dash_*_collapsed` keys)
 - **Daily Inspiration decorative panel** — Double accent border with layered insets, 3D drop shadow via LayerDrawable + elevation

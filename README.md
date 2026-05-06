@@ -19,10 +19,10 @@ A fully native Kotlin Android app for keeping a personal journal with rich text 
 - **Biometric login** — Fingerprint/face unlock via AndroidX BiometricPrompt
 - **Image attachments** — Camera capture, gallery picker, base64 storage with thumbnails
 - **Weather tracking** — Open-Meteo API integration, GPS-based, optional auto-populate on new entry
-- **Dashboard** — Stats, pinned entries, search, ranked panels (collapsible), configurable widgets, Today in History, Daily Inspiration
+- **Dashboard** — Stats, pinned entries, search, ranked panels (collapsible with expand), configurable widgets, template shortcuts, Today in History, Daily Inspiration
 - **App font customization** — Font family (9 options) and size scale across all screens
 - **Custom views** — Saved filter/sort/group combinations, usable as filter presets in Entry List and Reports
-- **Pre-fill templates** — Auto-populate new entries with saved field defaults (date, time, title, content, tags, categories)
+- **Pre-fill templates** — Auto-populate new entries with saved field defaults (date, time, title, content, tags, categories); optional dashboard shortcuts for one-tap entry creation
 - **SQL Explorer** — Query builder, raw SQL, CSV and iCalendar export, SQL Library (save/load/edit/delete queries)
 - **Reports** — HTML (exports to browser), PDF (native PdfDocument), CSV
 - **Calendar view** — Monthly grid with entry dots, day selection

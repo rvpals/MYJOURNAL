@@ -43,6 +43,7 @@ class EntryFormActivity : AppCompatActivity() {
         @JvmStatic var bootstrapService: BootstrapService? = null
         @JvmStatic var weatherService: WeatherService? = null
         @JvmStatic var pendingEntryId: String? = null
+        @JvmStatic var pendingTemplateId: String? = null
     }
 
     private lateinit var db: DatabaseService
@@ -177,6 +178,18 @@ class EntryFormActivity : AppCompatActivity() {
 
         if (isNew && bs.get("auto_gps_weather") == "true") {
             autoPopulateGpsWeather()
+        }
+
+        val tplId = pendingTemplateId
+        pendingTemplateId = null
+        if (tplId != null && isNew) {
+            for (i in 0 until entryTemplates.length()) {
+                val tpl = entryTemplates.optJSONObject(i) ?: continue
+                if (tpl.optString("id") == tplId) {
+                    applyTemplate(tpl)
+                    break
+                }
+            }
         }
     }
 

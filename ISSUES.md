@@ -13,6 +13,10 @@ summary: "Known bugs, platform limitations, fixed issues, and architectural note
 
 ## Fixed Issues
 
+### 2026-05-05
+
+- **Dashboard ranked panel "+N more" not expanding (v1.9.0)** — "+N more" links in Top Tags, Top Categories, Top Places panels called `openFilteredEntryList(null, null)` instead of expanding inline. Fixed to remove the link and append remaining items directly to the list.
+
 ### 2026-05-04
 
 - **Pre-fill template not populating title field (v1.8.2)** — `applyTemplate()` called `showTab(activeTab)` which internally called `syncFormData()`, reading the old `titleInput.text` back into `titleValue` and overwriting what the template had just set. Replaced `showTab()` call with direct `contentContainer.removeAllViews()` + `buildMainTab()`/`buildMiscTab()` to skip the sync.
@@ -111,9 +115,9 @@ summary: "Known bugs, platform limitations, fixed issues, and architectural note
 - **EntryFormActivity**: 📋 template button (new entries only) opens pre-fill template picker; applies saved field defaults.
 - **SettingsActivity**: 7 tabs in 3-row grid (3 per row, equal-width) instead of horizontal scroll. Display tab for theme, app font (family + size), entry viewer font, and alternate row color.
 
-### Dashboard Components (11 total)
+### Dashboard Components (12 total)
 
-Weather/streak, Stats, Quick actions, Widgets, Pinned entries, Recent entries, Today in History, Top Tags, Top Categories, Top Places, Daily Inspiration. Configurable via Settings > Dashboard tab. Order/visibility stored in BootstrapService as `dashboard_components` JSON.
+Weather/streak, Stats, Quick actions, Pre-fill Templates, Widgets, Pinned entries, Recent entries, Today in History, Top Tags, Top Categories, Top Places, Daily Inspiration. Configurable via Settings > Dashboard tab. Order/visibility stored in BootstrapService as `dashboard_components` JSON.
 
 ### Dashboard Auto-Refresh
 
