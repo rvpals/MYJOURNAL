@@ -15,7 +15,7 @@ summary: "Project architecture reference — directory structure, tech stack, da
 
 Fully native Android encrypted journal app. All 15 screens are native Kotlin activities. Services (crypto, database, bootstrap, weather) are managed by a `ServiceProvider` singleton. All data stored locally in AES-256-GCM encrypted SQLCipher database.
 
-**App Name:** My Journal | **Version:** 2.1.0 | **Package:** com.journal.app | **Min SDK:** 24 | **Target SDK:** 34
+**App Name:** My Journal | **Version:** 2.2.0 | **Package:** com.journal.app | **Min SDK:** 24 | **Target SDK:** 34
 
 ## Project Structure
 
@@ -93,6 +93,7 @@ Output: `app/build/outputs/apk/debug/app-debug.apk`
 **inspiration** — id (PK, autoincrement), quote (TEXT), source (TEXT)
 **sql_library** — id (PK, autoincrement), name (TEXT), description (TEXT), sql_statement (TEXT), dtCreated, dtUpdated
 **attachments** — id (PK), filename, hash (SHA-256), size, dtAdded, dtUpdated, link_entry_id (FK -> entries)
+**draft_entries** — id (PK), date, time, title, content, categories (JSON), tags (JSON), placeName, locations (JSON), weather (JSON), pinned, locked, images_json (TEXT, full image data), dtCreated, dtUpdated
 **settings** — key (PK), value
 **schema_version** — version (INT)
 
@@ -163,3 +164,4 @@ Light, Dark, Ocean, Midnight, Forest, Amethyst, Aurora, Lavender, Frost, Navy, S
 - **Attachment icon in entry lists** — 📎 icon shown next to entries with attachments in Dashboard (Recent, Pinned, Today in History), Entry List, Search, Calendar; clickable to open AttachmentActivity
 - **DashboardCardComponent** — Reusable `DashboardCardComponent.kt` singleton builds 3D card views (gray drop shadow via LayerDrawable, rounded corners, highlight edge, accent pill badge for count); used by Top Categories card view, extensible to other grid panels
 - **Modern collapsible headers** — Dashboard collapsible panel headers styled with 3D LayerDrawable (gray shadow, rounded corners, highlight edge, elevation)
+- **Draft entries** — `draft_entries` table stores entries-in-progress; images stored inline as `images_json` TEXT column (not in `images` table); "Draft" button in entry form navbar for new entries; when editing a draft, "Save" updates draft and "Publish" moves to `entries` table and deletes draft; collapsible dashboard panel with Publish button and tap-to-edit; `dash_drafts_collapsed` key in BootstrapService

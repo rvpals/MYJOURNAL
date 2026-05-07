@@ -70,6 +70,12 @@ object DashboardDataBuilder {
         result.put("theme", theme)
         result.put("todayInHistory", buildTodayInHistory(entryList))
 
+        val draftsJson = db.getDraftEntries()
+        val drafts = try { JSONArray(draftsJson) } catch (_: Exception) { JSONArray() }
+        val draftList = (0 until drafts.length()).mapNotNull { drafts.optJSONObject(it) }
+            .map { summarizeEntry(it) }
+        result.put("draftEntries", JSONArray().apply { draftList.forEach { put(it) } })
+
         return result.toString()
     }
 

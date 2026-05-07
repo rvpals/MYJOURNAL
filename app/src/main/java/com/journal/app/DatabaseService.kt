@@ -12,7 +12,7 @@ class DatabaseService(private val context: Context) {
 
     companion object {
         private const val TAG = "DatabaseService"
-        private const val SCHEMA_VERSION = 3
+        private const val SCHEMA_VERSION = 4
         private const val DB_VERSION = 1
     }
 
@@ -145,6 +145,25 @@ class DatabaseService(private val context: Context) {
             )
         """)
         d.execSQL("CREATE INDEX IF NOT EXISTS idx_attachments_entry ON attachments(link_entry_id)")
+        d.execSQL("""
+            CREATE TABLE IF NOT EXISTS draft_entries (
+                id TEXT PRIMARY KEY,
+                date TEXT,
+                time TEXT,
+                title TEXT,
+                content TEXT,
+                categories TEXT,
+                tags TEXT,
+                placeName TEXT,
+                locations TEXT,
+                weather TEXT,
+                pinned INTEGER DEFAULT 0,
+                locked INTEGER DEFAULT 0,
+                images_json TEXT DEFAULT '[]',
+                dtCreated TEXT,
+                dtUpdated TEXT
+            )
+        """)
         d.execSQL("CREATE TABLE IF NOT EXISTS schema_version (version INTEGER PRIMARY KEY)")
         d.execSQL("INSERT OR REPLACE INTO schema_version VALUES ($SCHEMA_VERSION)")
     }
@@ -179,6 +198,25 @@ class DatabaseService(private val context: Context) {
             )
         """)
         d.execSQL("CREATE INDEX IF NOT EXISTS idx_attachments_entry ON attachments(link_entry_id)")
+        d.execSQL("""
+            CREATE TABLE IF NOT EXISTS draft_entries (
+                id TEXT PRIMARY KEY,
+                date TEXT,
+                time TEXT,
+                title TEXT,
+                content TEXT,
+                categories TEXT,
+                tags TEXT,
+                placeName TEXT,
+                locations TEXT,
+                weather TEXT,
+                pinned INTEGER DEFAULT 0,
+                locked INTEGER DEFAULT 0,
+                images_json TEXT DEFAULT '[]',
+                dtCreated TEXT,
+                dtUpdated TEXT
+            )
+        """)
     }
 
     private fun insertDefaults() {
@@ -260,6 +298,16 @@ class DatabaseService(private val context: Context) {
         """)
         d.execSQL("CREATE TABLE IF NOT EXISTS inspiration (id INTEGER PRIMARY KEY AUTOINCREMENT, quote TEXT NOT NULL, source TEXT DEFAULT '')")
         d.execSQL("CREATE TABLE IF NOT EXISTS sql_library (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL, description TEXT DEFAULT '', sql_statement TEXT NOT NULL, dtCreated TEXT, dtUpdated TEXT)")
+        d.execSQL("""
+            CREATE TABLE IF NOT EXISTS draft_entries (
+                id TEXT PRIMARY KEY, date TEXT, time TEXT, title TEXT,
+                content TEXT, categories TEXT, tags TEXT,
+                placeName TEXT, locations TEXT, weather TEXT,
+                pinned INTEGER DEFAULT 0, locked INTEGER DEFAULT 0,
+                images_json TEXT DEFAULT '[]',
+                dtCreated TEXT, dtUpdated TEXT
+            )
+        """)
         d.execSQL("CREATE TABLE IF NOT EXISTS schema_version (version INTEGER PRIMARY KEY)")
         d.execSQL("INSERT OR REPLACE INTO schema_version VALUES ($SCHEMA_VERSION)")
     }
@@ -485,6 +533,129 @@ class DatabaseService(private val context: Context) {
         cv.put("locked", if (entry.optBoolean("locked")) 1 else 0)
         cv.put("dtCreated", entry.optString("dtCreated", ""))
         cv.put("dtUpdated", entry.optString("dtUpdated", ""))
+        return cv
+    }
+
+    // ========== Draft Entries ==========
+
+    fun getDraftEntries(): String {
+        val d = db ?: return "[]"
+        val arr = JSONArray()
+        val cursor = d.rawQuery("SELECT * FROM draft_entries ORDER BY dtUpdated DESC", null)
+        while (cursor.moveToNext()) {
+            val obj = cursorToDraftJson(cursor)
+            arr.put(obj)
+        }
+        cursor.close()
+        return arr.toString()
+    }
+
+    fun getDraftById(id: String): String {
+        val d = db ?: return "{}"
+        val cursor = d.rawQuery("SELECT * FROM draft_entries WHERE id = ?", arrayOf(id))
+        if (!cursor.moveToFirst()) { cursor.close(); return "{}" }
+        val obj = cursorToDraftJson(cursor)
+        cursor.close()
+        return obj.toString()
+    }
+
+    fun addDraft(draftJson: String) {
+        val d = db ?: return
+        val draft = JSONObject(draftJson)
+        val cv = draftToContentValues(draft)
+        d.insertWithOnConflict("draft_entries", null, cv, SQLiteDatabase.CONFLICT_REPLACE)
+    }
+
+    fun updateDraft(id: String, draftJson: String) {
+        val d = db ?: return
+        val draft = JSONObject(draftJson)
+        val cv = draftToContentValues(draft)
+        d.update("draft_entries", cv, "id = ?", arrayOf(id))
+    }
+
+    fun deleteDraftById(id: String) {
+        val d = db ?: return
+        d.delete("draft_entries", "id = ?", arrayOf(id))
+    }
+
+    fun publishDraft(id: String): Boolean {
+        val d = db ?: return false
+        val cursor = d.rawQuery("SELECT * FROM draft_entries WHERE id = ?", arrayOf(id))
+        if (!cursor.moveToFirst()) { cursor.close(); return false }
+        val draft = cursorToDraftJson(cursor)
+        cursor.close()
+
+        val imagesJson = draft.optString("images_json", "[]")
+        val images = try { JSONArray(imagesJson) } catch (_: Exception) { JSONArray() }
+
+        val entry = JSONObject().apply {
+            put("id", draft.optString("id"))
+            put("date", draft.optString("date", ""))
+            put("time", draft.optString("time", ""))
+            put("title", draft.optString("title", ""))
+            put("content", draft.optString("content", ""))
+            put("categories", draft.optJSONArray("categories") ?: JSONArray())
+            put("tags", draft.optJSONArray("tags") ?: JSONArray())
+            put("placeName", draft.optString("placeName", ""))
+            put("locations", draft.optJSONArray("locations") ?: JSONArray())
+            put("weather", draft.opt("weather") ?: JSONObject.NULL)
+            put("pinned", draft.optBoolean("pinned", false))
+            put("locked", draft.optBoolean("locked", false))
+            put("images", images)
+            put("dtCreated", draft.optString("dtCreated", ""))
+            put("dtUpdated", draft.optString("dtUpdated", ""))
+        }
+
+        d.beginTransaction()
+        try {
+            addEntry(entry.toString())
+            d.delete("draft_entries", "id = ?", arrayOf(id))
+            d.setTransactionSuccessful()
+        } finally {
+            d.endTransaction()
+        }
+        return true
+    }
+
+    private fun cursorToDraftJson(cursor: android.database.Cursor): JSONObject {
+        val obj = JSONObject()
+        obj.put("id", cursor.getString(cursor.getColumnIndexOrThrow("id")) ?: "")
+        obj.put("date", cursor.getString(cursor.getColumnIndexOrThrow("date")) ?: "")
+        obj.put("time", cursor.getString(cursor.getColumnIndexOrThrow("time")) ?: "")
+        obj.put("title", cursor.getString(cursor.getColumnIndexOrThrow("title")) ?: "")
+        obj.put("content", cursor.getString(cursor.getColumnIndexOrThrow("content")) ?: "")
+        obj.put("categories", safeParseArray(cursor.getString(cursor.getColumnIndexOrThrow("categories"))))
+        obj.put("tags", safeParseArray(cursor.getString(cursor.getColumnIndexOrThrow("tags"))))
+        obj.put("placeName", cursor.getString(cursor.getColumnIndexOrThrow("placeName")) ?: "")
+        obj.put("locations", safeParseArray(cursor.getString(cursor.getColumnIndexOrThrow("locations"))))
+        val weatherStr = cursor.getString(cursor.getColumnIndexOrThrow("weather"))
+        obj.put("weather", if (weatherStr != null) safeParseObject(weatherStr) else JSONObject.NULL)
+        obj.put("pinned", cursor.getInt(cursor.getColumnIndexOrThrow("pinned")) == 1)
+        obj.put("locked", cursor.getInt(cursor.getColumnIndexOrThrow("locked")) == 1)
+        obj.put("images_json", cursor.getString(cursor.getColumnIndexOrThrow("images_json")) ?: "[]")
+        obj.put("dtCreated", cursor.getString(cursor.getColumnIndexOrThrow("dtCreated")) ?: "")
+        obj.put("dtUpdated", cursor.getString(cursor.getColumnIndexOrThrow("dtUpdated")) ?: "")
+        return obj
+    }
+
+    private fun draftToContentValues(draft: JSONObject): ContentValues {
+        val cv = ContentValues()
+        cv.put("id", draft.getString("id"))
+        cv.put("date", draft.optString("date", ""))
+        cv.put("time", draft.optString("time", ""))
+        cv.put("title", draft.optString("title", ""))
+        cv.put("content", draft.optString("content", ""))
+        cv.put("categories", draft.optJSONArray("categories")?.toString() ?: "[]")
+        cv.put("tags", draft.optJSONArray("tags")?.toString() ?: "[]")
+        cv.put("placeName", draft.optString("placeName", ""))
+        cv.put("locations", draft.optJSONArray("locations")?.toString() ?: "[]")
+        val weather = draft.opt("weather")
+        cv.put("weather", if (weather == null || weather == JSONObject.NULL) null else weather.toString())
+        cv.put("pinned", if (draft.optBoolean("pinned")) 1 else 0)
+        cv.put("locked", if (draft.optBoolean("locked")) 1 else 0)
+        cv.put("images_json", draft.optString("images_json", "[]"))
+        cv.put("dtCreated", draft.optString("dtCreated", ""))
+        cv.put("dtUpdated", draft.optString("dtUpdated", ""))
         return cv
     }
 

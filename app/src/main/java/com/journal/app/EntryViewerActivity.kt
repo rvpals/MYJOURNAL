@@ -942,6 +942,7 @@ class EntryViewerActivity : AppCompatActivity() {
             finish()
             return
         }
+        loadAndShowEntry()
     }
 
 }

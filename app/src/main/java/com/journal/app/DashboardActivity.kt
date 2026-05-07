@@ -69,6 +69,7 @@ class DashboardActivity : AppCompatActivity() {
         populateStats()
         populateQuickActions()
         populatePrefillShortcuts()
+        populateDraftsPanel()
         populateWidgets()
         populatePinnedEntries()
         populateRecentEntries()
@@ -79,7 +80,7 @@ class DashboardActivity : AppCompatActivity() {
         populateInspiration()
 
         listOf(
-            R.id.panel_prefill_shortcuts, R.id.panel_pinned, R.id.panel_recent,
+            R.id.panel_prefill_shortcuts, R.id.panel_drafts, R.id.panel_pinned, R.id.panel_recent,
             R.id.panel_today_history, R.id.panel_tags, R.id.panel_categories,
             R.id.panel_places, R.id.panel_inspiration
         ).forEach { style3DPanel(findViewById(it)) }
@@ -98,6 +99,7 @@ class DashboardActivity : AppCompatActivity() {
             "stats" to findViewById<View>(R.id.stats_container),
             "quick_actions" to findViewById<View>(R.id.quick_actions),
             "prefill_shortcuts" to findViewById<View>(R.id.panel_prefill_shortcuts),
+            "drafts" to findViewById<View>(R.id.panel_drafts),
             "widgets" to findViewById<View>(R.id.panel_widgets),
             "pinned" to findViewById<View>(R.id.panel_pinned),
             "recent" to findViewById<View>(R.id.panel_recent),
@@ -109,7 +111,7 @@ class DashboardActivity : AppCompatActivity() {
         )
 
         val defaultOrder = listOf(
-            "weather_streak", "stats", "quick_actions", "prefill_shortcuts", "widgets",
+            "weather_streak", "stats", "quick_actions", "prefill_shortcuts", "drafts", "widgets",
             "pinned", "recent", "today_history", "tags", "categories", "places", "inspiration"
         )
 
@@ -348,6 +350,97 @@ class DashboardActivity : AppCompatActivity() {
             }
             list.addView(btn)
         }
+    }
+
+    // ========== Draft Entries ==========
+
+    private fun populateDraftsPanel() {
+        val drafts = dashboardData.optJSONArray("draftEntries")
+        val panel = findViewById<LinearLayout>(R.id.panel_drafts)
+        val list = findViewById<LinearLayout>(R.id.drafts_list)
+        val header = findViewById<TextView>(R.id.drafts_header)
+
+        if (drafts == null || drafts.length() == 0) {
+            panel.visibility = View.GONE
+            return
+        }
+
+        panel.visibility = View.VISIBLE
+        setupCollapsibleHeader(header, list, "dash_drafts_collapsed", "Drafts")
+        list.removeAllViews()
+
+        for (i in 0 until drafts.length()) {
+            val draft = drafts.optJSONObject(i) ?: continue
+            list.addView(createDraftRow(draft))
+        }
+    }
+
+    private fun createDraftRow(draft: JSONObject): View {
+        val row = LinearLayout(this).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = Gravity.CENTER_VERTICAL
+            setPadding(dp(10), dp(10), dp(10), dp(10))
+            background = ContextCompat.getDrawable(this@DashboardActivity, R.drawable.entry_row_bg)
+            layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            ).apply { bottomMargin = dp(4) }
+        }
+
+        val textCol = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
+        }
+
+        val titleText = draft.optString("title", "").ifEmpty { "Untitled Draft" }
+        textCol.addView(TextView(this).apply {
+            text = titleText
+            setTextColor(ThemeManager.color(C.TEXT))
+            setTextSize(TypedValue.COMPLEX_UNIT_SP, 14f)
+            setTypeface(null, Typeface.BOLD)
+            maxLines = 1
+            ellipsize = TextUtils.TruncateAt.END
+        })
+
+        val date = draft.optString("date", "")
+        if (date.isNotEmpty()) {
+            textCol.addView(TextView(this).apply {
+                text = date
+                setTextColor(ThemeManager.color(C.TEXT_SECONDARY))
+                setTextSize(TypedValue.COMPLEX_UNIT_SP, 11f)
+            })
+        }
+        row.addView(textCol)
+
+        val publishBtn = Button(this).apply {
+            text = "Publish"
+            setTextSize(TypedValue.COMPLEX_UNIT_SP, 11f)
+            isAllCaps = false
+            setTextColor(ThemeManager.color(C.CARD_BG))
+            background = ContextCompat.getDrawable(this@DashboardActivity, R.drawable.btn_accent)
+            setPadding(dp(10), dp(4), dp(10), dp(4))
+            layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.WRAP_CONTENT, dp(32)
+            ).apply { marginStart = dp(6) }
+        }
+        val draftId = draft.optString("id", "")
+        publishBtn.setOnClickListener {
+            val db = ServiceProvider.databaseService ?: return@setOnClickListener
+            db.publishDraft(draftId)
+            needsRefresh = true
+            recreate()
+        }
+        row.addView(publishBtn)
+
+        row.setOnClickListener {
+            EntryFormActivity.databaseService = ServiceProvider.databaseService
+            EntryFormActivity.bootstrapService = ServiceProvider.bootstrapService
+            EntryFormActivity.weatherService = ServiceProvider.weatherService
+            EntryFormActivity.pendingDraftId = draftId
+            startActivity(Intent(this, EntryFormActivity::class.java))
+        }
+
+        return row
     }
 
     // ========== Widgets ==========

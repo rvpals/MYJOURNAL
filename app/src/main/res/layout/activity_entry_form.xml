@@ -49,6 +49,19 @@
             android:layout_marginStart="4dp" />
 
         <Button
+            android:id="@+id/btn_draft"
+            android:layout_width="wrap_content"
+            android:layout_height="38dp"
+            android:text="Draft"
+            android:textSize="13sp"
+            android:textAllCaps="false"
+            android:background="@drawable/btn_secondary"
+            android:textColor="@color/login_text"
+            android:paddingHorizontal="12dp"
+            android:layout_marginStart="4dp"
+            android:visibility="gone" />
+
+        <Button
             android:id="@+id/btn_save"
             android:layout_width="wrap_content"
             android:layout_height="38dp"

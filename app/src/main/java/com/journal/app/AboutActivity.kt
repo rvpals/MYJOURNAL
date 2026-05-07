@@ -88,6 +88,13 @@ class AboutActivity : AppCompatActivity() {
     }
 
     private fun buildChangelog(): String = """
+v2.2.0 (2026-05-07)
+• Draft entries — save entries as drafts for future publishing
+• "Save as Draft" button in entry form navbar
+• Collapsible Drafts panel on dashboard with one-click Publish
+• Edit and delete drafts from dashboard
+• Entry Viewer now refreshes after editing an entry
+
 v2.0.0 (2026-05-06)
 • File attachments — attach any files to entries as zip archives
 • New Attachment screen with Add/Save/Download/View Entry buttons

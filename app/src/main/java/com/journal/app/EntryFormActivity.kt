@@ -44,6 +44,7 @@ class EntryFormActivity : AppCompatActivity() {
         @JvmStatic var weatherService: WeatherService? = null
         @JvmStatic var pendingEntryId: String? = null
         @JvmStatic var pendingTemplateId: String? = null
+        @JvmStatic var pendingDraftId: String? = null
     }
 
     private lateinit var db: DatabaseService
@@ -56,6 +57,8 @@ class EntryFormActivity : AppCompatActivity() {
 
     private var entryId = ""
     private var isNew = true
+    private var isDraft = false
+    private var draftId = ""
     private var activeTab = "main"
 
     // Main tab fields
@@ -143,6 +146,9 @@ class EntryFormActivity : AppCompatActivity() {
         val editId = pendingEntryId
         pendingEntryId = null
 
+        val editDraftId = pendingDraftId
+        pendingDraftId = null
+
         if (editId != null && editId.isNotEmpty()) {
             val json = try { JSONObject(db.getEntryById(editId)) } catch (_: Exception) { JSONObject() }
             if (json.has("id")) {
@@ -150,24 +156,52 @@ class EntryFormActivity : AppCompatActivity() {
                 isNew = false
                 loadEntryData(json)
             }
+        } else if (editDraftId != null && editDraftId.isNotEmpty()) {
+            val json = try { JSONObject(db.getDraftById(editDraftId)) } catch (_: Exception) { JSONObject() }
+            if (json.has("id")) {
+                entryId = json.getString("id")
+                draftId = entryId
+                isDraft = true
+                isNew = false
+                loadEntryData(json)
+                val imagesStr = json.optString("images_json", "[]")
+                currentImages = try {
+                    val arr = JSONArray(imagesStr)
+                    (0 until arr.length()).mapNotNull { arr.optJSONObject(it) }.toMutableList()
+                } catch (_: Exception) { mutableListOf() }
+            }
         }
 
         if (isNew) {
             placeName = ""
         }
 
-        titleView.text = if (isNew) "New Entry" else "Edit Entry"
+        titleView.text = if (isDraft) "Edit Draft" else if (isNew) "New Entry" else "Edit Entry"
 
-        if (!isNew) {
+        if (!isNew && !isDraft) {
             deleteBtn.visibility = View.VISIBLE
             deleteBtn.setOnClickListener { confirmDelete() }
             val attachBtn = findViewById<Button>(R.id.btn_attach)
             attachBtn.visibility = View.VISIBLE
             attachBtn.setOnClickListener { openAttachments() }
+        } else if (isDraft) {
+            deleteBtn.visibility = View.VISIBLE
+            deleteBtn.setOnClickListener { confirmDeleteDraft() }
+        }
+
+        val draftBtn = findViewById<Button>(R.id.btn_draft)
+        val saveBtn = findViewById<Button>(R.id.btn_save)
+        if (isDraft) {
+            saveBtn.text = "Publish"
+            draftBtn.text = "Save"
+            draftBtn.visibility = View.VISIBLE
+        } else if (isNew) {
+            draftBtn.visibility = View.VISIBLE
         }
 
         findViewById<Button>(R.id.btn_back).setOnClickListener { confirmCancel() }
-        findViewById<Button>(R.id.btn_save).setOnClickListener { saveEntry() }
+        saveBtn.setOnClickListener { saveEntry() }
+        draftBtn.setOnClickListener { saveAsDraft() }
         findViewById<Button>(R.id.btn_cancel).setOnClickListener { confirmCancel() }
 
         val templateBtn = findViewById<Button>(R.id.btn_template)
@@ -1172,6 +1206,64 @@ class EntryFormActivity : AppCompatActivity() {
 
     // ========== Save / Delete ==========
 
+    private fun saveAsDraft() {
+        syncFormData()
+        if (::dateInput.isInitialized) {
+            dateValue = dateInput.text.toString().trim()
+            timeValue = timeInput.text.toString().trim()
+            titleValue = titleInput.text.toString().trim()
+        }
+        if (::contentInput.isInitialized) {
+            contentValue = contentInput.text.toString()
+        }
+
+        val now = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.US).format(Date())
+        val imagesArr = JSONArray()
+        for (img in currentImages) imagesArr.put(img)
+        val locsArr = JSONArray()
+        for (loc in currentLocations) locsArr.put(loc)
+
+        val draft = JSONObject().apply {
+            put("id", if (isDraft) draftId else generateId())
+            put("date", dateValue)
+            put("time", timeValue)
+            put("title", titleValue)
+            put("content", contentValue)
+            put("categories", JSONArray(selectedCategories.toList()))
+            put("tags", JSONArray(currentTags))
+            put("placeName", placeName)
+            put("locations", locsArr)
+            put("weather", currentWeather ?: JSONObject.NULL)
+            put("images_json", imagesArr.toString())
+            put("dtCreated", if (isDraft) "" else now)
+            put("dtUpdated", now)
+        }
+
+        if (isDraft) {
+            db.updateDraft(draftId, draft.toString())
+        } else {
+            db.addDraft(draft.toString())
+        }
+
+        Toast.makeText(this, "Draft saved", Toast.LENGTH_SHORT).show()
+        DashboardActivity.needsRefresh = true
+        setResult(RESULT_OK)
+        finish()
+    }
+
+    private fun confirmDeleteDraft() {
+        AlertDialog.Builder(this)
+            .setMessage("Delete this draft?")
+            .setPositiveButton("Delete") { _, _ ->
+                db.deleteDraftById(draftId)
+                DashboardActivity.needsRefresh = true
+                setResult(RESULT_OK)
+                finish()
+            }
+            .setNegativeButton("Cancel", null)
+            .show()
+    }
+
     private fun saveEntry() {
         syncFormData()
 
@@ -1205,7 +1297,26 @@ class EntryFormActivity : AppCompatActivity() {
         val locsArr = JSONArray()
         for (loc in currentLocations) locsArr.put(loc)
 
-        if (isNew) {
+        if (isDraft) {
+            val entry = JSONObject().apply {
+                put("id", generateId())
+                put("date", dateValue)
+                put("time", timeValue)
+                put("title", titleValue)
+                put("content", contentValue)
+                put("categories", JSONArray(selectedCategories.toList()))
+                put("tags", JSONArray(currentTags))
+                put("placeName", placeName)
+                put("locations", locsArr)
+                put("weather", currentWeather ?: JSONObject.NULL)
+                put("images", imagesArr)
+                put("dtCreated", now)
+                put("dtUpdated", now)
+            }
+            db.addEntry(entry.toString())
+            db.deleteDraftById(draftId)
+            Toast.makeText(this, "Draft published", Toast.LENGTH_SHORT).show()
+        } else if (isNew) {
             val entry = JSONObject().apply {
                 put("id", generateId())
                 put("date", dateValue)
