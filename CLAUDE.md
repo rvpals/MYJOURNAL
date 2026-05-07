@@ -15,7 +15,7 @@ summary: "Project architecture reference — directory structure, tech stack, da
 
 Fully native Android encrypted journal app. All 15 screens are native Kotlin activities. Services (crypto, database, bootstrap, weather) are managed by a `ServiceProvider` singleton. All data stored locally in AES-256-GCM encrypted SQLCipher database.
 
-**App Name:** My Journal | **Version:** 2.0.0 | **Package:** com.journal.app | **Min SDK:** 24 | **Target SDK:** 34
+**App Name:** My Journal | **Version:** 2.1.0 | **Package:** com.journal.app | **Min SDK:** 24 | **Target SDK:** 34
 
 ## Project Structure
 
@@ -25,7 +25,7 @@ MYJOURNAL/
 │   ├── build.gradle                # Android build config (compileSdk 34, minSdk 24)
 │   ├── src/main/
 │   │   ├── AndroidManifest.xml     # 15 activities, permissions (internet, location, camera, biometric)
-│   │   ├── java/com/journal/app/    # All Kotlin sources (22 files)
+│   │   ├── java/com/journal/app/    # All Kotlin sources (23 files)
 │   │   │   ├── LoginActivity.kt         # Entry point: journal select, password, biometric login
 │   │   │   ├── DashboardActivity.kt     # Native dashboard (stats, ranked lists, pinned/recent, widgets, hamburger menu)
 │   │   │   ├── CalendarActivity.kt      # Native calendar view
@@ -43,6 +43,7 @@ MYJOURNAL/
 │   │   │   ├── AttachmentActivity.kt   # Native file attachment screen (add/save/download zip, file grid, entry link)
 │   │   │   ├── ServiceProvider.kt       # Singleton service holder (replaces old MainActivity.instance)
 │   │   │   ├── DashboardDataBuilder.kt  # Computes dashboard JSON from DatabaseService (stats, streaks, ranked lists, widgets, today in history)
+│   │   │   ├── DashboardCardComponent.kt # Reusable 3D card component for dashboard grid views (categories, tags)
 │   │   │   ├── BootstrapService.kt      # SharedPreferences wrapper
 │   │   │   ├── CryptoService.kt         # AES-256-GCM + PBKDF2
 │   │   │   ├── WeatherService.kt        # Open-Meteo HTTP client
@@ -158,3 +159,7 @@ Light, Dark, Ocean, Midnight, Forest, Amethyst, Aurora, Lavender, Frost, Navy, S
 - **File attachments** — AttachmentActivity manages file attachments per entry; files zipped with SHA-256 hash; stored in user-configured attachments folder (SAF DocumentFile); accessible from EntryViewer (Attachments tab) and EntryForm (📎 button)
 - **Attachment storage paths** — `app_data_path` and `attachments_path` settings in BootstrapService; folder selected via `ACTION_OPEN_DOCUMENT_TREE` with persistable URI permissions
 - **EntryViewer tabs** — Entry/Attachments tab bar; Attachments tab lists zip contents, tap to extract and open via FileProvider, Delete Zip removes record + file
+- **Attachment file grid columns** — File list grid shows #, Filename, Size, Date, and ✕ (remove) columns; size/date from zip entry metadata or content resolver for new files
+- **Attachment icon in entry lists** — 📎 icon shown next to entries with attachments in Dashboard (Recent, Pinned, Today in History), Entry List, Search, Calendar; clickable to open AttachmentActivity
+- **DashboardCardComponent** — Reusable `DashboardCardComponent.kt` singleton builds 3D card views (gray drop shadow via LayerDrawable, rounded corners, highlight edge, accent pill badge for count); used by Top Categories card view, extensible to other grid panels
+- **Modern collapsible headers** — Dashboard collapsible panel headers styled with 3D LayerDrawable (gray shadow, rounded corners, highlight edge, elevation)

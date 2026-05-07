@@ -10,7 +10,7 @@ Personal journal and activity log Android app with encrypted local storage.
 
 ## Overview
 
-A fully native Kotlin Android app for keeping a personal journal with rich text editing, image attachments, weather tracking, and more. All 15 screens are native Kotlin activities. All data is stored locally on-device in an AES-256-GCM encrypted SQLCipher database.
+A fully native Kotlin Android app for keeping a personal journal with rich text editing, image attachments, weather tracking, and more. All 15 screens are native Kotlin activities. All data is stored locally on-device in an AES-256-GCM encrypted SQLCipher database. Version 2.1.0.
 
 ## Features
 
@@ -18,9 +18,9 @@ A fully native Kotlin Android app for keeping a personal journal with rich text 
 - **Multiple journals** — Each with its own password
 - **Biometric login** — Fingerprint/face unlock via AndroidX BiometricPrompt
 - **Image attachments** — Camera capture, gallery picker, base64 storage with thumbnails
-- **File attachments** — Attach any files to entries as zip archives, configurable storage path, view/download/delete from entry viewer
+- **File attachments** — Attach any files to entries as zip archives, configurable storage path, view/download/delete from entry viewer; 📎 icon in entry lists links directly to attachment screen
 - **Weather tracking** — Open-Meteo API integration, GPS-based, optional auto-populate on new entry
-- **Dashboard** — Stats, pinned entries, search, ranked panels (collapsible with expand), configurable widgets, template shortcuts, Today in History, Daily Inspiration
+- **Dashboard** — Stats, pinned entries, search, ranked panels (collapsible with expand), configurable widgets, template shortcuts, Today in History, Daily Inspiration, modern 3D card components and collapsible headers
 - **What's New** — In-app changelog accessible from About screen
 - **App font customization** — Font family (9 options) and size scale across all screens
 - **Custom views** — Saved filter/sort/group combinations, usable as filter presets in Entry List and Reports

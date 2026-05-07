@@ -72,6 +72,7 @@ class EntryListActivity : AppCompatActivity() {
 
     private var customViews = JSONArray()
     private var activeViewIndex = 0
+    private var entryIdsWithAttachments = emptySet<String>()
 
     override fun attachBaseContext(newBase: android.content.Context) {
         super.attachBaseContext(ThemeManager.fontScaledContext(newBase))
@@ -393,6 +394,7 @@ class EntryListActivity : AppCompatActivity() {
     private fun loadEntries() {
         val json = db.getEntries()
         allEntries = try { JSONArray(json) } catch (_: Exception) { JSONArray() }
+        entryIdsWithAttachments = db.getEntryIdsWithAttachments()
     }
 
     private fun applyFilters() {
@@ -807,13 +809,27 @@ class EntryListActivity : AppCompatActivity() {
         val badges = mutableListOf<String>()
         if (pinned) badges.add("📌")
         if (locked) badges.add("🔒")
-        if (badges.isNotEmpty()) {
-            headerRow.addView(TextView(this).apply {
-                text = "  ${badges.joinToString(" ")}"
-                textSize = 12f
-                layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
-                gravity = Gravity.END
+        val hasAttachment = entryIdsWithAttachments.contains(id)
+        if (badges.isNotEmpty() || hasAttachment) {
+            if (badges.isNotEmpty()) {
+                headerRow.addView(TextView(this).apply {
+                    text = "  ${badges.joinToString(" ")}"
+                    textSize = 12f
+                    layoutParams = LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT)
+                })
+            }
+            headerRow.addView(View(this).apply {
+                layoutParams = LinearLayout.LayoutParams(0, 0, 1f)
             })
+            if (hasAttachment) {
+                headerRow.addView(TextView(this).apply {
+                    text = "📎"
+                    textSize = 12f
+                    setPadding(dp(4), 0, dp(4), 0)
+                    isClickable = true
+                    setOnClickListener { openAttachmentScreen(id, title, date) }
+                })
+            }
         } else {
             headerRow.addView(View(this).apply {
                 layoutParams = LinearLayout.LayoutParams(0, 0, 1f)
@@ -1140,6 +1156,15 @@ class EntryListActivity : AppCompatActivity() {
         EntryViewerActivity.databaseService = db
         EntryViewerActivity.bootstrapService = bs
         startActivity(Intent(this, EntryViewerActivity::class.java))
+    }
+
+    private fun openAttachmentScreen(entryId: String, title: String, date: String) {
+        AttachmentActivity.databaseService = db
+        AttachmentActivity.bootstrapService = bs
+        AttachmentActivity.pendingEntryId = entryId
+        AttachmentActivity.pendingEntryTitle = title
+        AttachmentActivity.pendingEntryDate = date
+        startActivity(Intent(this, AttachmentActivity::class.java))
     }
 
     override fun onResume() {

@@ -34,6 +34,7 @@ class SearchActivity : AppCompatActivity() {
 
     private var entries = JSONArray()
     private var lastMatchIds = listOf<String>()
+    private var entryIdsWithAttachments = emptySet<String>()
 
     override fun attachBaseContext(newBase: android.content.Context) {
         super.attachBaseContext(ThemeManager.fontScaledContext(newBase))
@@ -50,6 +51,7 @@ class SearchActivity : AppCompatActivity() {
             try {
                 entries = JSONArray(db.getEntries())
             } catch (_: JSONException) {}
+            entryIdsWithAttachments = db.getEntryIdsWithAttachments()
         }
 
         setupNavbar()
@@ -173,6 +175,17 @@ class SearchActivity : AppCompatActivity() {
             topRow.addView(dateView)
         }
 
+        val entryId = entry.optString("id", "")
+        if (entryIdsWithAttachments.contains(entryId)) {
+            topRow.addView(TextView(this).apply {
+                text = "📎"
+                setTextSize(TypedValue.COMPLEX_UNIT_SP, 12f)
+                setPadding(dp(6), 0, 0, 0)
+                isClickable = true
+                setOnClickListener { openAttachmentScreen(entryId, entry.optString("title", ""), entry.optString("date", "")) }
+            })
+        }
+
         row.addView(topRow)
 
         val content = entry.optString("content", "")
@@ -205,7 +218,6 @@ class SearchActivity : AppCompatActivity() {
             row.addView(metaView)
         }
 
-        val entryId = entry.optString("id", "")
         row.setOnClickListener { finishWithViewEntry(entryId) }
 
         row.layoutParams = LinearLayout.LayoutParams(
@@ -268,6 +280,15 @@ class SearchActivity : AppCompatActivity() {
         EntryViewerActivity.databaseService = ServiceProvider.databaseService
         EntryViewerActivity.bootstrapService = ServiceProvider.bootstrapService
         startActivity(Intent(this, EntryViewerActivity::class.java))
+    }
+
+    private fun openAttachmentScreen(entryId: String, title: String, date: String) {
+        AttachmentActivity.databaseService = ServiceProvider.databaseService
+        AttachmentActivity.bootstrapService = ServiceProvider.bootstrapService
+        AttachmentActivity.pendingEntryId = entryId
+        AttachmentActivity.pendingEntryTitle = title
+        AttachmentActivity.pendingEntryDate = date
+        startActivity(Intent(this, AttachmentActivity::class.java))
     }
 
     @Deprecated("Deprecated in Java")

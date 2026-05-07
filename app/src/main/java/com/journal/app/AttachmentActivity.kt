@@ -21,6 +21,9 @@ import com.journal.app.ThemeManager.C
 import org.json.JSONObject
 import java.io.BufferedOutputStream
 import java.security.MessageDigest
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 import java.util.zip.ZipEntry
 import java.util.zip.ZipInputStream
 import java.util.zip.ZipOutputStream
@@ -45,7 +48,9 @@ class AttachmentActivity : AppCompatActivity() {
     private var attachmentId: String? = null
     private var existingFilename: String? = null
 
-    private val pendingFiles = mutableListOf<Pair<String, Uri>>() // name to uri
+    private data class FileInfo(val name: String, val uri: Uri, val size: Long, val dateTime: String)
+    private val pendingFiles = mutableListOf<FileInfo>()
+    private var originalFileCount = 0
     private lateinit var fileGrid: LinearLayout
 
     private var lastThemeVersion = 0
@@ -240,19 +245,23 @@ class AttachmentActivity : AppCompatActivity() {
         val zipName = "$attachmentId.zip"
         val zipFile = dir.findFile(zipName) ?: return
 
+        val dtFmt = SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.getDefault())
         try {
             contentResolver.openInputStream(zipFile.uri)?.use { inputStream ->
                 ZipInputStream(inputStream).use { zis ->
                     var entry = zis.nextEntry
                     while (entry != null) {
                         if (!entry.isDirectory) {
-                            pendingFiles.add(entry.name to Uri.EMPTY)
+                            val size = entry.size.coerceAtLeast(0L)
+                            val dt = if (entry.time > 0) dtFmt.format(Date(entry.time)) else ""
+                            pendingFiles.add(FileInfo(entry.name, Uri.EMPTY, size, dt))
                         }
                         entry = zis.nextEntry
                     }
                 }
             }
         } catch (_: Exception) {}
+        originalFileCount = pendingFiles.size
         refreshFileGrid()
     }
 
@@ -281,28 +290,42 @@ class AttachmentActivity : AppCompatActivity() {
         header.addView(TextView(this).apply {
             text = "#"
             setTextColor(ThemeManager.color(C.ACCENT))
-            setTextSize(TypedValue.COMPLEX_UNIT_SP, 12f)
+            setTextSize(TypedValue.COMPLEX_UNIT_SP, 11f)
             setTypeface(null, Typeface.BOLD)
-            layoutParams = LinearLayout.LayoutParams(dp(30), LinearLayout.LayoutParams.WRAP_CONTENT)
+            layoutParams = LinearLayout.LayoutParams(dp(24), LinearLayout.LayoutParams.WRAP_CONTENT)
         })
         header.addView(TextView(this).apply {
             text = "Filename"
             setTextColor(ThemeManager.color(C.ACCENT))
-            setTextSize(TypedValue.COMPLEX_UNIT_SP, 12f)
+            setTextSize(TypedValue.COMPLEX_UNIT_SP, 11f)
             setTypeface(null, Typeface.BOLD)
             layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
         })
         header.addView(TextView(this).apply {
-            text = "Action"
+            text = "Size"
             setTextColor(ThemeManager.color(C.ACCENT))
-            setTextSize(TypedValue.COMPLEX_UNIT_SP, 12f)
+            setTextSize(TypedValue.COMPLEX_UNIT_SP, 11f)
             setTypeface(null, Typeface.BOLD)
-            layoutParams = LinearLayout.LayoutParams(dp(60), LinearLayout.LayoutParams.WRAP_CONTENT)
+            layoutParams = LinearLayout.LayoutParams(dp(52), LinearLayout.LayoutParams.WRAP_CONTENT)
+        })
+        header.addView(TextView(this).apply {
+            text = "Date"
+            setTextColor(ThemeManager.color(C.ACCENT))
+            setTextSize(TypedValue.COMPLEX_UNIT_SP, 11f)
+            setTypeface(null, Typeface.BOLD)
+            layoutParams = LinearLayout.LayoutParams(dp(90), LinearLayout.LayoutParams.WRAP_CONTENT)
+        })
+        header.addView(TextView(this).apply {
+            text = ""
+            setTextColor(ThemeManager.color(C.ACCENT))
+            setTextSize(TypedValue.COMPLEX_UNIT_SP, 11f)
+            setTypeface(null, Typeface.BOLD)
+            layoutParams = LinearLayout.LayoutParams(dp(40), LinearLayout.LayoutParams.WRAP_CONTENT)
             gravity = Gravity.CENTER
         })
         fileGrid.addView(header)
 
-        for ((idx, pair) in pendingFiles.withIndex()) {
+        for ((idx, fileInfo) in pendingFiles.withIndex()) {
             val rowBg = if (idx % 2 == 0) ThemeManager.color(C.CARD_BG) else ThemeManager.color(C.INPUT_BG)
             val row = LinearLayout(this).apply {
                 orientation = LinearLayout.HORIZONTAL
@@ -316,16 +339,29 @@ class AttachmentActivity : AppCompatActivity() {
             row.addView(TextView(this).apply {
                 text = "${idx + 1}"
                 setTextColor(ThemeManager.color(C.TEXT_SECONDARY))
-                setTextSize(TypedValue.COMPLEX_UNIT_SP, 12f)
-                layoutParams = LinearLayout.LayoutParams(dp(30), LinearLayout.LayoutParams.WRAP_CONTENT)
+                setTextSize(TypedValue.COMPLEX_UNIT_SP, 11f)
+                layoutParams = LinearLayout.LayoutParams(dp(24), LinearLayout.LayoutParams.WRAP_CONTENT)
             })
             row.addView(TextView(this).apply {
-                text = pair.first
+                text = fileInfo.name
                 setTextColor(ThemeManager.color(C.TEXT))
-                setTextSize(TypedValue.COMPLEX_UNIT_SP, 12f)
+                setTextSize(TypedValue.COMPLEX_UNIT_SP, 11f)
                 maxLines = 1
                 ellipsize = android.text.TextUtils.TruncateAt.END
                 layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
+            })
+            row.addView(TextView(this).apply {
+                text = formatFileSize(fileInfo.size)
+                setTextColor(ThemeManager.color(C.TEXT_SECONDARY))
+                setTextSize(TypedValue.COMPLEX_UNIT_SP, 11f)
+                layoutParams = LinearLayout.LayoutParams(dp(52), LinearLayout.LayoutParams.WRAP_CONTENT)
+            })
+            row.addView(TextView(this).apply {
+                text = fileInfo.dateTime
+                setTextColor(ThemeManager.color(C.TEXT_SECONDARY))
+                setTextSize(TypedValue.COMPLEX_UNIT_SP, 11f)
+                maxLines = 1
+                layoutParams = LinearLayout.LayoutParams(dp(90), LinearLayout.LayoutParams.WRAP_CONTENT)
             })
             val deleteBtn = Button(this).apply {
                 text = "✕"
@@ -361,17 +397,21 @@ class AttachmentActivity : AppCompatActivity() {
         when (requestCode) {
             FILE_PICK -> {
                 if (data == null) return
+                val dtFmt = SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.getDefault())
+                val nowStr = dtFmt.format(Date())
                 val clipData = data.clipData
                 if (clipData != null) {
                     for (i in 0 until clipData.itemCount) {
                         val uri = clipData.getItemAt(i).uri
                         val name = getFileName(uri)
-                        pendingFiles.add(name to uri)
+                        val size = getFileSize(uri)
+                        pendingFiles.add(FileInfo(name, uri, size, nowStr))
                     }
                 } else {
                     val uri = data.data ?: return
                     val name = getFileName(uri)
-                    pendingFiles.add(name to uri)
+                    val size = getFileSize(uri)
+                    pendingFiles.add(FileInfo(name, uri, size, nowStr))
                 }
                 refreshFileGrid()
             }
@@ -405,8 +445,9 @@ class AttachmentActivity : AppCompatActivity() {
             return
         }
 
-        val hasNewFiles = pendingFiles.any { it.second != Uri.EMPTY }
-        if (!hasNewFiles && attachmentId != null) {
+        val hasNewFiles = pendingFiles.any { it.uri != Uri.EMPTY }
+        val hasRemovedFiles = attachmentId != null && pendingFiles.size < originalFileCount
+        if (!hasNewFiles && !hasRemovedFiles && attachmentId != null) {
             Toast.makeText(this, "No changes to save", Toast.LENGTH_SHORT).show()
             return
         }
@@ -439,10 +480,10 @@ class AttachmentActivity : AppCompatActivity() {
 
             contentResolver.openOutputStream(newZipFile.uri)?.use { os ->
                 ZipOutputStream(BufferedOutputStream(os)).use { zos ->
-                    for ((name, uri) in pendingFiles) {
-                        zos.putNextEntry(ZipEntry(name))
-                        if (uri != Uri.EMPTY) {
-                            contentResolver.openInputStream(uri)?.use { input ->
+                    for (fileInfo in pendingFiles) {
+                        zos.putNextEntry(ZipEntry(fileInfo.name))
+                        if (fileInfo.uri != Uri.EMPTY) {
+                            contentResolver.openInputStream(fileInfo.uri)?.use { input ->
                                 val buf = ByteArray(8192)
                                 var len: Int
                                 while (input.read(buf).also { len = it } > 0) {
@@ -452,12 +493,11 @@ class AttachmentActivity : AppCompatActivity() {
                                 }
                             }
                         } else if (isEdit && oldFile != null) {
-                            // Re-read from old zip
                             contentResolver.openInputStream(oldFile.uri)?.use { zipInput ->
                                 ZipInputStream(zipInput).use { zis ->
                                     var entry = zis.nextEntry
                                     while (entry != null) {
-                                        if (entry.name == name) {
+                                        if (entry.name == fileInfo.name) {
                                             val buf = ByteArray(8192)
                                             var len: Int
                                             while (zis.read(buf).also { len = it } > 0) {
@@ -490,6 +530,7 @@ class AttachmentActivity : AppCompatActivity() {
                 db.updateAttachment(id, zipName, hash, totalSize)
             }
             existingFilename = zipName
+            originalFileCount = pendingFiles.size
 
             Toast.makeText(this, "Attachments saved", Toast.LENGTH_SHORT).show()
         } catch (e: Exception) {
@@ -542,6 +583,27 @@ class AttachmentActivity : AppCompatActivity() {
         EntryViewerActivity.bootstrapService = ServiceProvider.bootstrapService
         EntryViewerActivity.pendingEntryId = entryId
         startActivity(Intent(this, EntryViewerActivity::class.java))
+    }
+
+    private fun getFileSize(uri: Uri): Long {
+        var size = 0L
+        val cursor = contentResolver.query(uri, null, null, null, null)
+        cursor?.use {
+            if (it.moveToFirst()) {
+                val idx = it.getColumnIndex(android.provider.OpenableColumns.SIZE)
+                if (idx >= 0) size = it.getLong(idx)
+            }
+        }
+        return size
+    }
+
+    private fun formatFileSize(bytes: Long): String {
+        if (bytes <= 0) return "—"
+        return when {
+            bytes < 1024 -> "${bytes} B"
+            bytes < 1024 * 1024 -> "${bytes / 1024} KB"
+            else -> "%.1f MB".format(bytes / (1024.0 * 1024.0))
+        }
     }
 
     private fun dp(v: Int): Int = (v * resources.displayMetrics.density).toInt()

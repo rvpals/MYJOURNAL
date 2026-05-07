@@ -920,6 +920,17 @@ class DatabaseService(private val context: Context) {
         return result
     }
 
+    fun getEntryIdsWithAttachments(): Set<String> {
+        val d = db ?: return emptySet()
+        val result = mutableSetOf<String>()
+        val cursor = d.rawQuery("SELECT DISTINCT link_entry_id FROM attachments", null)
+        while (cursor.moveToNext()) {
+            cursor.getString(0)?.let { result.add(it) }
+        }
+        cursor.close()
+        return result
+    }
+
     fun saveAttachment(id: String, filename: String, hash: String, size: Long, entryId: String) {
         val d = db ?: return
         val now = java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", java.util.Locale.US).format(java.util.Date())

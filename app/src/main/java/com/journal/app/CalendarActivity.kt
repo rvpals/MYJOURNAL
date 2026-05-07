@@ -33,6 +33,7 @@ class CalendarActivity : AppCompatActivity() {
     private val dayLabels = arrayOf("Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun")
 
     private var entries = JSONArray()
+    private var entryIdsWithAttachments = emptySet<String>()
     private var viewYear = 0
     private var viewMonth = 0
     private var selectedDate: String? = null
@@ -55,6 +56,7 @@ class CalendarActivity : AppCompatActivity() {
                 entries = JSONArray(json)
             } catch (_: JSONException) {}
         }
+        entryIdsWithAttachments = ServiceProvider.databaseService?.getEntryIdsWithAttachments() ?: emptySet()
 
         val today = Calendar.getInstance()
         viewYear = today.get(Calendar.YEAR)
@@ -309,6 +311,17 @@ class CalendarActivity : AppCompatActivity() {
             topRow.addView(timeView)
         }
 
+        val entryId = entry.optString("id", "")
+        if (entryIdsWithAttachments.contains(entryId)) {
+            topRow.addView(TextView(this).apply {
+                text = "📎"
+                setTextSize(TypedValue.COMPLEX_UNIT_SP, 12f)
+                setPadding(dp(6), 0, 0, 0)
+                isClickable = true
+                setOnClickListener { openAttachmentScreen(entryId, entry.optString("title", ""), entry.optString("date", "")) }
+            })
+        }
+
         row.addView(topRow)
 
         val preview = entry.optString("contentPreview", "")
@@ -324,7 +337,6 @@ class CalendarActivity : AppCompatActivity() {
             row.addView(sub)
         }
 
-        val entryId = entry.optString("id", "")
         row.setOnClickListener { openEntryViewer(entryId) }
 
         row.layoutParams = LinearLayout.LayoutParams(
@@ -369,6 +381,15 @@ class CalendarActivity : AppCompatActivity() {
         EntryViewerActivity.databaseService = ServiceProvider.databaseService
         EntryViewerActivity.bootstrapService = ServiceProvider.bootstrapService
         startActivity(Intent(this, EntryViewerActivity::class.java))
+    }
+
+    private fun openAttachmentScreen(entryId: String, title: String, date: String) {
+        AttachmentActivity.databaseService = ServiceProvider.databaseService
+        AttachmentActivity.bootstrapService = ServiceProvider.bootstrapService
+        AttachmentActivity.pendingEntryId = entryId
+        AttachmentActivity.pendingEntryTitle = title
+        AttachmentActivity.pendingEntryDate = date
+        startActivity(Intent(this, AttachmentActivity::class.java))
     }
 
     private fun finishWithNav(target: String) {

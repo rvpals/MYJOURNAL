@@ -34,6 +34,7 @@ class DashboardActivity : AppCompatActivity() {
     }
 
     private lateinit var dashboardData: JSONObject
+    private var entryIdsWithAttachments = emptySet<String>()
 
     override fun attachBaseContext(newBase: android.content.Context) {
         super.attachBaseContext(ThemeManager.fontScaledContext(newBase))
@@ -58,6 +59,8 @@ class DashboardActivity : AppCompatActivity() {
             finish()
             return
         }
+
+        entryIdsWithAttachments = ServiceProvider.databaseService?.getEntryIdsWithAttachments() ?: emptySet()
 
         setupNavbar()
         setupMenuButton()
@@ -540,10 +543,35 @@ class DashboardActivity : AppCompatActivity() {
 
     private fun setupCollapsibleHeader(header: TextView, content: View, prefKey: String, title: String) {
         val bs = ServiceProvider.bootstrapService ?: return
-        header.setTextColor(ThemeManager.color(C.TEXT))
         val collapsed = bs.get(prefKey) == "1"
         content.visibility = if (collapsed) View.GONE else View.VISIBLE
         header.text = "${if (collapsed) "▶" else "▼"} $title"
+        header.setTextColor(ThemeManager.color(C.TEXT))
+        header.setTextSize(TypedValue.COMPLEX_UNIT_SP, 14f)
+        header.setTypeface(null, android.graphics.Typeface.BOLD)
+        header.setPadding(dp(12), dp(8), dp(12), dp(8))
+
+        val shadow = GradientDrawable().apply {
+            cornerRadius = dp(10).toFloat()
+            setColor(android.graphics.Color.parseColor("#30808080"))
+        }
+        val face = GradientDrawable().apply {
+            cornerRadius = dp(10).toFloat()
+            setColor(ThemeManager.color(C.CARD_BG))
+            setStroke(dp(1), ThemeManager.color(C.CARD_BORDER))
+        }
+        val highlight = GradientDrawable().apply {
+            cornerRadius = dp(10).toFloat()
+            setColor(android.graphics.Color.TRANSPARENT)
+            setStroke(dp(1), android.graphics.Color.parseColor("#18FFFFFF"))
+        }
+        val layered = LayerDrawable(arrayOf(shadow, face, highlight))
+        layered.setLayerInset(0, dp(2), dp(2), 0, 0)
+        layered.setLayerInset(1, 0, 0, dp(2), dp(2))
+        layered.setLayerInset(2, 0, 0, dp(2), dp(2))
+        header.background = layered
+        header.elevation = dp(3).toFloat()
+
         header.setOnClickListener {
             val nowCollapsed = content.visibility == View.VISIBLE
             content.visibility = if (nowCollapsed) View.GONE else View.VISIBLE
@@ -663,6 +691,17 @@ class DashboardActivity : AppCompatActivity() {
                 setPadding(dp(8), dp(3), dp(8), dp(3))
             }
             topRow.addView(badge)
+
+            if (entryIdsWithAttachments.contains(entryId)) {
+                topRow.addView(TextView(this).apply {
+                    text = "📎"
+                    setTextSize(TypedValue.COMPLEX_UNIT_SP, 12f)
+                    setPadding(dp(6), 0, 0, 0)
+                    isClickable = true
+                    setOnClickListener { openAttachmentScreen(entryId, title, item.optString("date", "")) }
+                })
+            }
+
             row.addView(topRow)
 
             if (preview.isNotEmpty()) {
@@ -726,6 +765,17 @@ class DashboardActivity : AppCompatActivity() {
             topRow.addView(dateText)
         }
 
+        val entryId = entry.optString("id", "")
+        if (entryIdsWithAttachments.contains(entryId)) {
+            topRow.addView(TextView(this).apply {
+                text = "📎"
+                setTextSize(TypedValue.COMPLEX_UNIT_SP, 12f)
+                setPadding(dp(6), 0, 0, 0)
+                isClickable = true
+                setOnClickListener { openAttachmentScreen(entryId, entry.optString("title", ""), entry.optString("date", "")) }
+            })
+        }
+
         row.addView(topRow)
 
         val preview = entry.optString("contentPreview", "")
@@ -748,7 +798,6 @@ class DashboardActivity : AppCompatActivity() {
             row.addView(sub)
         }
 
-        val entryId = entry.optString("id", "")
         row.setOnClickListener {
             if (entryId.isNotEmpty()) {
                 EntryViewerActivity.pendingEntryId = entryId
@@ -1000,23 +1049,15 @@ class DashboardActivity : AppCompatActivity() {
                 container.addView(currentRow)
             }
 
-            val card = LinearLayout(this).apply {
-                orientation = LinearLayout.VERTICAL
-                gravity = Gravity.CENTER_HORIZONTAL
-                setPadding(dp(6), dp(8), dp(6), dp(8))
-                val bg = GradientDrawable().apply {
-                    cornerRadius = dp(8).toFloat()
-                    setColor(ThemeManager.color(C.CARD_BG))
-                    setStroke(dp(1), ThemeManager.color(C.CARD_BORDER))
-                }
-                background = bg
-                elevation = dp(2).toFloat()
-                layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f).apply {
-                    marginEnd = if ((i % columns) < columns - 1) dp(6) else 0
-                }
-                isClickable = true
-                isFocusable = true
-                setOnClickListener {
+            val iconData = try { db.getIcon("category_hd", name).ifEmpty { db.getIcon("category", name) } } catch (_: Exception) { "" }
+            val card = DashboardCardComponent.createCard(this, DashboardCardComponent.CardConfig(
+                name = name,
+                count = count,
+                iconData = iconData,
+                fallbackEmoji = "📁",
+                columnIndex = i % columns,
+                totalColumns = columns,
+                onClick = {
                     val filter = JSONArray().put(JSONObject().apply {
                         put("field", "categories")
                         put("op", "includes")
@@ -1025,52 +1066,7 @@ class DashboardActivity : AppCompatActivity() {
                     })
                     openFilteredEntryList(filter.toString(), name)
                 }
-            }
-
-            // Icon
-            val iconData = try { db.getIcon("category_hd", name).ifEmpty { db.getIcon("category", name) } } catch (_: Exception) { "" }
-            if (iconData.isNotEmpty() && iconData != "null") {
-                val iv = ImageView(this).apply {
-                    layoutParams = LinearLayout.LayoutParams(dp(48), dp(48)).apply { bottomMargin = dp(4) }
-                    scaleType = ImageView.ScaleType.FIT_CENTER
-                    adjustViewBounds = true
-                }
-                try {
-                    val dataUrl = iconData.removeSurrounding("\"")
-                    val b64 = if (dataUrl.contains(",")) dataUrl.substringAfter(",") else dataUrl
-                    if (b64.isNotEmpty()) {
-                        val bytes = Base64.decode(b64, Base64.DEFAULT)
-                        val bmp = BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
-                        if (bmp != null) iv.setImageBitmap(bmp)
-                    }
-                } catch (_: Exception) {}
-                card.addView(iv)
-            } else {
-                card.addView(TextView(this).apply {
-                    text = "📁"
-                    setTextSize(TypedValue.COMPLEX_UNIT_SP, 28f)
-                    gravity = Gravity.CENTER
-                    layoutParams = LinearLayout.LayoutParams(dp(48), dp(48)).apply { bottomMargin = dp(4) }
-                })
-            }
-
-            // Name
-            card.addView(TextView(this).apply {
-                text = name
-                setTextColor(ThemeManager.color(C.TEXT))
-                setTextSize(TypedValue.COMPLEX_UNIT_SP, 12f)
-                gravity = Gravity.CENTER
-                maxLines = 2
-                ellipsize = TextUtils.TruncateAt.END
-            })
-
-            // Count
-            card.addView(TextView(this).apply {
-                text = "$count"
-                setTextColor(ThemeManager.color(C.TEXT_SECONDARY))
-                setTextSize(TypedValue.COMPLEX_UNIT_SP, 11f)
-                gravity = Gravity.CENTER
-            })
+            ))
 
             currentRow?.addView(card)
         }
@@ -1079,11 +1075,7 @@ class DashboardActivity : AppCompatActivity() {
         val remainder = limit % columns
         if (remainder != 0) {
             for (j in remainder until columns) {
-                currentRow?.addView(View(this).apply {
-                    layoutParams = LinearLayout.LayoutParams(0, 0, 1f).apply {
-                        marginEnd = if (j < columns - 1) dp(6) else 0
-                    }
-                })
+                currentRow?.addView(DashboardCardComponent.createEmptyCell(this, j, columns))
             }
         }
     }
@@ -1244,6 +1236,15 @@ class DashboardActivity : AppCompatActivity() {
     }
 
     // ========== Navigation ==========
+
+    private fun openAttachmentScreen(entryId: String, title: String, date: String) {
+        AttachmentActivity.databaseService = ServiceProvider.databaseService
+        AttachmentActivity.bootstrapService = ServiceProvider.bootstrapService
+        AttachmentActivity.pendingEntryId = entryId
+        AttachmentActivity.pendingEntryTitle = title
+        AttachmentActivity.pendingEntryDate = date
+        startActivity(Intent(this, AttachmentActivity::class.java))
+    }
 
     private fun openFilteredEntryList(filtersJson: String?, label: String?) {
         android.util.Log.d("DashboardNav", "openFilteredEntryList filters=$filtersJson label=$label")
