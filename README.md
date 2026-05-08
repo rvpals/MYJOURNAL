@@ -10,7 +10,7 @@ Personal journal and activity log Android app with encrypted local storage.
 
 ## Overview
 
-A fully native Kotlin Android app for keeping a personal journal with rich text editing, image attachments, weather tracking, and more. All 15 screens are native Kotlin activities. All data is stored locally on-device in an AES-256-GCM encrypted SQLCipher database. Version 2.2.0.
+A fully native Kotlin Android app for keeping a personal journal with rich text editing, image attachments, weather tracking, and more. All 15 screens are native Kotlin activities. All data is stored locally on-device in an AES-256-GCM encrypted SQLCipher database. Version 2.3.0.
 
 ## Features
 
@@ -31,7 +31,7 @@ A fully native Kotlin Android app for keeping a personal journal with rich text 
 - **Calendar view** — Monthly grid with entry dots, day selection
 - **Entry locking** — Prevent accidental edits
 - **Backup/Restore** — SAF folder-based backup on Android
-- **12 themes** — Light, Dark, Ocean, Midnight, Forest, Amethyst, Aurora, Lavender, Frost, Navy, Sunflower, Meadow
+- **20 themes** — Light, Dark, Ocean, Midnight, Forest, Amethyst, Aurora, Lavender, Frost, Navy, Sunflower, Meadow, Rose, Copper, Slate, Ember, Sage, Dusk, Mocha, Arctic
 - **Export/Import** — CSV, metadata JSON, encrypted DB
 
 ## Building

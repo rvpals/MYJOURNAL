@@ -88,6 +88,10 @@ class AboutActivity : AppCompatActivity() {
     }
 
     private fun buildChangelog(): String = """
+v2.3.0 (2026-05-07)
+• 8 new color themes — Rose, Copper, Slate, Ember, Sage, Dusk, Mocha, Arctic (20 total)
+• Fix: Publish draft from dashboard no longer crashes app
+
 v2.2.0 (2026-05-07)
 • Draft entries — save entries as drafts for future publishing
 • "Save as Draft" button in entry form navbar

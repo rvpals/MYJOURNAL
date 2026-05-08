@@ -168,6 +168,94 @@ object ThemeManager {
             C.TAG_BG to 0xFFc8f0cc.toInt(), C.TAG_TEXT to 0xFF1a7a28.toInt(),
             C.BIOMETRIC_BG to 0xFF1a4a2a.toInt(), C.BIOMETRIC_BORDER to 0xFF2a8a40.toInt(),
             C.DELETE_BG to 0xFF5a2a2a.toInt(), C.DELETE_BORDER to 0xFF8a3a3a.toInt()
+        ),
+        "rose" to mapOf(
+            C.BG to 0xFF1e1018.toInt(), C.CARD_BG to 0xFF2e1a28.toInt(),
+            C.CARD_BORDER to 0xFF5a3050.toInt(), C.ACCENT to 0xFFe8608a.toInt(),
+            C.ACCENT_DARK to 0xFFf080a0.toInt(), C.TEXT to 0xFFf0e0e8.toInt(),
+            C.TEXT_SECONDARY to 0xFFc8a0b8.toInt(), C.INPUT_BG to 0xFF281420.toInt(),
+            C.ERROR to 0xFFff5060.toInt(), C.SUCCESS to 0xFF50d898.toInt(),
+            C.NAV_BG to 0xFF140a12.toInt(), C.NAV_TEXT to 0xFFe0c8d8.toInt(),
+            C.TAG_BG to 0xFF4a2040.toInt(), C.TAG_TEXT to 0xFFf8a0c8.toInt(),
+            C.BIOMETRIC_BG to 0xFF1a3028.toInt(), C.BIOMETRIC_BORDER to 0xFF38a060.toInt(),
+            C.DELETE_BG to 0xFF4a1520.toInt(), C.DELETE_BORDER to 0xFF8a2a38.toInt()
+        ),
+        "copper" to mapOf(
+            C.BG to 0xFF1a1410.toInt(), C.CARD_BG to 0xFF2a2018.toInt(),
+            C.CARD_BORDER to 0xFF5a4030.toInt(), C.ACCENT to 0xFFd08040.toInt(),
+            C.ACCENT_DARK to 0xFFe89850.toInt(), C.TEXT to 0xFFf0e8e0.toInt(),
+            C.TEXT_SECONDARY to 0xFFc0a888.toInt(), C.INPUT_BG to 0xFF221a14.toInt(),
+            C.ERROR to 0xFFe85040.toInt(), C.SUCCESS to 0xFF58c868.toInt(),
+            C.NAV_BG to 0xFF100c08.toInt(), C.NAV_TEXT to 0xFFe0d0c0.toInt(),
+            C.TAG_BG to 0xFF4a3020.toInt(), C.TAG_TEXT to 0xFFf0b870.toInt(),
+            C.BIOMETRIC_BG to 0xFF1a3820.toInt(), C.BIOMETRIC_BORDER to 0xFF38a048.toInt(),
+            C.DELETE_BG to 0xFF4a1a1a.toInt(), C.DELETE_BORDER to 0xFF8a3030.toInt()
+        ),
+        "slate" to mapOf(
+            C.BG to 0xFFf0f2f5.toInt(), C.CARD_BG to 0xFFffffff.toInt(),
+            C.CARD_BORDER to 0xFF8a9aaa.toInt(), C.ACCENT to 0xFF4a7a9a.toInt(),
+            C.ACCENT_DARK to 0xFF3a6a88.toInt(), C.TEXT to 0xFF2a3440.toInt(),
+            C.TEXT_SECONDARY to 0xFF5a6a7a.toInt(), C.INPUT_BG to 0xFFf5f7fa.toInt(),
+            C.ERROR to 0xFFd04848.toInt(), C.SUCCESS to 0xFF38a060.toInt(),
+            C.NAV_BG to 0xFF2a3440.toInt(), C.NAV_TEXT to 0xFFd0dae4.toInt(),
+            C.TAG_BG to 0xFFd8e4ee.toInt(), C.TAG_TEXT to 0xFF3a5a78.toInt(),
+            C.BIOMETRIC_BG to 0xFF2a4a38.toInt(), C.BIOMETRIC_BORDER to 0xFF3a8a50.toInt(),
+            C.DELETE_BG to 0xFF5a2a2a.toInt(), C.DELETE_BORDER to 0xFF8a3a3a.toInt()
+        ),
+        "ember" to mapOf(
+            C.BG to 0xFF1a0e0a.toInt(), C.CARD_BG to 0xFF2a1810.toInt(),
+            C.CARD_BORDER to 0xFF5a2e1a.toInt(), C.ACCENT to 0xFFe85020.toInt(),
+            C.ACCENT_DARK to 0xFFf06830.toInt(), C.TEXT to 0xFFf0e4e0.toInt(),
+            C.TEXT_SECONDARY to 0xFFc09888.toInt(), C.INPUT_BG to 0xFF221410.toInt(),
+            C.ERROR to 0xFFff4040.toInt(), C.SUCCESS to 0xFF48c870.toInt(),
+            C.NAV_BG to 0xFF100808.toInt(), C.NAV_TEXT to 0xFFe0c8c0.toInt(),
+            C.TAG_BG to 0xFF4a2010.toInt(), C.TAG_TEXT to 0xFFf8a070.toInt(),
+            C.BIOMETRIC_BG to 0xFF1a3820.toInt(), C.BIOMETRIC_BORDER to 0xFF38a048.toInt(),
+            C.DELETE_BG to 0xFF4a1010.toInt(), C.DELETE_BORDER to 0xFF8a2020.toInt()
+        ),
+        "sage" to mapOf(
+            C.BG to 0xFFf2f4f0.toInt(), C.CARD_BG to 0xFFfcfdfa.toInt(),
+            C.CARD_BORDER to 0xFF8a9a80.toInt(), C.ACCENT to 0xFF6a8a60.toInt(),
+            C.ACCENT_DARK to 0xFF587850.toInt(), C.TEXT to 0xFF2a3428.toInt(),
+            C.TEXT_SECONDARY to 0xFF5a6a58.toInt(), C.INPUT_BG to 0xFFf6f8f4.toInt(),
+            C.ERROR to 0xFFc84848.toInt(), C.SUCCESS to 0xFF4a9a50.toInt(),
+            C.NAV_BG to 0xFF2a3428.toInt(), C.NAV_TEXT to 0xFFd0dece.toInt(),
+            C.TAG_BG to 0xFFdae8d6.toInt(), C.TAG_TEXT to 0xFF3a6838.toInt(),
+            C.BIOMETRIC_BG to 0xFF2a4a30.toInt(), C.BIOMETRIC_BORDER to 0xFF3a8a48.toInt(),
+            C.DELETE_BG to 0xFF5a2a2a.toInt(), C.DELETE_BORDER to 0xFF8a3a3a.toInt()
+        ),
+        "dusk" to mapOf(
+            C.BG to 0xFF181020.toInt(), C.CARD_BG to 0xFF281e38.toInt(),
+            C.CARD_BORDER to 0xFF483860.toInt(), C.ACCENT to 0xFFc868a0.toInt(),
+            C.ACCENT_DARK to 0xFFe080b8.toInt(), C.TEXT to 0xFFe8e0f0.toInt(),
+            C.TEXT_SECONDARY to 0xFFa898c0.toInt(), C.INPUT_BG to 0xFF201530.toInt(),
+            C.ERROR to 0xFFf05060.toInt(), C.SUCCESS to 0xFF50d888.toInt(),
+            C.NAV_BG to 0xFF0e0818.toInt(), C.NAV_TEXT to 0xFFd0c0e0.toInt(),
+            C.TAG_BG to 0xFF382850.toInt(), C.TAG_TEXT to 0xFFe0a0d0.toInt(),
+            C.BIOMETRIC_BG to 0xFF182e28.toInt(), C.BIOMETRIC_BORDER to 0xFF30a060.toInt(),
+            C.DELETE_BG to 0xFF4a1520.toInt(), C.DELETE_BORDER to 0xFF8a2a38.toInt()
+        ),
+        "mocha" to mapOf(
+            C.BG to 0xFF1c1614.toInt(), C.CARD_BG to 0xFF2c2420.toInt(),
+            C.CARD_BORDER to 0xFF504038.toInt(), C.ACCENT to 0xFFb88a50.toInt(),
+            C.ACCENT_DARK to 0xFFd0a060.toInt(), C.TEXT to 0xFFf0e8e0.toInt(),
+            C.TEXT_SECONDARY to 0xFFb8a898.toInt(), C.INPUT_BG to 0xFF241c18.toInt(),
+            C.ERROR to 0xFFe05048.toInt(), C.SUCCESS to 0xFF58b860.toInt(),
+            C.NAV_BG to 0xFF120e0c.toInt(), C.NAV_TEXT to 0xFFdcd0c4.toInt(),
+            C.TAG_BG to 0xFF403020.toInt(), C.TAG_TEXT to 0xFFe0c080.toInt(),
+            C.BIOMETRIC_BG to 0xFF1a3820.toInt(), C.BIOMETRIC_BORDER to 0xFF38a048.toInt(),
+            C.DELETE_BG to 0xFF4a1a1a.toInt(), C.DELETE_BORDER to 0xFF8a3030.toInt()
+        ),
+        "arctic" to mapOf(
+            C.BG to 0xFF0a1820.toInt(), C.CARD_BG to 0xFF122838.toInt(),
+            C.CARD_BORDER to 0xFF1e4868.toInt(), C.ACCENT to 0xFF60c8e8.toInt(),
+            C.ACCENT_DARK to 0xFF80d8f0.toInt(), C.TEXT to 0xFFe4f0f8.toInt(),
+            C.TEXT_SECONDARY to 0xFF88b8d0.toInt(), C.INPUT_BG to 0xFF0e2030.toInt(),
+            C.ERROR to 0xFFf05868.toInt(), C.SUCCESS to 0xFF48d890.toInt(),
+            C.NAV_BG to 0xFF060e18.toInt(), C.NAV_TEXT to 0xFFb8d8e8.toInt(),
+            C.TAG_BG to 0xFF0e3848.toInt(), C.TAG_TEXT to 0xFF90e0f8.toInt(),
+            C.BIOMETRIC_BG to 0xFF0a3028.toInt(), C.BIOMETRIC_BORDER to 0xFF28a068.toInt(),
+            C.DELETE_BG to 0xFF4a1520.toInt(), C.DELETE_BORDER to 0xFF8a2a38.toInt()
         )
     )
 

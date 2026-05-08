@@ -15,7 +15,7 @@ summary: "Project architecture reference — directory structure, tech stack, da
 
 Fully native Android encrypted journal app. All 15 screens are native Kotlin activities. Services (crypto, database, bootstrap, weather) are managed by a `ServiceProvider` singleton. All data stored locally in AES-256-GCM encrypted SQLCipher database.
 
-**App Name:** My Journal | **Version:** 2.2.0 | **Package:** com.journal.app | **Min SDK:** 24 | **Target SDK:** 34
+**App Name:** My Journal | **Version:** 2.3.0 | **Package:** com.journal.app | **Min SDK:** 24 | **Target SDK:** 34
 
 ## Project Structure
 
@@ -48,7 +48,7 @@ MYJOURNAL/
 │   │   │   ├── CryptoService.kt         # AES-256-GCM + PBKDF2
 │   │   │   ├── WeatherService.kt        # Open-Meteo HTTP client
 │   │   │   └── DatabaseService.kt       # SQLCipher encrypted DB
-│   │   │   ├── ThemeManager.kt          # Runtime theme system (12 themes, view tree recoloring, app font scale + typeface)
+│   │   │   ├── ThemeManager.kt          # Runtime theme system (20 themes, view tree recoloring, app font scale + typeface)
 │   │   ├── res/
 │   │   │   ├── drawable/           # Button ripples, input/card/search/stat backgrounds, 3D tab/search drawables (25+ XML files)
 │   │   │   ├── layout/            # 14 activity layouts + 2 spinner item layouts
@@ -120,9 +120,9 @@ Output: `app/build/outputs/apk/debug/app-debug.apk`
 
 Navigation between activities uses standard Android `startActivity()`.
 
-## Themes (12)
+## Themes (20)
 
-Light, Dark, Ocean, Midnight, Forest, Amethyst, Aurora, Lavender, Frost, Navy, Sunflower, Meadow — theme selection stored in settings DB.
+Light, Dark, Ocean, Midnight, Forest, Amethyst, Aurora, Lavender, Frost, Navy, Sunflower, Meadow, Rose, Copper, Slate, Ember, Sage, Dusk, Mocha, Arctic — theme selection stored in settings DB.
 
 `ThemeManager.kt` singleton provides runtime theme colors, app font scale, and typeface. All activities call `ThemeManager.applyToActivity(this)` in `onCreate` to recolor XML-set backgrounds/text and schedule typeface application. All 13 post-login activities override `attachBaseContext` with `ThemeManager.fontScaledContext()` for font size scaling. Activities detect theme/font changes via `themeVersion` counter in `onResume`.
 

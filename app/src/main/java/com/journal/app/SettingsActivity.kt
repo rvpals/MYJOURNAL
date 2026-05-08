@@ -3770,7 +3770,8 @@ class SettingsActivity : AppCompatActivity() {
         buildSectionHeader("🎨  Theme")
         val themes = listOf(
             "light", "dark", "ocean", "midnight", "forest", "amethyst",
-            "aurora", "lavender", "frost", "navy", "sunflower", "meadow"
+            "aurora", "lavender", "frost", "navy", "sunflower", "meadow",
+            "rose", "copper", "slate", "ember", "sage", "dusk", "mocha", "arctic"
         )
         val currentTheme = settings.optString("theme", "dark")
         buildSpinner("Theme", themes.map { it.replaceFirstChar { c -> c.uppercase() } }, themes.indexOf(currentTheme).coerceAtLeast(0)) { idx ->

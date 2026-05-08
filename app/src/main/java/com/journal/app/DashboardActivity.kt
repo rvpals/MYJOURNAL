@@ -426,9 +426,15 @@ class DashboardActivity : AppCompatActivity() {
         val draftId = draft.optString("id", "")
         publishBtn.setOnClickListener {
             val db = ServiceProvider.databaseService ?: return@setOnClickListener
+            val bs = ServiceProvider.bootstrapService ?: return@setOnClickListener
             db.publishDraft(draftId)
-            needsRefresh = true
-            recreate()
+            Thread {
+                val json = DashboardDataBuilder.build(db, bs)
+                runOnUiThread {
+                    pendingData = json
+                    recreate()
+                }
+            }.start()
         }
         row.addView(publishBtn)
 
