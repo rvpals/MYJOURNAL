@@ -3,10 +3,14 @@ package com.journal.app
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
+import android.view.View
+import android.widget.LinearLayout
+import android.widget.ProgressBar
 import android.widget.ScrollView
 import android.widget.TextView
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
+import kotlin.concurrent.thread
 
 class AboutActivity : AppCompatActivity() {
 
@@ -77,6 +81,137 @@ class AboutActivity : AppCompatActivity() {
         }
 
         findViewById<android.view.View>(R.id.about_back_btn).setOnClickListener { finish() }
+
+        findViewById<View>(R.id.about_get_stats_btn).setOnClickListener { loadContentStats() }
+    }
+
+    private fun loadContentStats() {
+        val progress = findViewById<ProgressBar>(R.id.about_stats_progress)
+        val results = findViewById<LinearLayout>(R.id.about_stats_results)
+        val btn = findViewById<View>(R.id.about_get_stats_btn)
+
+        btn.isEnabled = false
+        btn.alpha = 0.5f
+        progress.visibility = View.VISIBLE
+        results.visibility = View.GONE
+
+        thread {
+            val db = ServiceProvider.databaseService
+            val entriesJson = db?.getEntries() ?: "[]"
+            val arr = org.json.JSONArray(entriesJson)
+
+            var maxWords = 0
+            var maxWordsTitle = ""
+            val wordCounts = mutableMapOf<String, Int>()
+            val stopWords = setOf("the", "a", "an", "is", "are", "was", "were", "be", "been",
+                "being", "have", "has", "had", "do", "does", "did", "will", "would", "could",
+                "should", "may", "might", "shall", "can", "need", "dare", "ought", "used",
+                "to", "of", "in", "for", "on", "with", "at", "by", "from", "as", "into",
+                "through", "during", "before", "after", "above", "below", "between", "out",
+                "off", "over", "under", "again", "further", "then", "once", "and", "but",
+                "or", "nor", "not", "so", "yet", "both", "either", "neither", "each",
+                "every", "all", "any", "few", "more", "most", "other", "some", "such",
+                "no", "only", "own", "same", "than", "too", "very", "just", "because",
+                "this", "that", "these", "those", "i", "me", "my", "myself", "we", "our",
+                "you", "your", "he", "him", "his", "she", "her", "it", "its", "they",
+                "them", "their", "what", "which", "who", "whom", "when", "where", "why",
+                "how", "if", "about", "up", "also", "there", "here", "s", "t", "don",
+                "didn", "won", "isn", "aren", "wasn", "weren", "hasn", "haven", "hadn")
+
+            for (i in 0 until arr.length()) {
+                val e = arr.getJSONObject(i)
+                val content = e.optString("content", "")
+                val words = content.split(Regex("\\s+")).filter { it.isNotBlank() }
+                if (words.size > maxWords) {
+                    maxWords = words.size
+                    maxWordsTitle = e.optString("title", "Untitled")
+                }
+                for (word in words) {
+                    val cleaned = word.lowercase().replace(Regex("[^a-z']"), "")
+                    if (cleaned.length > 1 && cleaned !in stopWords) {
+                        wordCounts[cleaned] = (wordCounts[cleaned] ?: 0) + 1
+                    }
+                }
+            }
+
+            val top5 = wordCounts.entries.sortedByDescending { it.value }.take(5)
+            val maxCount = top5.firstOrNull()?.value ?: 1
+
+            runOnUiThread {
+                progress.visibility = View.GONE
+                results.removeAllViews()
+                results.visibility = View.VISIBLE
+                btn.isEnabled = true
+                btn.alpha = 1.0f
+
+                // Max word count stat
+                val maxLabel = TextView(this).apply {
+                    text = "📝 Longest Entry (by words)"
+                    textSize = 12f
+                    setTextColor(0xFF738598.toInt())
+                    setTypeface(null, android.graphics.Typeface.BOLD)
+                }
+                results.addView(maxLabel)
+
+                val maxValue = TextView(this).apply {
+                    text = "$maxWords words — \"${maxWordsTitle.take(40)}\""
+                    textSize = 14f
+                    setTextColor(0xFF2c3145.toInt())
+                    setPadding(0, 4, 0, 16)
+                }
+                results.addView(maxValue)
+
+                // Top 5 words
+                val freqLabel = TextView(this).apply {
+                    text = "🔤 Most Frequent Words (Top 5)"
+                    textSize = 12f
+                    setTextColor(0xFF738598.toInt())
+                    setTypeface(null, android.graphics.Typeface.BOLD)
+                    setPadding(0, 0, 0, 8)
+                }
+                results.addView(freqLabel)
+
+                for ((idx, wordEntry) in top5.withIndex()) {
+                    val row = LinearLayout(this).apply {
+                        orientation = LinearLayout.VERTICAL
+                        setPadding(0, 0, 0, 10)
+                    }
+
+                    val wordRow = LinearLayout(this).apply {
+                        orientation = LinearLayout.HORIZONTAL
+                        gravity = android.view.Gravity.CENTER_VERTICAL
+                    }
+
+                    val rank = TextView(this).apply {
+                        text = "${idx + 1}. ${wordEntry.key}"
+                        textSize = 13f
+                        setTextColor(0xFF2c3145.toInt())
+                        layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
+                    }
+                    wordRow.addView(rank)
+
+                    val count = TextView(this).apply {
+                        text = "${wordEntry.value}×"
+                        textSize = 13f
+                        setTextColor(0xFF1cb3c8.toInt())
+                        setTypeface(null, android.graphics.Typeface.BOLD)
+                    }
+                    wordRow.addView(count)
+                    row.addView(wordRow)
+
+                    val wordBar = ProgressBar(this, null, android.R.attr.progressBarStyleHorizontal).apply {
+                        max = maxCount
+                        setProgress(wordEntry.value, false)
+                        layoutParams = LinearLayout.LayoutParams(
+                            LinearLayout.LayoutParams.MATCH_PARENT,
+                            (6 * resources.displayMetrics.density).toInt()
+                        ).apply { topMargin = (3 * resources.displayMetrics.density).toInt() }
+                    }
+                    row.addView(wordBar)
+                    results.addView(row)
+                }
+            }
+        }
     }
 
     override fun onResume() {

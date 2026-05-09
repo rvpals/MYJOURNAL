@@ -183,6 +183,59 @@
             </LinearLayout>
         </LinearLayout>
 
+        <!-- Interesting Content Stats Card -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:orientation="vertical"
+            android:background="@drawable/about_card_bg"
+            android:padding="16dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Interesting Content Stats"
+                android:textSize="16sp"
+                android:textStyle="bold"
+                android:textColor="#1cb3c8"
+                android:letterSpacing="0.03" />
+
+            <TextView
+                android:id="@+id/about_get_stats_btn"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:text="Get Stats"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                android:textColor="#ffffff"
+                android:paddingStart="24dp"
+                android:paddingEnd="24dp"
+                android:paddingTop="8dp"
+                android:paddingBottom="8dp"
+                android:background="@drawable/btn_accent"
+                android:clickable="true"
+                android:focusable="true" />
+
+            <ProgressBar
+                android:id="@+id/about_stats_progress"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                style="?android:attr/progressBarStyleHorizontal"
+                android:indeterminate="true"
+                android:visibility="gone" />
+
+            <LinearLayout
+                android:id="@+id/about_stats_results"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:layout_marginTop="12dp"
+                android:visibility="gone" />
+        </LinearLayout>
+
         <!-- What's New Button -->
         <TextView
             android:id="@+id/about_whats_new_btn"
