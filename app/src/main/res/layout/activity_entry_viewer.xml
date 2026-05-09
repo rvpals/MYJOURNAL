@@ -86,6 +86,16 @@
             android:orientation="vertical"
             android:padding="12dp">
 
+            <!-- Record ID -->
+            <TextView
+                android:id="@+id/ev_record_id"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textColor="#738598"
+                android:textSize="11sp"
+                android:layout_marginBottom="4dp"
+                android:visibility="gone" />
+
             <!-- Header: Date, Time, Pin, Lock -->
             <LinearLayout
                 android:layout_width="match_parent"

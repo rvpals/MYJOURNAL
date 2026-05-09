@@ -338,6 +338,16 @@ class EntryFormActivity : AppCompatActivity() {
 
         addSectionHeader("Main")
 
+        // Record ID
+        val idText = if (isNew) "New Entry" else "ID: $entryId"
+        val idLabel = TextView(this).apply {
+            text = idText
+            setTextColor(0xFF738598.toInt())
+            setTextSize(android.util.TypedValue.COMPLEX_UNIT_SP, 11f)
+            setPadding(0, 0, 0, dp(6))
+        }
+        contentContainer.addView(idLabel)
+
         // Date
         addLabel("Date")
         val dateRow = LinearLayout(this).apply {

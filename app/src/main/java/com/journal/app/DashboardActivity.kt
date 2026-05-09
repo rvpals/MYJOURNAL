@@ -74,13 +74,13 @@ class DashboardActivity : AppCompatActivity() {
         populatePinnedEntries()
         populateRecentEntries()
         populateTodayInHistory()
-        populateRankedPanel(R.id.tags_list, R.id.panel_tags, R.id.tags_header, "topTags", "tags", "dash_tags_collapsed", "🏷️ Top Tags")
+        populateRankedPanel(R.id.tags_list, R.id.panel_tags, R.id.tags_header, "topTags", "tags", "dash_tags_collapsed", "🏷️ Top Tags", "tags")
         populateCategoriesPanel()
-        populateRankedPanel(R.id.places_list, R.id.panel_places, R.id.places_header, "topPlaces", "placeName", "dash_places_collapsed", "📍 Top Places")
+        populateRankedPanel(R.id.places_list, R.id.panel_places, R.id.places_header, "topPlaces", "placeName", "dash_places_collapsed", "📍 Top Places", "places")
         populateInspiration()
 
         listOf(
-            R.id.panel_prefill_shortcuts, R.id.panel_drafts, R.id.panel_pinned, R.id.panel_recent,
+            R.id.panel_stats, R.id.panel_prefill_shortcuts, R.id.panel_drafts, R.id.panel_pinned, R.id.panel_recent,
             R.id.panel_today_history, R.id.panel_tags, R.id.panel_categories,
             R.id.panel_places, R.id.panel_inspiration
         ).forEach { style3DPanel(findViewById(it)) }
@@ -315,7 +315,7 @@ class DashboardActivity : AppCompatActivity() {
             container.addView(row)
         }
 
-        setupCollapsibleHeader(header, container, "dash_stats_collapsed", "📊 Entry Stats")
+        setupCollapsibleHeader(header, container, "dash_stats_collapsed", "📊 Entry Stats", "stats")
     }
 
     // ========== Quick Actions (Pinned Views) ==========
@@ -375,7 +375,7 @@ class DashboardActivity : AppCompatActivity() {
         }
 
         panel.visibility = View.VISIBLE
-        setupCollapsibleHeader(header, list, "dash_prefill_collapsed", "📋 Pre-fill Templates")
+        setupCollapsibleHeader(header, list, "dash_prefill_collapsed", "📋 Pre-fill Templates", "prefill_shortcuts")
         list.removeAllViews()
 
         for (tpl in shortcuts) {
@@ -418,7 +418,7 @@ class DashboardActivity : AppCompatActivity() {
         }
 
         panel.visibility = View.VISIBLE
-        setupCollapsibleHeader(header, list, "dash_drafts_collapsed", "Drafts")
+        setupCollapsibleHeader(header, list, "dash_drafts_collapsed", "Drafts", "drafts")
         list.removeAllViews()
 
         for (i in 0 until drafts.length()) {
@@ -514,6 +514,7 @@ class DashboardActivity : AppCompatActivity() {
         }
 
         panel.visibility = View.VISIBLE
+        addRemoveButton(panel, "widgets")
         list.removeAllViews()
 
         for (i in 0 until widgets.length()) {
@@ -685,6 +686,7 @@ class DashboardActivity : AppCompatActivity() {
         }
 
         panel.visibility = View.VISIBLE
+        addRemoveButton(panel, "pinned")
         list.removeAllViews()
         for (i in 0 until pinned.length()) {
             val entry = pinned.optJSONObject(i) ?: continue
@@ -692,7 +694,7 @@ class DashboardActivity : AppCompatActivity() {
         }
     }
 
-    private fun setupCollapsibleHeader(header: TextView, content: View, prefKey: String, title: String) {
+    private fun setupCollapsibleHeader(header: TextView, content: View, prefKey: String, title: String, componentId: String? = null) {
         val bs = ServiceProvider.bootstrapService ?: return
         val collapsed = bs.get(prefKey) == "1"
         content.visibility = if (collapsed) View.GONE else View.VISIBLE
@@ -700,7 +702,7 @@ class DashboardActivity : AppCompatActivity() {
         header.setTextColor(ThemeManager.color(C.TEXT))
         header.setTextSize(TypedValue.COMPLEX_UNIT_SP, 14f)
         header.setTypeface(null, android.graphics.Typeface.BOLD)
-        header.setPadding(dp(12), dp(8), dp(12), dp(8))
+        header.setPadding(dp(12), dp(8), dp(36), dp(8))
 
         val shadow = GradientDrawable().apply {
             cornerRadius = dp(10).toFloat()
@@ -729,6 +731,65 @@ class DashboardActivity : AppCompatActivity() {
             header.text = "${if (nowCollapsed) "▶" else "▼"} $title"
             bs.set(prefKey, if (nowCollapsed) "1" else "0")
         }
+
+        if (componentId != null) {
+            val parent = header.parent as? android.view.ViewGroup ?: return
+            addRemoveButton(parent, componentId)
+        }
+    }
+
+    private fun addRemoveButton(panel: android.view.ViewGroup, componentId: String) {
+        if (panel.findViewWithTag<View>("remove_$componentId") != null) return
+        val btn = TextView(this).apply {
+            tag = "remove_$componentId"
+            text = "✕"
+            setTextColor(ThemeManager.color(C.TEXT_SECONDARY))
+            textSize = 13f
+            gravity = android.view.Gravity.CENTER
+            setPadding(dp(8), dp(4), dp(8), dp(4))
+            layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.WRAP_CONTENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            ).apply { gravity = android.view.Gravity.END }
+            isClickable = true
+            setOnClickListener { removeDashboardComponent(componentId, panel) }
+        }
+        panel.addView(btn, 0)
+    }
+
+    private fun removeDashboardComponent(componentId: String, panel: android.view.ViewGroup) {
+        val bs = ServiceProvider.bootstrapService ?: return
+        val json = bs.get("dashboard_components")
+        val components = mutableListOf<JSONObject>()
+        val defaultOrder = listOf(
+            "weather_streak", "stats", "quick_actions", "prefill_shortcuts", "drafts", "widgets",
+            "pinned", "recent", "today_history", "tags", "categories", "places", "inspiration"
+        )
+        if (json != null) {
+            try {
+                val arr = JSONArray(json)
+                for (i in 0 until arr.length()) components.add(arr.getJSONObject(i))
+            } catch (_: Exception) {
+                components.addAll(defaultOrder.map { JSONObject().put("id", it).put("enabled", true) })
+            }
+        } else {
+            components.addAll(defaultOrder.map { JSONObject().put("id", it).put("enabled", true) })
+        }
+        val existingIds = components.map { it.getString("id") }.toSet()
+        for (id in defaultOrder) {
+            if (id !in existingIds) components.add(JSONObject().put("id", id).put("enabled", true))
+        }
+        for (comp in components) {
+            if (comp.getString("id") == componentId) {
+                comp.put("enabled", false)
+                break
+            }
+        }
+        val arr = JSONArray()
+        for (comp in components) arr.put(comp)
+        bs.set("dashboard_components", arr.toString())
+
+        panel.visibility = View.GONE
     }
 
     private fun style3DPanel(panel: View) {
@@ -759,7 +820,7 @@ class DashboardActivity : AppCompatActivity() {
     private fun populateRecentEntries() {
         val recent = dashboardData.optJSONArray("recentEntries")
         val list = findViewById<LinearLayout>(R.id.recent_entries_list)
-        setupCollapsibleHeader(findViewById(R.id.recent_header), list, "dash_recent_collapsed", "Recent Entries")
+        setupCollapsibleHeader(findViewById(R.id.recent_header), list, "dash_recent_collapsed", "Recent Entries", "recent")
         list.removeAllViews()
 
         if (recent == null || recent.length() == 0) {
@@ -792,6 +853,7 @@ class DashboardActivity : AppCompatActivity() {
         }
 
         panel.visibility = View.VISIBLE
+        addRemoveButton(panel, "today_history")
         list.removeAllViews()
 
         for (i in 0 until items.length()) {
@@ -977,7 +1039,7 @@ class DashboardActivity : AppCompatActivity() {
         panel.visibility = View.VISIBLE
         content.removeAllViews()
 
-        setupCollapsibleHeader(header, content, "dash_inspiration_collapsed", "✨ Daily Inspiration")
+        setupCollapsibleHeader(header, content, "dash_inspiration_collapsed", "✨ Daily Inspiration", "inspiration")
 
         val accent = ThemeManager.color(C.ACCENT)
         val cardBg = ThemeManager.color(C.CARD_BG)
@@ -1100,7 +1162,7 @@ class DashboardActivity : AppCompatActivity() {
         val isCardView = bs?.get("categories_view_mode") == "card"
 
         val header = findViewById<TextView>(R.id.categories_header)
-        setupCollapsibleHeader(header, list, "dash_categories_collapsed", "📁 Top Categories")
+        setupCollapsibleHeader(header, list, "dash_categories_collapsed", "📁 Top Categories", "categories")
 
         // Replace header with row containing title + view mode toggle (first time only)
         val parent = header.parent
@@ -1231,7 +1293,7 @@ class DashboardActivity : AppCompatActivity() {
         }
     }
 
-    private fun populateRankedPanel(listId: Int, panelId: Int, headerId: Int, dataKey: String, filterField: String, prefKey: String, title: String) {
+    private fun populateRankedPanel(listId: Int, panelId: Int, headerId: Int, dataKey: String, filterField: String, prefKey: String, title: String, componentId: String? = null) {
         val items = dashboardData.optJSONArray(dataKey)
         val list = findViewById<LinearLayout>(listId)
         val panel = findViewById<LinearLayout>(panelId)
@@ -1242,7 +1304,7 @@ class DashboardActivity : AppCompatActivity() {
         }
 
         panel.visibility = View.VISIBLE
-        setupCollapsibleHeader(findViewById(headerId), list, prefKey, title)
+        setupCollapsibleHeader(findViewById(headerId), list, prefKey, title, componentId)
         list.removeAllViews()
 
         val limit = minOf(items.length(), 10)
@@ -1486,7 +1548,10 @@ class DashboardActivity : AppCompatActivity() {
         if (timeStr.isEmpty()) return ""
         val fmt = ServiceProvider.bootstrapService?.get("ev_time_format") ?: "h:mm a"
         return try {
-            val d = java.text.SimpleDateFormat("HH:mm", java.util.Locale.US).parse(timeStr) ?: return timeStr
+            val normalized = if (!timeStr.contains(":") && timeStr.length in 3..4) {
+                timeStr.padStart(4, '0').let { "${it.substring(0, 2)}:${it.substring(2)}" }
+            } else timeStr
+            val d = java.text.SimpleDateFormat("HH:mm", java.util.Locale.US).parse(normalized) ?: return timeStr
             java.text.SimpleDateFormat(fmt, java.util.Locale.US).format(d)
         } catch (_: Exception) { timeStr }
     }

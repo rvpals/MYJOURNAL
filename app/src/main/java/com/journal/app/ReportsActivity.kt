@@ -1057,7 +1057,10 @@ class ReportsActivity : AppCompatActivity() {
         if (timeStr.isEmpty()) return ""
         val fmt = bs.get("ev_time_format") ?: "h:mm a"
         return try {
-            val d = SimpleDateFormat("HH:mm", Locale.US).parse(timeStr) ?: return timeStr
+            val normalized = if (!timeStr.contains(":") && timeStr.length in 3..4) {
+                timeStr.padStart(4, '0').let { "${it.substring(0, 2)}:${it.substring(2)}" }
+            } else timeStr
+            val d = SimpleDateFormat("HH:mm", Locale.US).parse(normalized) ?: return timeStr
             SimpleDateFormat(fmt, Locale.US).format(d)
         } catch (_: Exception) { timeStr }
     }

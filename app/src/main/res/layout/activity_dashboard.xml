@@ -117,6 +117,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
+                android:padding="12dp"
                 android:layout_marginBottom="12dp">
 
                 <TextView
@@ -127,8 +128,7 @@
                     android:textColor="@color/login_text"
                     android:textSize="14sp"
                     android:textStyle="bold"
-                    android:padding="10dp"
-                    android:layout_marginBottom="6dp" />
+                    android:padding="10dp" />
 
                 <LinearLayout
                     android:id="@+id/stats_container"

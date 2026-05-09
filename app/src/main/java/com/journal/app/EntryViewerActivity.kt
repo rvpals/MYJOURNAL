@@ -380,6 +380,16 @@ class EntryViewerActivity : AppCompatActivity() {
         val pinned = entry.optBoolean("pinned", false)
         val locked = entry.optBoolean("locked", false)
 
+        // Record ID
+        val recordIdView = findViewById<TextView>(R.id.ev_record_id)
+        val entryIdVal = entry.optString("id", "")
+        if (entryIdVal.isNotEmpty()) {
+            recordIdView.text = "ID: $entryIdVal"
+            recordIdView.visibility = View.VISIBLE
+        } else {
+            recordIdView.visibility = View.GONE
+        }
+
         // Header chips
         val dateView = findViewById<TextView>(R.id.ev_date)
         val timeView = findViewById<TextView>(R.id.ev_time)

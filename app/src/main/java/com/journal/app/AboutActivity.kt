@@ -100,8 +100,8 @@ class AboutActivity : AppCompatActivity() {
             val entriesJson = db?.getEntries() ?: "[]"
             val arr = org.json.JSONArray(entriesJson)
 
-            var maxWords = 0
-            var maxWordsTitle = ""
+            data class EntryLength(val title: String, val wordCount: Int)
+            val entryLengths = mutableListOf<EntryLength>()
             val wordCounts = mutableMapOf<String, Int>()
             val stopWords = setOf("the", "a", "an", "is", "are", "was", "were", "be", "been",
                 "being", "have", "has", "had", "do", "does", "did", "will", "would", "could",
@@ -122,10 +122,7 @@ class AboutActivity : AppCompatActivity() {
                 val e = arr.getJSONObject(i)
                 val content = e.optString("content", "")
                 val words = content.split(Regex("\\s+")).filter { it.isNotBlank() }
-                if (words.size > maxWords) {
-                    maxWords = words.size
-                    maxWordsTitle = e.optString("title", "Untitled")
-                }
+                entryLengths.add(EntryLength(e.optString("title", "Untitled"), words.size))
                 for (word in words) {
                     val cleaned = word.lowercase().replace(Regex("[^a-z']"), "")
                     if (cleaned.length > 1 && cleaned !in stopWords) {
@@ -134,8 +131,9 @@ class AboutActivity : AppCompatActivity() {
                 }
             }
 
-            val top5 = wordCounts.entries.sortedByDescending { it.value }.take(5)
-            val maxCount = top5.firstOrNull()?.value ?: 1
+            val top10Entries = entryLengths.sortedByDescending { it.wordCount }.take(10)
+            val top50 = wordCounts.entries.sortedByDescending { it.value }.take(50)
+            val maxCount = top50.firstOrNull()?.value ?: 1
 
             runOnUiThread {
                 progress.visibility = View.GONE
@@ -144,34 +142,64 @@ class AboutActivity : AppCompatActivity() {
                 btn.isEnabled = true
                 btn.alpha = 1.0f
 
-                // Max word count stat
+                // Top 10 longest entries
                 val maxLabel = TextView(this).apply {
-                    text = "📝 Longest Entry (by words)"
+                    text = "📝 Longest Entries (Top 10)"
                     textSize = 12f
                     setTextColor(0xFF738598.toInt())
                     setTypeface(null, android.graphics.Typeface.BOLD)
                 }
                 results.addView(maxLabel)
 
-                val maxValue = TextView(this).apply {
-                    text = "$maxWords words — \"${maxWordsTitle.take(40)}\""
-                    textSize = 14f
-                    setTextColor(0xFF2c3145.toInt())
-                    setPadding(0, 4, 0, 16)
-                }
-                results.addView(maxValue)
+                val topEntryMax = top10Entries.firstOrNull()?.wordCount ?: 1
+                for ((idx, entry) in top10Entries.withIndex()) {
+                    val row = LinearLayout(this).apply {
+                        orientation = LinearLayout.VERTICAL
+                        setPadding(0, 0, 0, 8)
+                    }
+                    val entryRow = LinearLayout(this).apply {
+                        orientation = LinearLayout.HORIZONTAL
+                        gravity = android.view.Gravity.CENTER_VERTICAL
+                    }
+                    val rank = TextView(this).apply {
+                        text = "${idx + 1}. ${entry.title.take(30)}"
+                        textSize = 13f
+                        setTextColor(0xFF2c3145.toInt())
+                        layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
+                    }
+                    entryRow.addView(rank)
+                    val count = TextView(this).apply {
+                        text = "${entry.wordCount} words"
+                        textSize = 13f
+                        setTextColor(0xFF1cb3c8.toInt())
+                        setTypeface(null, android.graphics.Typeface.BOLD)
+                    }
+                    entryRow.addView(count)
+                    row.addView(entryRow)
 
-                // Top 5 words
+                    val entryBar = ProgressBar(this, null, android.R.attr.progressBarStyleHorizontal).apply {
+                        max = topEntryMax
+                        setProgress(entry.wordCount, false)
+                        layoutParams = LinearLayout.LayoutParams(
+                            LinearLayout.LayoutParams.MATCH_PARENT,
+                            (6 * resources.displayMetrics.density).toInt()
+                        ).apply { topMargin = (3 * resources.displayMetrics.density).toInt() }
+                    }
+                    row.addView(entryBar)
+                    results.addView(row)
+                }
+
+                // Top 50 words
                 val freqLabel = TextView(this).apply {
-                    text = "🔤 Most Frequent Words (Top 5)"
+                    text = "🔤 Most Frequent Words (Top 50)"
                     textSize = 12f
                     setTextColor(0xFF738598.toInt())
                     setTypeface(null, android.graphics.Typeface.BOLD)
-                    setPadding(0, 0, 0, 8)
+                    setPadding(0, 16, 0, 8)
                 }
                 results.addView(freqLabel)
 
-                for ((idx, wordEntry) in top5.withIndex()) {
+                for ((idx, wordEntry) in top50.withIndex()) {
                     val row = LinearLayout(this).apply {
                         orientation = LinearLayout.VERTICAL
                         setPadding(0, 0, 0, 10)
@@ -223,6 +251,15 @@ class AboutActivity : AppCompatActivity() {
     }
 
     private fun buildChangelog(): String = """
+v2.5.0 (2026-05-09)
+• Content Stats: Top 50 most frequent words (up from 5) and Top 10 longest entries (up from 1)
+• Dashboard: ✕ button on panels to quickly hide components (syncs with Settings > Dashboard)
+• Dashboard: Entry Stats panel enclosed in single bordered container
+• Entry Viewer & Editor: Record ID field shown at top for debugging
+• Settings > Prefs: "Record ID" toggle in Entry List Fields (off by default)
+• Settings: Collapsible panels now have clear bordered containers
+• Fix: Time display inconsistency across screens (times stored without colon now normalized everywhere)
+
 v2.4.0 (2026-05-08)
 • Theme management — remove unwanted themes, restore all with Reset Themes
 • Complete Backup & Restore — full zip backup (database + attachments + settings) with timestamp naming

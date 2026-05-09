@@ -273,12 +273,12 @@ class SettingsActivity : AppCompatActivity() {
         contentContainer = displayBody
         buildLabel("Entry List Fields")
         val fieldDefs = listOf(
-            "date" to "Date", "time" to "Time", "title" to "Title",
+            "recordId" to "Record ID", "date" to "Date", "time" to "Time", "title" to "Title",
             "content" to "Content", "categories" to "Categories", "tags" to "Tags",
             "places" to "Places", "weather" to "Weather", "images" to "Images"
         )
         val fieldDefaults = mapOf(
-            "date" to true, "time" to true, "title" to true,
+            "recordId" to false, "date" to true, "time" to true, "title" to true,
             "content" to true, "categories" to true, "tags" to true,
             "places" to false, "weather" to true, "images" to true
         )
@@ -1994,6 +1994,20 @@ class SettingsActivity : AppCompatActivity() {
     }
 
     private fun buildCollapsibleSection(title: String, expanded: Boolean, onToggle: (Boolean) -> Unit): LinearLayout {
+        val wrapper = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            setPadding(dp(10), dp(8), dp(10), dp(8))
+            layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            ).apply { bottomMargin = dp(8) }
+            background = android.graphics.drawable.GradientDrawable().apply {
+                cornerRadius = dp(8).toFloat()
+                setStroke(dp(1), ThemeManager.color(C.CARD_BORDER))
+                setColor(ThemeManager.color(C.CARD_BG))
+            }
+        }
+
         val arrow = TextView(this).apply {
             text = if (expanded) "▼" else "▶"
             setTextColor(ThemeManager.color(C.ACCENT))
@@ -2003,11 +2017,11 @@ class SettingsActivity : AppCompatActivity() {
         val header = LinearLayout(this).apply {
             orientation = LinearLayout.HORIZONTAL
             gravity = Gravity.CENTER_VERTICAL
-            setPadding(dp(4), dp(8), dp(4), dp(8))
+            setPadding(dp(4), dp(4), dp(4), dp(4))
             layoutParams = LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT,
                 LinearLayout.LayoutParams.WRAP_CONTENT
-            ).apply { bottomMargin = dp(4) }
+            )
             isClickable = true
             isFocusable = true
         }
@@ -2018,7 +2032,7 @@ class SettingsActivity : AppCompatActivity() {
             textSize = 15f
             setTypeface(null, Typeface.BOLD)
         })
-        contentContainer.addView(header)
+        wrapper.addView(header)
 
         val body = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
@@ -2028,7 +2042,8 @@ class SettingsActivity : AppCompatActivity() {
             )
             visibility = if (expanded) View.VISIBLE else View.GONE
         }
-        contentContainer.addView(body)
+        wrapper.addView(body)
+        contentContainer.addView(wrapper)
 
         header.setOnClickListener {
             val nowExpanded = body.visibility != View.VISIBLE

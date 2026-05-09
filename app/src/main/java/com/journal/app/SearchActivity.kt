@@ -309,7 +309,10 @@ class SearchActivity : AppCompatActivity() {
         if (timeStr.isEmpty()) return ""
         val fmt = ServiceProvider.bootstrapService?.get("ev_time_format") ?: "h:mm a"
         return try {
-            val d = java.text.SimpleDateFormat("HH:mm", java.util.Locale.US).parse(timeStr) ?: return timeStr
+            val normalized = if (!timeStr.contains(":") && timeStr.length in 3..4) {
+                timeStr.padStart(4, '0').let { "${it.substring(0, 2)}:${it.substring(2)}" }
+            } else timeStr
+            val d = java.text.SimpleDateFormat("HH:mm", java.util.Locale.US).parse(normalized) ?: return timeStr
             java.text.SimpleDateFormat(fmt, java.util.Locale.US).format(d)
         } catch (_: Exception) { timeStr }
     }

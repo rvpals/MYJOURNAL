@@ -132,7 +132,7 @@ class EntryListActivity : AppCompatActivity() {
         val settings = try { JSONObject(db.getSettings()) } catch (_: Exception) { JSONObject() }
         val fields = settings.optJSONObject("entryListFields") ?: JSONObject()
         val defaults = mapOf(
-            "date" to true, "time" to true, "title" to true,
+            "recordId" to false, "date" to true, "time" to true, "title" to true,
             "content" to true, "categories" to true, "tags" to true,
             "places" to false, "weather" to true, "images" to true
         )
@@ -850,6 +850,19 @@ class EntryListActivity : AppCompatActivity() {
 
         card.addView(headerRow)
 
+        // Record ID
+        if (show("recordId") && id.isNotEmpty()) {
+            card.addView(TextView(this).apply {
+                text = "ID: $id"
+                setTextColor(ThemeManager.color(C.TEXT_SECONDARY))
+                textSize = 10f
+                layoutParams = LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.MATCH_PARENT,
+                    LinearLayout.LayoutParams.WRAP_CONTENT
+                ).apply { bottomMargin = dp(2) }
+            })
+        }
+
         // Title
         if (show("title") && title.isNotEmpty()) {
             card.addView(TextView(this).apply {
@@ -1191,7 +1204,10 @@ class EntryListActivity : AppCompatActivity() {
         if (timeStr.isEmpty()) return ""
         val fmt = bs.get("ev_time_format") ?: "h:mm a"
         return try {
-            val d = SimpleDateFormat("HH:mm", Locale.US).parse(timeStr) ?: return timeStr
+            val normalized = if (!timeStr.contains(":") && timeStr.length in 3..4) {
+                timeStr.padStart(4, '0').let { "${it.substring(0, 2)}:${it.substring(2)}" }
+            } else timeStr
+            val d = SimpleDateFormat("HH:mm", Locale.US).parse(normalized) ?: return timeStr
             SimpleDateFormat(fmt, Locale.US).format(d)
         } catch (_: Exception) { timeStr }
     }
