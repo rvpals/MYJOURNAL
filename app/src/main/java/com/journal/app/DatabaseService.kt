@@ -50,6 +50,10 @@ class DatabaseService(private val context: Context) {
 
     fun isOpen(): Boolean = db != null
 
+    fun getJournalId(): String? = currentJournalId
+
+    fun getDatabaseFile(): File? = currentJournalId?.let { dbPath(it) }
+
     fun hasNativeDB(journalId: String): Boolean = dbPath(journalId).exists()
 
     private fun dbPath(journalId: String): File =

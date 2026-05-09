@@ -40,6 +40,7 @@ class SettingsActivity : AppCompatActivity() {
         private const val ICON_PICK = 2002
         private const val CSV_PICK = 2003
         private const val FOLDER_PICK = 2004
+        private const val BACKUP_RESTORE_PICK = 2005
     }
 
     private lateinit var db: DatabaseService
@@ -2519,9 +2520,14 @@ class SettingsActivity : AppCompatActivity() {
     // ========== Data Tab ==========
 
     private fun buildDataTab() {
-        buildSectionHeader("💾  Data & Security")
+        val prevContainer = contentContainer
 
-        // Storage Paths
+        // ---- Data Paths panel ----
+        val pathsBody = buildCollapsibleSection("📂  Data Paths", bs.get("data_paths_collapsed") != "1") {
+            bs.set("data_paths_collapsed", if (it) "0" else "1")
+        }
+        contentContainer = pathsBody
+
         buildLabel("Application Data Path")
         val dataPathDisplay = TextView(this).apply {
             text = bs.get("app_data_path") ?: "(Default: internal app storage)"
@@ -2568,9 +2574,69 @@ class SettingsActivity : AppCompatActivity() {
             setOnClickListener { pickFolderForSetting("attachments_path", attachPathDisplay) }
         })
 
-        buildSpacer()
+        buildLabel("Full Backup Path")
+        val backupPathDisplay = TextView(this).apply {
+            text = bs.get("full_backup_path") ?: "(Not set — please select a folder)"
+            setTextColor(ThemeManager.color(C.TEXT_SECONDARY))
+            textSize = 12f
+            setPadding(dp(4), dp(2), dp(4), dp(2))
+            layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT
+            ).apply { bottomMargin = dp(4) }
+        }
+        contentContainer.addView(backupPathDisplay)
+        contentContainer.addView(Button(this).apply {
+            text = "Select Full Backup Path"
+            textSize = 13f
+            isAllCaps = false
+            setTextColor(ThemeManager.color(C.TEXT))
+            background = ContextCompat.getDrawable(this@SettingsActivity, R.drawable.btn_secondary)
+            layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT, dp(40)
+            ).apply { bottomMargin = dp(4) }
+            setOnClickListener { pickFolderForSetting("full_backup_path", backupPathDisplay) }
+        })
 
-        // Export
+        contentContainer = prevContainer
+
+        // ---- Complete Data Backup panel ----
+        val backupBody = buildCollapsibleSection("📦  Complete Data Backup", bs.get("data_backup_collapsed") != "1") {
+            bs.set("data_backup_collapsed", if (it) "0" else "1")
+        }
+        contentContainer = backupBody
+
+        contentContainer.addView(Button(this).apply {
+            text = "Complete Backup"
+            textSize = 13f
+            isAllCaps = false
+            setTextColor(ThemeManager.color(C.CARD_BG))
+            background = ContextCompat.getDrawable(this@SettingsActivity, R.drawable.btn_accent)
+            layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT, dp(40)
+            ).apply { bottomMargin = dp(4) }
+            setOnClickListener { performCompleteBackup() }
+        })
+
+        contentContainer.addView(Button(this).apply {
+            text = "Complete Restore"
+            textSize = 13f
+            isAllCaps = false
+            setTextColor(ThemeManager.color(C.TEXT))
+            background = ContextCompat.getDrawable(this@SettingsActivity, R.drawable.btn_secondary)
+            layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT, dp(40)
+            ).apply { bottomMargin = dp(4) }
+            setOnClickListener { performCompleteRestore() }
+        })
+
+        contentContainer = prevContainer
+
+        // ---- Export & Import Data panel ----
+        val exportImportBody = buildCollapsibleSection("📤  Export & Import Data", bs.get("data_exportimport_collapsed") != "1") {
+            bs.set("data_exportimport_collapsed", if (it) "0" else "1")
+        }
+        contentContainer = exportImportBody
+
         buildLabel("Export")
         val exportOptions = listOf(
             "encrypted" to "Encrypted Backup (.sqlite.enc)",
@@ -2593,7 +2659,6 @@ class SettingsActivity : AppCompatActivity() {
 
         buildSpacer()
 
-        // Import
         buildLabel("Import")
         val importOptions = listOf(
             "data" to "Import Backup (.sqlite / .sqlite.enc)",
@@ -2617,7 +2682,6 @@ class SettingsActivity : AppCompatActivity() {
 
         buildSpacer()
 
-        // Import CSV
         buildLabel("Import CSV")
         val csvBtnRow = LinearLayout(this).apply {
             orientation = LinearLayout.HORIZONTAL
@@ -2648,7 +2712,6 @@ class SettingsActivity : AppCompatActivity() {
         })
         contentContainer.addView(csvBtnRow)
 
-        // CSV import status area
         val csvStatusText = TextView(this).apply {
             tag = "csv_import_status"
             textSize = 12f
@@ -2660,9 +2723,10 @@ class SettingsActivity : AppCompatActivity() {
         }
         contentContainer.addView(csvStatusText)
 
-        buildSpacer()
+        contentContainer = prevContainer
 
-        // Erase All Entries
+        // ---- Danger Zone (not collapsible) ----
+        buildSpacer()
         buildLabel("Danger Zone")
         contentContainer.addView(Button(this).apply {
             text = "Erase All Entries"
@@ -3351,6 +3415,7 @@ class SettingsActivity : AppCompatActivity() {
             ICON_PICK -> handleIconResult(data.data!!)
             CSV_PICK -> handleCsvImport(data.data!!)
             FOLDER_PICK -> handleFolderResult(data.data!!)
+            BACKUP_RESTORE_PICK -> handleBackupRestoreResult(data.data!!)
         }
     }
 
@@ -3372,6 +3437,207 @@ class SettingsActivity : AppCompatActivity() {
         folderPickerDisplay?.text = path
         folderPickerDisplay = null
         Toast.makeText(this, "Path saved", Toast.LENGTH_SHORT).show()
+    }
+
+    private fun performCompleteBackup() {
+        val backupPath = bs.get("full_backup_path")
+        if (backupPath.isNullOrEmpty()) {
+            Toast.makeText(this, "Please select a Full Backup Path first", Toast.LENGTH_SHORT).show()
+            return
+        }
+        val dirUri = Uri.parse(backupPath)
+        val dir = androidx.documentfile.provider.DocumentFile.fromTreeUri(this, dirUri)
+        if (dir == null || !dir.canWrite()) {
+            Toast.makeText(this, "Backup folder not accessible", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        val progressDialog = AlertDialog.Builder(this)
+            .setTitle("Backup in progress...")
+            .setMessage("Please wait.")
+            .setCancelable(false)
+            .create()
+        progressDialog.show()
+
+        thread {
+            try {
+                val timestamp = java.text.SimpleDateFormat("yyyyMMdd_HHmmss", java.util.Locale.getDefault()).format(java.util.Date())
+                val zipFilename = "backup_${journalId}_$timestamp.zip"
+
+                val baos = java.io.ByteArrayOutputStream()
+                val zos = java.util.zip.ZipOutputStream(baos)
+
+                // Add database file
+                val dbFile = db.getDatabaseFile()
+                if (dbFile != null && dbFile.exists()) {
+                    zos.putNextEntry(java.util.zip.ZipEntry("database/${dbFile.name}"))
+                    dbFile.inputStream().use { it.copyTo(zos) }
+                    zos.closeEntry()
+                }
+
+                // Add attachments
+                val attachPath = bs.get("attachments_path")
+                if (!attachPath.isNullOrEmpty()) {
+                    val attachUri = Uri.parse(attachPath)
+                    val attachDir = androidx.documentfile.provider.DocumentFile.fromTreeUri(this, attachUri)
+                    if (attachDir != null && attachDir.exists()) {
+                        val files = attachDir.listFiles()
+                        for (file in files) {
+                            if (file.isFile) {
+                                zos.putNextEntry(java.util.zip.ZipEntry("attachments/${file.name}"))
+                                contentResolver.openInputStream(file.uri)?.use { it.copyTo(zos) }
+                                zos.closeEntry()
+                            }
+                        }
+                    }
+                }
+
+                // Add bootstrap settings
+                val settingsJson = JSONObject()
+                val allKeys = listOf("app_data_path", "attachments_path", "full_backup_path",
+                    "ui_font_scale", "ui_font_family", "removed_themes", "dashboard_components",
+                    "auto_gps_weather", "default_sort_field", "default_sort_dir")
+                for (key in allKeys) {
+                    val v = bs.get(key)
+                    if (v != null) settingsJson.put(key, v)
+                }
+                zos.putNextEntry(java.util.zip.ZipEntry("settings.json"))
+                zos.write(settingsJson.toString().toByteArray(Charsets.UTF_8))
+                zos.closeEntry()
+
+                zos.close()
+
+                val zipBytes = baos.toByteArray()
+                val zipFile = dir.createFile("application/zip", zipFilename)
+                if (zipFile != null) {
+                    contentResolver.openOutputStream(zipFile.uri)?.use { it.write(zipBytes) }
+                }
+
+                runOnUiThread {
+                    progressDialog.dismiss()
+                    Toast.makeText(this, "Backup saved: $zipFilename", Toast.LENGTH_LONG).show()
+                }
+            } catch (e: Exception) {
+                runOnUiThread {
+                    progressDialog.dismiss()
+                    Toast.makeText(this, "Backup failed: ${e.message}", Toast.LENGTH_LONG).show()
+                }
+            }
+        }
+    }
+
+    @Suppress("DEPRECATION")
+    private fun performCompleteRestore() {
+        val backupPath = bs.get("full_backup_path")
+        if (backupPath.isNullOrEmpty()) {
+            Toast.makeText(this, "Please select a Full Backup Path first", Toast.LENGTH_SHORT).show()
+            return
+        }
+        val dirUri = Uri.parse(backupPath)
+        val dir = androidx.documentfile.provider.DocumentFile.fromTreeUri(this, dirUri)
+        if (dir == null || !dir.canRead()) {
+            Toast.makeText(this, "Backup folder not accessible", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        val backupFiles = dir.listFiles().filter {
+            it.isFile && (it.name?.startsWith("backup_") == true) && (it.name?.endsWith(".zip") == true)
+        }.sortedByDescending { it.name }
+
+        if (backupFiles.isEmpty()) {
+            Toast.makeText(this, "No backup files found in backup folder", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        val names = backupFiles.map { it.name ?: "unknown" }.toTypedArray()
+        AlertDialog.Builder(this)
+            .setTitle("Select Backup to Restore")
+            .setItems(names) { _, which ->
+                val selected = backupFiles[which]
+                AlertDialog.Builder(this)
+                    .setTitle("Confirm Restore")
+                    .setMessage("This will overwrite the current database and attachments with:\n\n${selected.name}\n\nThis cannot be undone. Continue?")
+                    .setPositiveButton("Restore") { _, _ -> executeRestore(selected) }
+                    .setNegativeButton("Cancel", null)
+                    .show()
+            }
+            .setNegativeButton("Cancel", null)
+            .show()
+    }
+
+    private fun executeRestore(backupFile: androidx.documentfile.provider.DocumentFile) {
+        val progressDialog = AlertDialog.Builder(this)
+            .setTitle("Restoring...")
+            .setMessage("Please wait.")
+            .setCancelable(false)
+            .create()
+        progressDialog.show()
+
+        thread {
+            try {
+                val inputStream = contentResolver.openInputStream(backupFile.uri)
+                    ?: throw Exception("Cannot read backup file")
+                val zis = java.util.zip.ZipInputStream(inputStream)
+
+                val dbFile = db.getDatabaseFile()
+                db.close()
+
+                var entry = zis.nextEntry
+                while (entry != null) {
+                    when {
+                        entry.name.startsWith("database/") && dbFile != null -> {
+                            dbFile.outputStream().use { zis.copyTo(it) }
+                        }
+                        entry.name.startsWith("attachments/") -> {
+                            val attachPath = bs.get("attachments_path")
+                            if (!attachPath.isNullOrEmpty()) {
+                                val attachUri = Uri.parse(attachPath)
+                                val attachDir = androidx.documentfile.provider.DocumentFile.fromTreeUri(this, attachUri)
+                                if (attachDir != null) {
+                                    val filename = entry.name.removePrefix("attachments/")
+                                    val existing = attachDir.findFile(filename)
+                                    existing?.delete()
+                                    val newFile = attachDir.createFile("application/octet-stream", filename)
+                                    if (newFile != null) {
+                                        contentResolver.openOutputStream(newFile.uri)?.use { zis.copyTo(it) }
+                                    }
+                                }
+                            }
+                        }
+                        entry.name == "settings.json" -> {
+                            val bytes = zis.readBytes()
+                            val settingsJson = JSONObject(String(bytes, Charsets.UTF_8))
+                            val keys = settingsJson.keys()
+                            while (keys.hasNext()) {
+                                val key = keys.next()
+                                bs.set(key, settingsJson.getString(key))
+                            }
+                        }
+                    }
+                    zis.closeEntry()
+                    entry = zis.nextEntry
+                }
+                zis.close()
+
+                runOnUiThread {
+                    progressDialog.dismiss()
+                    Toast.makeText(this, "Restore complete. Please re-login.", Toast.LENGTH_LONG).show()
+                    val intent = Intent(this, LoginActivity::class.java)
+                    intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                    startActivity(intent)
+                    finish()
+                }
+            } catch (e: Exception) {
+                runOnUiThread {
+                    progressDialog.dismiss()
+                    Toast.makeText(this, "Restore failed: ${e.message}", Toast.LENGTH_LONG).show()
+                }
+            }
+        }
+    }
+
+    private fun handleBackupRestoreResult(uri: Uri) {
+        // Reserved for future file-picker based restore
     }
 
     private fun handleIconResult(uri: Uri) {
@@ -3768,16 +4034,45 @@ class SettingsActivity : AppCompatActivity() {
 
         // Theme
         buildSectionHeader("🎨  Theme")
-        val themes = listOf(
-            "light", "dark", "ocean", "midnight", "forest", "amethyst",
-            "aurora", "lavender", "frost", "navy", "sunflower", "meadow",
-            "rose", "copper", "slate", "ember", "sage", "dusk", "mocha", "arctic"
-        )
+        val themes = ThemeManager.getAvailableThemes()
         val currentTheme = settings.optString("theme", "dark")
         buildSpinner("Theme", themes.map { it.replaceFirstChar { c -> c.uppercase() } }, themes.indexOf(currentTheme).coerceAtLeast(0)) { idx ->
             db.setSettings(JSONObject().apply { put("theme", themes[idx]) }.toString())
             ThemeManager.setTheme(themes[idx])
             recreate()
+        }
+
+        if (currentTheme != "dark") {
+            contentContainer.addView(TextView(this).apply {
+                text = "Remove \"${currentTheme.replaceFirstChar { it.uppercase() }}\" Theme"
+                textSize = 14f
+                setTextColor(ThemeManager.color(C.ERROR))
+                setPadding(dp(8), dp(8), dp(8), dp(8))
+                setOnClickListener {
+                    android.app.AlertDialog.Builder(this@SettingsActivity)
+                        .setTitle("Remove Theme")
+                        .setMessage("Permanently remove \"${currentTheme.replaceFirstChar { it.uppercase() }}\"? You can restore it later with Reset Themes.")
+                        .setPositiveButton("Remove") { _, _ ->
+                            ThemeManager.removeTheme(currentTheme)
+                            recreate()
+                        }
+                        .setNegativeButton("Cancel", null)
+                        .show()
+                }
+            })
+        }
+
+        if (ThemeManager.getRemovedThemes().isNotEmpty()) {
+            contentContainer.addView(TextView(this).apply {
+                text = "Reset Themes (restore ${ThemeManager.getRemovedThemes().size} removed)"
+                textSize = 14f
+                setTextColor(ThemeManager.color(C.ACCENT))
+                setPadding(dp(8), dp(8), dp(8), dp(8))
+                setOnClickListener {
+                    ThemeManager.restoreAllThemes()
+                    recreate()
+                }
+            })
         }
 
         buildSpacer()

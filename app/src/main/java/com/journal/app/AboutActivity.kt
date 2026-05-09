@@ -88,6 +88,15 @@ class AboutActivity : AppCompatActivity() {
     }
 
     private fun buildChangelog(): String = """
+v2.4.0 (2026-05-08)
+• Theme management — remove unwanted themes, restore all with Reset Themes
+• Complete Backup & Restore — full zip backup (database + attachments + settings) with timestamp naming
+• Data tab reorganized into collapsible panels (Data Paths, Complete Data Backup, Export & Import)
+• Entry form: action buttons moved to bottom dock bar
+• Entry form: category selection via popup checkbox dialog
+• Entry form: Place & Weather grouped in bordered card
+• Dashboard: Entry Stats as collapsible panel with half-size 2x2 cards
+
 v2.3.0 (2026-05-07)
 • 8 new color themes — Rose, Copper, Slate, Ember, Sage, Dusk, Mocha, Arctic (20 total)
 • Fix: Publish draft from dashboard no longer crashes app

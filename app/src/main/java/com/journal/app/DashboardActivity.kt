@@ -251,19 +251,71 @@ class DashboardActivity : AppCompatActivity() {
     // ========== Stats ==========
 
     private fun populateStats() {
-        setStatValue(R.id.stat_total_value, dashboardData.optInt("totalEntries", 0))
-        setStatValue(R.id.stat_week_value, dashboardData.optInt("thisWeek", 0))
-        setStatValue(R.id.stat_month_value, dashboardData.optInt("thisMonth", 0))
-        setStatValue(R.id.stat_year_value, dashboardData.optInt("thisYear", 0))
+        val container = findViewById<LinearLayout>(R.id.stats_container)
+        val header = findViewById<TextView>(R.id.stats_header)
+        container.removeAllViews()
 
-        findViewById<View>(R.id.stat_total).setOnClickListener { openFilteredEntryList(null, null) }
-        findViewById<View>(R.id.stat_week).setOnClickListener { openDateRangeEntryList("week", "This Week") }
-        findViewById<View>(R.id.stat_month).setOnClickListener { openDateRangeEntryList("month", "This Month") }
-        findViewById<View>(R.id.stat_year).setOnClickListener { openDateRangeEntryList("year", "This Year") }
-    }
+        val stats = listOf(
+            Triple("Total", dashboardData.optInt("totalEntries", 0), "total"),
+            Triple("This Week", dashboardData.optInt("thisWeek", 0), "week"),
+            Triple("This Month", dashboardData.optInt("thisMonth", 0), "month"),
+            Triple("This Year", dashboardData.optInt("thisYear", 0), "year")
+        )
 
-    private fun setStatValue(viewId: Int, value: Int) {
-        findViewById<TextView>(viewId).text = value.toString()
+        // Build 2x2 grid of half-size stat cards
+        for (rowIdx in 0..1) {
+            val row = LinearLayout(this).apply {
+                orientation = LinearLayout.HORIZONTAL
+                layoutParams = LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT
+                ).apply { bottomMargin = dp(5) }
+            }
+            for (colIdx in 0..1) {
+                val idx = rowIdx * 2 + colIdx
+                val (label, value, key) = stats[idx]
+                val card = LinearLayout(this).apply {
+                    orientation = LinearLayout.VERTICAL
+                    gravity = android.view.Gravity.CENTER
+                    background = GradientDrawable().apply {
+                        setColor(ThemeManager.color(C.CARD_BG))
+                        setStroke(dp(1), ThemeManager.color(C.CARD_BORDER))
+                        cornerRadius = dp(10).toFloat()
+                    }
+                    setPadding(dp(10), dp(10), dp(10), dp(10))
+                    layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f).apply {
+                        if (colIdx == 0) marginEnd = dp(4) else marginStart = dp(4)
+                    }
+                    isClickable = true
+                    isFocusable = true
+                }
+                card.addView(TextView(this).apply {
+                    text = value.toString()
+                    setTextColor(ThemeManager.color(C.ACCENT))
+                    setTextSize(TypedValue.COMPLEX_UNIT_SP, 22f)
+                    setTypeface(null, android.graphics.Typeface.BOLD)
+                    gravity = android.view.Gravity.CENTER
+                })
+                card.addView(TextView(this).apply {
+                    text = label.uppercase()
+                    setTextColor(ThemeManager.color(C.TEXT_SECONDARY))
+                    setTextSize(TypedValue.COMPLEX_UNIT_SP, 10f)
+                    letterSpacing = 0.05f
+                    gravity = android.view.Gravity.CENTER
+                })
+                card.setOnClickListener {
+                    when (key) {
+                        "total" -> openFilteredEntryList(null, null)
+                        "week" -> openDateRangeEntryList("week", "This Week")
+                        "month" -> openDateRangeEntryList("month", "This Month")
+                        "year" -> openDateRangeEntryList("year", "This Year")
+                    }
+                }
+                row.addView(card)
+            }
+            container.addView(row)
+        }
+
+        setupCollapsibleHeader(header, container, "dash_stats_collapsed", "📊 Entry Stats")
     }
 
     // ========== Quick Actions (Pinned Views) ==========

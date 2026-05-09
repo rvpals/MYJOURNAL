@@ -15,7 +15,7 @@ summary: "Project architecture reference — directory structure, tech stack, da
 
 Fully native Android encrypted journal app. All 15 screens are native Kotlin activities. Services (crypto, database, bootstrap, weather) are managed by a `ServiceProvider` singleton. All data stored locally in AES-256-GCM encrypted SQLCipher database.
 
-**App Name:** My Journal | **Version:** 2.3.0 | **Package:** com.journal.app | **Min SDK:** 24 | **Target SDK:** 34
+**App Name:** My Journal | **Version:** 2.4.0 | **Package:** com.journal.app | **Min SDK:** 24 | **Target SDK:** 34
 
 ## Project Structure
 
@@ -120,9 +120,9 @@ Output: `app/build/outputs/apk/debug/app-debug.apk`
 
 Navigation between activities uses standard Android `startActivity()`.
 
-## Themes (20)
+## Themes (20, removable)
 
-Light, Dark, Ocean, Midnight, Forest, Amethyst, Aurora, Lavender, Frost, Navy, Sunflower, Meadow, Rose, Copper, Slate, Ember, Sage, Dusk, Mocha, Arctic — theme selection stored in settings DB.
+Light, Dark, Ocean, Midnight, Forest, Amethyst, Aurora, Lavender, Frost, Navy, Sunflower, Meadow, Rose, Copper, Slate, Ember, Sage, Dusk, Mocha, Arctic — theme selection stored in settings DB. Themes can be permanently removed (stored as `removed_themes` JSON array in BootstrapService); "dark" is protected. "Reset Themes" restores all removed themes.
 
 `ThemeManager.kt` singleton provides runtime theme colors, app font scale, and typeface. All activities call `ThemeManager.applyToActivity(this)` in `onCreate` to recolor XML-set backgrounds/text and schedule typeface application. All 13 post-login activities override `attachBaseContext` with `ThemeManager.fontScaledContext()` for font size scaling. Activities detect theme/font changes via `themeVersion` counter in `onResume`.
 
@@ -165,3 +165,9 @@ Light, Dark, Ocean, Midnight, Forest, Amethyst, Aurora, Lavender, Frost, Navy, S
 - **DashboardCardComponent** — Reusable `DashboardCardComponent.kt` singleton builds 3D card views (gray drop shadow via LayerDrawable, rounded corners, highlight edge, accent pill badge for count); used by Top Categories card view, extensible to other grid panels
 - **Modern collapsible headers** — Dashboard collapsible panel headers styled with 3D LayerDrawable (gray shadow, rounded corners, highlight edge, elevation)
 - **Draft entries** — `draft_entries` table stores entries-in-progress; images stored inline as `images_json` TEXT column (not in `images` table); "Draft" button in entry form navbar for new entries; when editing a draft, "Save" updates draft and "Publish" moves to `entries` table and deletes draft; collapsible dashboard panel with Publish button and tap-to-edit; `dash_drafts_collapsed` key in BootstrapService
+- **Entry form bottom dock** — Action buttons (Save, Cancel, Draft, Template, Attach, Delete) in a bottom dock bar; top navbar has only back arrow and title
+- **Entry form category picker** — Single "Select Categories" button opens multi-choice checkbox dialog; summary text shows selected categories
+- **Entry form Place & Weather group** — Place Name, Locations, and Weather grouped in a bordered card box in the Misc tab
+- **Complete Backup/Restore** — Settings > Data tab; zips database + attachments + bootstrap settings into timestamped zip; restore lists backups from folder with overwrite confirmation; redirects to login after restore
+- **Data tab collapsible panels** — Data Paths, Complete Data Backup, Export & Import Data panels; collapse state stored in BootstrapService (`data_paths_collapsed`, `data_backup_collapsed`, `data_exportimport_collapsed`)
+- **Dashboard stats panel** — Collapsible "📊 Entry Stats" panel with 2x2 half-size stat cards (Total, This Week, This Month, This Year); `dash_stats_collapsed` key in BootstrapService

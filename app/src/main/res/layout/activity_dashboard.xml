@@ -111,151 +111,24 @@
                     android:textStyle="bold" />
             </LinearLayout>
 
-            <!-- Stats Grid (2x2) -->
+            <!-- Stats Collapsible Panel -->
+            <TextView
+                android:id="@+id/stats_header"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="▼ 📊 Entry Stats"
+                android:textColor="@color/login_text"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                android:padding="10dp"
+                android:layout_marginBottom="6dp" />
+
             <LinearLayout
                 android:id="@+id/stats_container"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="vertical">
-
-              <LinearLayout
-                  android:layout_width="match_parent"
-                  android:layout_height="wrap_content"
-                  android:orientation="horizontal"
-                  android:layout_marginBottom="6dp">
-
-                  <LinearLayout
-                      android:id="@+id/stat_total"
-                      android:layout_width="0dp"
-                      android:layout_height="wrap_content"
-                      android:layout_weight="1"
-                      android:orientation="vertical"
-                      android:gravity="center"
-                      android:background="@drawable/stat_card_bg"
-                      android:padding="16dp"
-                      android:layout_marginEnd="5dp"
-                      android:clickable="true"
-                      android:focusable="true">
-
-                      <TextView
-                          android:id="@+id/stat_total_value"
-                          android:layout_width="wrap_content"
-                          android:layout_height="wrap_content"
-                          android:text="0"
-                          android:textColor="@color/login_accent"
-                          android:textSize="30sp"
-                          android:textStyle="bold" />
-                      <TextView
-                          android:layout_width="wrap_content"
-                          android:layout_height="wrap_content"
-                          android:text="Total"
-                          android:textColor="@color/login_text_secondary"
-                          android:textSize="11sp"
-                          android:textAllCaps="true"
-                          android:letterSpacing="0.05" />
-                  </LinearLayout>
-
-                  <LinearLayout
-                      android:id="@+id/stat_week"
-                      android:layout_width="0dp"
-                      android:layout_height="wrap_content"
-                      android:layout_weight="1"
-                      android:orientation="vertical"
-                      android:gravity="center"
-                      android:background="@drawable/stat_card_bg"
-                      android:padding="16dp"
-                      android:layout_marginStart="5dp"
-                      android:clickable="true"
-                      android:focusable="true">
-
-                      <TextView
-                          android:id="@+id/stat_week_value"
-                          android:layout_width="wrap_content"
-                          android:layout_height="wrap_content"
-                          android:text="0"
-                          android:textColor="@color/login_accent"
-                          android:textSize="30sp"
-                          android:textStyle="bold" />
-                      <TextView
-                          android:layout_width="wrap_content"
-                          android:layout_height="wrap_content"
-                          android:text="This Week"
-                          android:textColor="@color/login_text_secondary"
-                          android:textSize="11sp"
-                          android:textAllCaps="true"
-                          android:letterSpacing="0.05" />
-                  </LinearLayout>
-              </LinearLayout>
-
-              <LinearLayout
-                  android:layout_width="match_parent"
-                  android:layout_height="wrap_content"
-                  android:orientation="horizontal"
-                  android:layout_marginBottom="12dp">
-
-                <LinearLayout
-                    android:id="@+id/stat_month"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:orientation="vertical"
-                    android:gravity="center"
-                    android:background="@drawable/stat_card_bg"
-                    android:padding="16dp"
-                    android:layout_marginEnd="5dp"
-                    android:clickable="true"
-                    android:focusable="true">
-
-                    <TextView
-                        android:id="@+id/stat_month_value"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="0"
-                        android:textColor="@color/login_accent"
-                        android:textSize="30sp"
-                        android:textStyle="bold" />
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="This Month"
-                        android:textColor="@color/login_text_secondary"
-                        android:textSize="11sp"
-                        android:textAllCaps="true"
-                        android:letterSpacing="0.05" />
-                </LinearLayout>
-
-                <LinearLayout
-                    android:id="@+id/stat_year"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:orientation="vertical"
-                    android:gravity="center"
-                    android:background="@drawable/stat_card_bg"
-                    android:padding="16dp"
-                    android:layout_marginStart="5dp"
-                    android:clickable="true"
-                    android:focusable="true">
-
-                    <TextView
-                        android:id="@+id/stat_year_value"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="0"
-                        android:textColor="@color/login_accent"
-                        android:textSize="30sp"
-                        android:textStyle="bold" />
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="This Year"
-                        android:textColor="@color/login_text_secondary"
-                        android:textSize="11sp"
-                        android:textAllCaps="true"
-                        android:letterSpacing="0.05" />
-                </LinearLayout>
-              </LinearLayout>
-            </LinearLayout>
+                android:orientation="vertical"
+                android:layout_marginBottom="12dp" />
 
             <!-- Quick Actions (Pinned Views) -->
             <LinearLayout

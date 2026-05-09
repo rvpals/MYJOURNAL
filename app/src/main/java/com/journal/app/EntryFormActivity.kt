@@ -540,91 +540,92 @@ class EntryFormActivity : AppCompatActivity() {
 
         addSpacer()
 
-        // Place Name
-        addSectionHeader("Place")
+        // Place & Weather group box
+        val groupBox = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            background = android.graphics.drawable.GradientDrawable().apply {
+                setColor(ThemeManager.color(C.CARD_BG))
+                setStroke(dp(1), ThemeManager.color(C.CARD_BORDER))
+                cornerRadius = dp(8).toFloat()
+            }
+            setPadding(dp(10), dp(8), dp(10), dp(10))
+            layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT
+            ).apply { bottomMargin = dp(8) }
+        }
+        groupBox.addView(TextView(this).apply {
+            text = "Place & Weather"
+            setTextColor(ThemeManager.color(C.ACCENT))
+            textSize = 14f
+            setTypeface(null, Typeface.BOLD)
+            setPadding(0, 0, 0, dp(6))
+        })
+        contentContainer.addView(groupBox)
+
+        val prevContainer = contentContainer
+        contentContainer = groupBox
+
         addLabel("Place Name")
         placeNameInput = makeInput("e.g. NYC Trip, Office, Home", placeName)
         contentContainer.addView(placeNameInput)
 
-        // Locations
         addLabel("Locations")
         buildLocationSection()
 
         addSpacer()
 
-        // Weather
-        addSectionHeader("Weather")
+        addLabel("Weather")
         buildWeatherSection()
+
+        contentContainer = prevContainer
     }
 
     // ========== Categories ==========
 
     private fun buildCategorySection() {
-        // Quick add
-        val addRow = LinearLayout(this).apply {
-            orientation = LinearLayout.HORIZONTAL
-            gravity = Gravity.CENTER_VERTICAL
-            layoutParams = linParams().apply { bottomMargin = dp(6) }
+        val summary = TextView(this).apply {
+            text = if (selectedCategories.isEmpty()) "None selected"
+                   else selectedCategories.joinToString(", ")
+            setTextColor(ThemeManager.color(C.TEXT_SECONDARY))
+            textSize = 12f
+            setPadding(dp(4), dp(2), dp(4), dp(6))
+            layoutParams = linParams()
         }
-        val newCatInput = EditText(this).apply {
-            hint = "New category"
+
+        contentContainer.addView(Button(this).apply {
+            text = "Select Categories"
             textSize = 13f
+            isAllCaps = false
             setTextColor(ThemeManager.color(C.TEXT))
-            setHintTextColor(ThemeManager.color(C.TEXT_SECONDARY))
-            background = ContextCompat.getDrawable(this@EntryFormActivity, R.drawable.input_bg)
-            setPadding(dp(10), dp(6), dp(10), dp(6))
-            layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f).apply { marginEnd = dp(4) }
-            isSingleLine = true
-        }
-        addRow.addView(newCatInput)
-        addRow.addView(makeAccentButton("Add") {
-            val name = newCatInput.text.toString().trim()
-            if (name.isNotEmpty() && !allCategories.contains(name)) {
-                val cats = allCategories.toMutableList()
-                cats.add(name)
-                db.setCategories(JSONArray(cats).toString())
-                allCategories = cats
-                selectedCategories.add(name)
-                newCatInput.setText("")
-                showTab("misc")
-            } else if (name.isNotEmpty()) {
-                selectedCategories.add(name)
-                showTab("misc")
-            }
-        }.apply {
-            layoutParams = LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, dp(36))
+            background = ContextCompat.getDrawable(this@EntryFormActivity, R.drawable.btn_secondary)
+            layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT, dp(40)
+            ).apply { bottomMargin = dp(4) }
+            setOnClickListener { showCategoryPickerDialog(summary) }
         })
-        contentContainer.addView(addRow)
 
-        // Checkbox list
-        for (cat in allCategories) {
-            val row = LinearLayout(this).apply {
-                orientation = LinearLayout.HORIZONTAL
-                gravity = Gravity.CENTER_VERTICAL
-                layoutParams = linParams()
-            }
-            val cb = CheckBox(this).apply {
-                text = cat
-                isChecked = selectedCategories.contains(cat)
-                setTextColor(ThemeManager.color(C.TEXT))
-                textSize = 14f
-                buttonTintList = ThemeManager.colorStateList(C.ACCENT)
-                setOnCheckedChangeListener { _, checked ->
-                    if (checked) selectedCategories.add(cat) else selectedCategories.remove(cat)
-                }
-            }
-            row.addView(cb)
-            contentContainer.addView(row)
-        }
+        contentContainer.addView(summary)
+    }
 
+    private fun showCategoryPickerDialog(summaryView: TextView) {
         if (allCategories.isEmpty()) {
-            contentContainer.addView(TextView(this).apply {
-                text = "No categories yet."
-                setTextColor(ThemeManager.color(C.TEXT_SECONDARY))
-                textSize = 12f
-                setPadding(dp(4), dp(4), dp(4), dp(4))
-            })
+            Toast.makeText(this, "No categories defined yet", Toast.LENGTH_SHORT).show()
+            return
         }
+        val checked = BooleanArray(allCategories.size) { selectedCategories.contains(allCategories[it]) }
+
+        android.app.AlertDialog.Builder(this)
+            .setTitle("Select Categories")
+            .setMultiChoiceItems(allCategories.toTypedArray(), checked) { _, which, isChecked ->
+                val cat = allCategories[which]
+                if (isChecked) selectedCategories.add(cat) else selectedCategories.remove(cat)
+            }
+            .setPositiveButton("OK") { _, _ ->
+                summaryView.text = if (selectedCategories.isEmpty()) "None selected"
+                                   else selectedCategories.joinToString(", ")
+            }
+            .setNegativeButton("Cancel", null)
+            .show()
     }
 
     // ========== Tags ==========

@@ -259,6 +259,37 @@ object ThemeManager {
         )
     )
 
+    fun allThemeNames(): List<String> = themes.keys.toList()
+
+    fun getRemovedThemes(): List<String> {
+        val json = ServiceProvider.bootstrapService?.get("removed_themes") ?: return emptyList()
+        return try {
+            val arr = org.json.JSONArray(json)
+            (0 until arr.length()).map { arr.getString(it) }
+        } catch (_: Exception) { emptyList() }
+    }
+
+    fun getAvailableThemes(): List<String> {
+        val removed = getRemovedThemes().toSet()
+        return themes.keys.filter { it !in removed }
+    }
+
+    fun removeTheme(name: String) {
+        if (name == "dark") return
+        val removed = getRemovedThemes().toMutableList()
+        if (name !in removed) removed.add(name)
+        ServiceProvider.bootstrapService?.set("removed_themes", org.json.JSONArray(removed).toString())
+        if (currentTheme == name) {
+            setTheme("dark")
+            val db = ServiceProvider.databaseService
+            db?.setSettings(org.json.JSONObject().apply { put("theme", "dark") }.toString())
+        }
+    }
+
+    fun restoreAllThemes() {
+        ServiceProvider.bootstrapService?.set("removed_themes", null)
+    }
+
     fun init() {
         val settingsJson = ServiceProvider.databaseService?.getSettings() ?: "{}"
         val settings = try { org.json.JSONObject(settingsJson) } catch (_: Exception) { org.json.JSONObject() }
