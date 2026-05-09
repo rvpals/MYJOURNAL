@@ -96,7 +96,7 @@ class DashboardActivity : AppCompatActivity() {
 
         val componentViewMap = mapOf(
             "weather_streak" to findViewById<View>(R.id.weather_streak_row),
-            "stats" to findViewById<View>(R.id.stats_container),
+            "stats" to findViewById<View>(R.id.panel_stats),
             "quick_actions" to findViewById<View>(R.id.quick_actions),
             "prefill_shortcuts" to findViewById<View>(R.id.panel_prefill_shortcuts),
             "drafts" to findViewById<View>(R.id.panel_drafts),

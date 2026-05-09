@@ -15,7 +15,7 @@ summary: "Project architecture reference — directory structure, tech stack, da
 
 Fully native Android encrypted journal app. All 15 screens are native Kotlin activities. Services (crypto, database, bootstrap, weather) are managed by a `ServiceProvider` singleton. All data stored locally in AES-256-GCM encrypted SQLCipher database.
 
-**App Name:** My Journal | **Version:** 2.4.0 | **Package:** com.journal.app | **Min SDK:** 24 | **Target SDK:** 34
+**App Name:** My Journal | **Version:** 2.4.1 | **Package:** com.journal.app | **Min SDK:** 24 | **Target SDK:** 34
 
 ## Project Structure
 
@@ -159,6 +159,7 @@ Light, Dark, Ocean, Midnight, Forest, Amethyst, Aurora, Lavender, Frost, Navy, S
 - **Daily Inspiration decorative panel** — Double accent border with layered insets, 3D drop shadow via LayerDrawable + elevation
 - **File attachments** — AttachmentActivity manages file attachments per entry; files zipped with SHA-256 hash; stored in user-configured attachments folder (SAF DocumentFile); accessible from EntryViewer (Attachments tab) and EntryForm (📎 button)
 - **Attachment storage paths** — `app_data_path` and `attachments_path` settings in BootstrapService; folder selected via `ACTION_OPEN_DOCUMENT_TREE` with persistable URI permissions
+- **EntryViewer category icons** — Category icons (HD preferred, fallback to standard) displayed in a row to the right of the entry title; shows all categories that have icons in the `icons` table
 - **EntryViewer tabs** — Entry/Attachments tab bar; Attachments tab lists zip contents, tap to extract and open via FileProvider, Delete Zip removes record + file
 - **Attachment file grid columns** — File list grid shows #, Filename, Size, Date, and ✕ (remove) columns; size/date from zip entry metadata or content resolver for new files
 - **Attachment icon in entry lists** — 📎 icon shown next to entries with attachments in Dashboard (Recent, Pinned, Today in History), Entry List, Search, Calendar; clickable to open AttachmentActivity

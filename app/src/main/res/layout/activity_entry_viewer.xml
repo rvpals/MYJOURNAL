@@ -141,15 +141,32 @@
                     android:background="@drawable/btn_secondary" />
             </LinearLayout>
 
-            <!-- Title -->
-            <TextView
-                android:id="@+id/ev_title"
+            <!-- Title Row with Category Icon -->
+            <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:textColor="@color/login_text"
-                android:textSize="20sp"
-                android:textStyle="bold"
-                android:layout_marginBottom="10dp" />
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:layout_marginBottom="10dp">
+
+                <TextView
+                    android:id="@+id/ev_title"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:textColor="@color/login_text"
+                    android:textSize="20sp"
+                    android:textStyle="bold" />
+
+                <LinearLayout
+                    android:id="@+id/ev_category_icons"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:layout_marginStart="8dp"
+                    android:gravity="center_vertical" />
+
+            </LinearLayout>
 
             <!-- Main Content Card -->
             <LinearLayout

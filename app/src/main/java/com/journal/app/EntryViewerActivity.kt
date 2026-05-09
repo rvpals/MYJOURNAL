@@ -391,6 +391,35 @@ class EntryViewerActivity : AppCompatActivity() {
         titleView.text = if (title.isNotEmpty()) title else "Untitled"
         applyFontToView(titleView, titleMode = true)
 
+        // Category icons next to title
+        val iconsContainer = findViewById<LinearLayout>(R.id.ev_category_icons)
+        iconsContainer.removeAllViews()
+        val cats = entry.optJSONArray("categories")
+        if (cats != null && cats.length() > 0) {
+            for (i in 0 until cats.length()) {
+                val catName = cats.optString(i, "")
+                if (catName.isEmpty()) continue
+                val iconData = ServiceProvider.databaseService?.getIcon("category_hd", catName)
+                    ?: ServiceProvider.databaseService?.getIcon("category", catName) ?: ""
+                if (iconData.isEmpty()) continue
+                try {
+                    val base64Str = if (iconData.contains(",")) iconData.substringAfter(",") else iconData
+                    val bytes = Base64.decode(base64Str, Base64.DEFAULT)
+                    val bmp = BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
+                    if (bmp != null) {
+                        val iv = ImageView(this)
+                        val size = (36 * resources.displayMetrics.density).toInt()
+                        val lp = LinearLayout.LayoutParams(size, size)
+                        lp.marginStart = (4 * resources.displayMetrics.density).toInt()
+                        iv.layoutParams = lp
+                        iv.scaleType = ImageView.ScaleType.CENTER_CROP
+                        iv.setImageBitmap(bmp)
+                        iconsContainer.addView(iv)
+                    }
+                } catch (_: Exception) {}
+            }
+        }
+
         // Pin button
         val pinBtn = findViewById<Button>(R.id.ev_btn_pin)
         pinBtn.alpha = if (pinned) 1.0f else 0.4f

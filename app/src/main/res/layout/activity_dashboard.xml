@@ -112,23 +112,30 @@
             </LinearLayout>
 
             <!-- Stats Collapsible Panel -->
-            <TextView
-                android:id="@+id/stats_header"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="▼ 📊 Entry Stats"
-                android:textColor="@color/login_text"
-                android:textSize="14sp"
-                android:textStyle="bold"
-                android:padding="10dp"
-                android:layout_marginBottom="6dp" />
-
             <LinearLayout
-                android:id="@+id/stats_container"
+                android:id="@+id/panel_stats"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
-                android:layout_marginBottom="12dp" />
+                android:layout_marginBottom="12dp">
+
+                <TextView
+                    android:id="@+id/stats_header"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="▼ 📊 Entry Stats"
+                    android:textColor="@color/login_text"
+                    android:textSize="14sp"
+                    android:textStyle="bold"
+                    android:padding="10dp"
+                    android:layout_marginBottom="6dp" />
+
+                <LinearLayout
+                    android:id="@+id/stats_container"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical" />
+            </LinearLayout>
 
             <!-- Quick Actions (Pinned Views) -->
             <LinearLayout
