@@ -15,7 +15,7 @@ summary: "Project architecture reference — directory structure, tech stack, da
 
 Fully native Android encrypted journal app. All 15 screens are native Kotlin activities. Services (crypto, database, bootstrap, weather) are managed by a `ServiceProvider` singleton. All data stored locally in AES-256-GCM encrypted SQLCipher database.
 
-**App Name:** My Journal | **Version:** 2.5.0 | **Package:** com.journal.app | **Min SDK:** 24 | **Target SDK:** 34
+**App Name:** My Journal | **Version:** 2.5.1 | **Package:** com.journal.app | **Min SDK:** 24 | **Target SDK:** 34
 
 ## Project Structure
 
@@ -164,7 +164,7 @@ Light, Dark, Ocean, Midnight, Forest, Amethyst, Aurora, Lavender, Frost, Navy, S
 - **Attachment file grid columns** — File list grid shows #, Filename, Size, Date, and ✕ (remove) columns; size/date from zip entry metadata or content resolver for new files
 - **Attachment icon in entry lists** — 📎 icon shown next to entries with attachments in Dashboard (Recent, Pinned, Today in History), Entry List, Search, Calendar; clickable to open AttachmentActivity
 - **DashboardCardComponent** — Reusable `DashboardCardComponent.kt` singleton builds 3D card views (gray drop shadow via LayerDrawable, rounded corners, highlight edge, accent pill badge for count); used by Top Categories card view, extensible to other grid panels
-- **Modern collapsible headers** — Dashboard collapsible panel headers styled with 3D LayerDrawable (gray shadow, rounded corners, highlight edge, elevation)
+- **Modern collapsible headers** — Dashboard collapsible panel headers are horizontal rows (arrow circle + title + optional ✕ close circle) styled with 3D LayerDrawable (gray shadow, rounded corners, highlight edge, elevation); `setupCollapsibleHeader()` replaces the XML TextView with a programmatic row; `makeCircleIcon()` creates bordered circular icon buttons
 - **Draft entries** — `draft_entries` table stores entries-in-progress; images stored inline as `images_json` TEXT column (not in `images` table); "Draft" button in entry form navbar for new entries; when editing a draft, "Save" updates draft and "Publish" moves to `entries` table and deletes draft; collapsible dashboard panel with Publish button and tap-to-edit; `dash_drafts_collapsed` key in BootstrapService
 - **Entry form bottom dock** — Action buttons (Save, Cancel, Draft, Template, Attach, Delete) in a bottom dock bar; top navbar has only back arrow and title
 - **Entry form category picker** — Single "Select Categories" button opens multi-choice checkbox dialog; summary text shows selected categories

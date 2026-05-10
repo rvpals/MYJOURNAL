@@ -514,7 +514,6 @@ class DashboardActivity : AppCompatActivity() {
         }
 
         panel.visibility = View.VISIBLE
-        addRemoveButton(panel, "widgets")
         list.removeAllViews()
 
         for (i in 0 until widgets.length()) {
@@ -686,7 +685,6 @@ class DashboardActivity : AppCompatActivity() {
         }
 
         panel.visibility = View.VISIBLE
-        addRemoveButton(panel, "pinned")
         list.removeAllViews()
         for (i in 0 until pinned.length()) {
             val entry = pinned.optJSONObject(i) ?: continue
@@ -698,63 +696,85 @@ class DashboardActivity : AppCompatActivity() {
         val bs = ServiceProvider.bootstrapService ?: return
         val collapsed = bs.get(prefKey) == "1"
         content.visibility = if (collapsed) View.GONE else View.VISIBLE
-        header.text = "${if (collapsed) "▶" else "▼"} $title"
-        header.setTextColor(ThemeManager.color(C.TEXT))
-        header.setTextSize(TypedValue.COMPLEX_UNIT_SP, 14f)
-        header.setTypeface(null, android.graphics.Typeface.BOLD)
-        header.setPadding(dp(12), dp(8), dp(36), dp(8))
 
-        val shadow = GradientDrawable().apply {
-            cornerRadius = dp(10).toFloat()
-            setColor(android.graphics.Color.parseColor("#30808080"))
-        }
-        val face = GradientDrawable().apply {
-            cornerRadius = dp(10).toFloat()
-            setColor(ThemeManager.color(C.CARD_BG))
-            setStroke(dp(1), ThemeManager.color(C.CARD_BORDER))
-        }
-        val highlight = GradientDrawable().apply {
-            cornerRadius = dp(10).toFloat()
-            setColor(android.graphics.Color.TRANSPARENT)
-            setStroke(dp(1), android.graphics.Color.parseColor("#18FFFFFF"))
-        }
-        val layered = LayerDrawable(arrayOf(shadow, face, highlight))
-        layered.setLayerInset(0, dp(2), dp(2), 0, 0)
-        layered.setLayerInset(1, 0, 0, dp(2), dp(2))
-        layered.setLayerInset(2, 0, 0, dp(2), dp(2))
-        header.background = layered
-        header.elevation = dp(3).toFloat()
+        val parent = header.parent as? android.view.ViewGroup ?: return
+        val headerIndex = parent.indexOfChild(header)
+        parent.removeView(header)
 
-        header.setOnClickListener {
+        val row = LinearLayout(this).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = android.view.Gravity.CENTER_VERTICAL
+            setPadding(dp(10), dp(6), dp(10), dp(6))
+            layoutParams = header.layoutParams
+
+            val shadow = GradientDrawable().apply {
+                cornerRadius = dp(10).toFloat()
+                setColor(android.graphics.Color.parseColor("#30808080"))
+            }
+            val face = GradientDrawable().apply {
+                cornerRadius = dp(10).toFloat()
+                setColor(ThemeManager.color(C.CARD_BG))
+                setStroke(dp(1), ThemeManager.color(C.CARD_BORDER))
+            }
+            val highlight = GradientDrawable().apply {
+                cornerRadius = dp(10).toFloat()
+                setColor(android.graphics.Color.TRANSPARENT)
+                setStroke(dp(1), android.graphics.Color.parseColor("#18FFFFFF"))
+            }
+            val layered = LayerDrawable(arrayOf(shadow, face, highlight))
+            layered.setLayerInset(0, dp(2), dp(2), 0, 0)
+            layered.setLayerInset(1, 0, 0, dp(2), dp(2))
+            layered.setLayerInset(2, 0, 0, dp(2), dp(2))
+            background = layered
+            elevation = dp(3).toFloat()
+        }
+
+        val arrow = makeCircleIcon(if (collapsed) "▶" else "▼")
+        row.addView(arrow)
+
+        val titleView = TextView(this).apply {
+            text = title
+            setTextColor(ThemeManager.color(C.TEXT))
+            setTextSize(TypedValue.COMPLEX_UNIT_SP, 14f)
+            setTypeface(null, android.graphics.Typeface.BOLD)
+            setPadding(dp(8), 0, 0, 0)
+            layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
+        }
+        row.addView(titleView)
+
+        if (componentId != null) {
+            val closeBtn = makeCircleIcon("✕")
+            closeBtn.setOnClickListener {
+                val panel = row.parent as? android.view.ViewGroup ?: return@setOnClickListener
+                removeDashboardComponent(componentId, panel)
+            }
+            row.addView(closeBtn)
+        }
+
+        row.setOnClickListener {
             val nowCollapsed = content.visibility == View.VISIBLE
             content.visibility = if (nowCollapsed) View.GONE else View.VISIBLE
-            header.text = "${if (nowCollapsed) "▶" else "▼"} $title"
+            arrow.text = if (nowCollapsed) "▶" else "▼"
             bs.set(prefKey, if (nowCollapsed) "1" else "0")
         }
 
-        if (componentId != null) {
-            val parent = header.parent as? android.view.ViewGroup ?: return
-            addRemoveButton(parent, componentId)
-        }
+        parent.addView(row, headerIndex)
     }
 
-    private fun addRemoveButton(panel: android.view.ViewGroup, componentId: String) {
-        if (panel.findViewWithTag<View>("remove_$componentId") != null) return
-        val btn = TextView(this).apply {
-            tag = "remove_$componentId"
-            text = "✕"
+    private fun makeCircleIcon(symbol: String): TextView {
+        return TextView(this).apply {
+            text = symbol
             setTextColor(ThemeManager.color(C.TEXT_SECONDARY))
-            textSize = 13f
+            setTextSize(TypedValue.COMPLEX_UNIT_SP, 12f)
             gravity = android.view.Gravity.CENTER
-            setPadding(dp(8), dp(4), dp(8), dp(4))
-            layoutParams = LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.WRAP_CONTENT,
-                LinearLayout.LayoutParams.WRAP_CONTENT
-            ).apply { gravity = android.view.Gravity.END }
-            isClickable = true
-            setOnClickListener { removeDashboardComponent(componentId, panel) }
+            val size = dp(26)
+            layoutParams = LinearLayout.LayoutParams(size, size)
+            background = GradientDrawable().apply {
+                shape = GradientDrawable.OVAL
+                setColor(android.graphics.Color.TRANSPARENT)
+                setStroke(dp(1), ThemeManager.color(C.CARD_BORDER))
+            }
         }
-        panel.addView(btn, 0)
     }
 
     private fun removeDashboardComponent(componentId: String, panel: android.view.ViewGroup) {
@@ -853,7 +873,6 @@ class DashboardActivity : AppCompatActivity() {
         }
 
         panel.visibility = View.VISIBLE
-        addRemoveButton(panel, "today_history")
         list.removeAllViews()
 
         for (i in 0 until items.length()) {
@@ -1164,45 +1183,37 @@ class DashboardActivity : AppCompatActivity() {
         val header = findViewById<TextView>(R.id.categories_header)
         setupCollapsibleHeader(header, list, "dash_categories_collapsed", "📁 Top Categories", "categories")
 
-        // Replace header with row containing title + view mode toggle (first time only)
-        val parent = header.parent
-        if (parent === panel) {
-            val headerIndex = panel.indexOfChild(header)
-            panel.removeView(header)
-            val titleRow = LinearLayout(this).apply {
-                tag = "cat_title_row"
-                orientation = LinearLayout.HORIZONTAL
-                gravity = Gravity.CENTER_VERTICAL
-                layoutParams = LinearLayout.LayoutParams(
-                    LinearLayout.LayoutParams.MATCH_PARENT,
-                    LinearLayout.LayoutParams.WRAP_CONTENT
-                ).apply { bottomMargin = dp(8) }
-            }
-            header.layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
-            titleRow.addView(header)
-            titleRow.addView(TextView(this).apply {
-                tag = "cat_view_toggle"
-                text = if (isCardView) "☰" else "▦"
-                setTextSize(TypedValue.COMPLEX_UNIT_SP, 20f)
-                setTextColor(ThemeManager.color(C.TEXT_SECONDARY))
-                setPadding(dp(8), dp(2), dp(4), dp(2))
-                isClickable = true
-                isFocusable = true
-                setOnClickListener {
-                    val newMode = if (isCardView) "list" else "card"
-                    bs?.set("categories_view_mode", newMode)
-                    populateCategoriesPanel()
-                }
-            })
-            panel.addView(titleRow, headerIndex)
-        } else {
-            val row = parent as? LinearLayout
-            val toggle = row?.findViewWithTag<TextView>("cat_view_toggle")
-            toggle?.text = if (isCardView) "☰" else "▦"
-            toggle?.setOnClickListener {
+        // Add view mode toggle into the collapsible header row
+        val headerRow = list.parent as? android.view.ViewGroup
+        val existingToggle = headerRow?.findViewWithTag<TextView>("cat_view_toggle")
+        if (existingToggle != null) {
+            existingToggle.text = if (isCardView) "☰" else "▦"
+            existingToggle.setOnClickListener {
                 val newMode = if (isCardView) "list" else "card"
                 bs?.set("categories_view_mode", newMode)
                 populateCategoriesPanel()
+            }
+        } else {
+            // Find the row that setupCollapsibleHeader created (it's above the list in the panel)
+            val listIndex = headerRow?.indexOfChild(list) ?: -1
+            val collapsibleRow = if (listIndex > 0) headerRow?.getChildAt(listIndex - 1) as? LinearLayout else null
+            if (collapsibleRow != null) {
+                val closeBtn = collapsibleRow.findViewWithTag<View>("close_btn_categories")
+                val toggleIdx = if (closeBtn != null) collapsibleRow.indexOfChild(closeBtn) else collapsibleRow.childCount
+                collapsibleRow.addView(TextView(this).apply {
+                    tag = "cat_view_toggle"
+                    text = if (isCardView) "☰" else "▦"
+                    setTextSize(TypedValue.COMPLEX_UNIT_SP, 18f)
+                    setTextColor(ThemeManager.color(C.TEXT_SECONDARY))
+                    setPadding(dp(6), dp(2), dp(6), dp(2))
+                    isClickable = true
+                    isFocusable = true
+                    setOnClickListener {
+                        val newMode = if (isCardView) "list" else "card"
+                        bs?.set("categories_view_mode", newMode)
+                        populateCategoriesPanel()
+                    }
+                }, toggleIdx)
             }
         }
 

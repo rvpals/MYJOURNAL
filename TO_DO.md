@@ -527,6 +527,14 @@ summary: "Remaining backlog, test checklist, version-by-version completion histo
 - [x] Collapsible template items: individual Custom Views, Pre-fill Templates, and Report Templates in Settings > Templates tab are now collapsible panels with ▶/▼ toggle headers; headers show name + summary badges, expanded body shows full details (conditions, settings, HTML preview) and Edit/Delete buttons
 - [x] Pre-fill templates in Entry Form: 📋 template button in navbar (new entries only, shown when templates exist); picker dialog lists all pre-fill templates; applies auto-date, auto-time, default title, content, tags, and categories — merges with existing form data
 
+### v2.5.1 (2026-05-09, dashboard header redesign + time format fixes)
+- [x] Dashboard collapsible headers redesigned: horizontal row with circular arrow button, title text, and optional ✕ close button (replaces old text-only header + separate remove buttons)
+- [x] `makeCircleIcon()` helper: creates bordered oval icon buttons for consistent dashboard UI
+- [x] Categories panel view toggle integrated into collapsible header row (no longer separate title row)
+- [x] Removed standalone `addRemoveButton()` — close functionality now built into collapsible header
+- [x] Fix: Entry form time normalization — handles stored times without colon (e.g., "121" → "01:21") in both `loadEntryData()` and time picker
+- [x] Fix: Entry viewer time format uses `ev_time_format` setting directly instead of activity-level `timeFormat` variable
+
 ## Kotlin Migration (complete)
 
 All original Java activities were converted to Kotlin (2026-04-17/18). MainActivity was later removed entirely when WebView was eliminated (2026-04-28). The app is now 100% Kotlin with 21 source files: 14 activities + 4 services + ServiceProvider + DashboardDataBuilder + ThemeManager.

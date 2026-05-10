@@ -259,7 +259,11 @@ class EntryFormActivity : AppCompatActivity() {
 
     private fun loadEntryData(entry: JSONObject) {
         dateValue = entry.optString("date", "")
-        timeValue = entry.optString("time", "")
+        timeValue = entry.optString("time", "").let { t ->
+            if (!t.contains(":") && t.length in 3..4) {
+                t.padStart(4, '0').let { "${it.substring(0, 2)}:${it.substring(2)}" }
+            } else t
+        }
         titleValue = entry.optString("title", "")
         contentValue = entry.optString("content", "")
 
@@ -1204,7 +1208,10 @@ class EntryFormActivity : AppCompatActivity() {
         val cal = Calendar.getInstance()
         if (timeValue.isNotEmpty()) {
             try {
-                val parts = timeValue.split(":")
+                val normalized = if (!timeValue.contains(":") && timeValue.length in 3..4) {
+                    timeValue.padStart(4, '0').let { "${it.substring(0, 2)}:${it.substring(2)}" }
+                } else timeValue
+                val parts = normalized.split(":")
                 cal.set(Calendar.HOUR_OF_DAY, parts[0].toInt())
                 cal.set(Calendar.MINUTE, parts[1].toInt())
             } catch (_: Exception) {}
