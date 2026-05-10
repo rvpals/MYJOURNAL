@@ -1228,7 +1228,7 @@ class EntryFormActivity : AppCompatActivity() {
         syncFormData()
         if (::dateInput.isInitialized) {
             dateValue = dateInput.text.toString().trim()
-            timeValue = timeInput.text.toString().trim()
+            timeValue = normalizeTime(timeInput.text.toString().trim())
             titleValue = titleInput.text.toString().trim()
         }
         if (::contentInput.isInitialized) {
@@ -1282,13 +1282,21 @@ class EntryFormActivity : AppCompatActivity() {
             .show()
     }
 
+    private fun normalizeTime(t: String): String {
+        if (t.isEmpty()) return t
+        if (!t.contains(":") && t.length in 3..4) {
+            return t.padStart(4, '0').let { "${it.substring(0, 2)}:${it.substring(2)}" }
+        }
+        return t
+    }
+
     private fun saveEntry() {
         syncFormData()
 
         // Read main tab values
         if (::dateInput.isInitialized) {
             dateValue = dateInput.text.toString().trim()
-            timeValue = timeInput.text.toString().trim()
+            timeValue = normalizeTime(timeInput.text.toString().trim())
             titleValue = titleInput.text.toString().trim()
         }
         if (::contentInput.isInitialized) {

@@ -251,6 +251,12 @@ class AboutActivity : AppCompatActivity() {
     }
 
     private fun buildChangelog(): String = """
+v2.5.2 (2026-05-09)
+• Splash screen with portrait image on app launch
+• Skip splash screen option in Settings > Prefs
+• Dashboard navbar elevated 3D panel style (rounded bottom corners, layered shadow)
+• Fix: Time input normalization on entry save (e.g. "930" → "09:30")
+
 v2.5.0 (2026-05-09)
 • Content Stats: Top 50 most frequent words (up from 5) and Top 10 longest entries (up from 1)
 • Dashboard: ✕ button on panels to quickly hide components (syncs with Settings > Dashboard)

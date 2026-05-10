@@ -13,9 +13,9 @@ summary: "Project architecture reference — directory structure, tech stack, da
 
 ## Overview
 
-Fully native Android encrypted journal app. All 15 screens are native Kotlin activities. Services (crypto, database, bootstrap, weather) are managed by a `ServiceProvider` singleton. All data stored locally in AES-256-GCM encrypted SQLCipher database.
+Fully native Android encrypted journal app. All 16 screens are native Kotlin activities. Services (crypto, database, bootstrap, weather) are managed by a `ServiceProvider` singleton. All data stored locally in AES-256-GCM encrypted SQLCipher database.
 
-**App Name:** My Journal | **Version:** 2.5.1 | **Package:** com.journal.app | **Min SDK:** 24 | **Target SDK:** 34
+**App Name:** My Journal | **Version:** 2.5.2 | **Package:** com.journal.app | **Min SDK:** 24 | **Target SDK:** 34
 
 ## Project Structure
 
@@ -24,9 +24,10 @@ MYJOURNAL/
 ├── app/
 │   ├── build.gradle                # Android build config (compileSdk 34, minSdk 24)
 │   ├── src/main/
-│   │   ├── AndroidManifest.xml     # 15 activities, permissions (internet, location, camera, biometric)
-│   │   ├── java/com/journal/app/    # All Kotlin sources (23 files)
-│   │   │   ├── LoginActivity.kt         # Entry point: journal select, password, biometric login
+│   │   ├── AndroidManifest.xml     # 16 activities, permissions (internet, location, camera, biometric)
+│   │   ├── java/com/journal/app/    # All Kotlin sources (24 files)
+│   │   │   ├── SplashActivity.kt        # Splash screen with portrait image, auto-transitions to Login
+│   │   │   ├── LoginActivity.kt         # Journal select, password, biometric login
 │   │   │   ├── DashboardActivity.kt     # Native dashboard (stats, ranked lists, pinned/recent, widgets, hamburger menu)
 │   │   │   ├── CalendarActivity.kt      # Native calendar view
 │   │   │   ├── AboutActivity.kt         # App info screen with "What's New" changelog dialog
@@ -111,12 +112,13 @@ Output: `app/build/outputs/apk/debug/app-debug.apk`
 
 ## App Flow
 
-1. **LoginActivity** — User selects/creates journal, enters password, optional biometric
-2. `ServiceProvider.init(context)` — Creates all services
-3. `DatabaseService.open(password, journalId)` — Opens/creates encrypted SQLCipher DB
-4. `ThemeManager.init()` — Loads active theme from DB settings
-5. `DashboardDataBuilder.build(db, bs)` — Computes dashboard JSON (stats, streaks, ranked lists, widgets, today in history, pinned/recent entries)
-6. **DashboardActivity** — Displays dashboard, launches other activities directly
+1. **SplashActivity** — Displays splash image, auto-transitions to Login (skippable via `skip_splash` setting)
+2. **LoginActivity** — User selects/creates journal, enters password, optional biometric
+3. `ServiceProvider.init(context)` — Creates all services
+4. `DatabaseService.open(password, journalId)` — Opens/creates encrypted SQLCipher DB
+5. `ThemeManager.init()` — Loads active theme from DB settings
+6. `DashboardDataBuilder.build(db, bs)` — Computes dashboard JSON (stats, streaks, ranked lists, widgets, today in history, pinned/recent entries)
+7. **DashboardActivity** — Displays dashboard, launches other activities directly
 
 Navigation between activities uses standard Android `startActivity()`.
 
@@ -172,3 +174,6 @@ Light, Dark, Ocean, Midnight, Forest, Amethyst, Aurora, Lavender, Frost, Navy, S
 - **Complete Backup/Restore** — Settings > Data tab; zips database + attachments + bootstrap settings into timestamped zip; restore lists backups from folder with overwrite confirmation; redirects to login after restore
 - **Data tab collapsible panels** — Data Paths, Complete Data Backup, Export & Import Data panels; collapse state stored in BootstrapService (`data_paths_collapsed`, `data_backup_collapsed`, `data_exportimport_collapsed`)
 - **Dashboard stats panel** — Collapsible "📊 Entry Stats" panel with 2x2 half-size stat cards (Total, This Week, This Month, This Year); `dash_stats_collapsed` key in BootstrapService
+- **Dashboard navbar elevated panel** — Top navbar row (search, title, new entry, lock, menu) styled as 3D elevated panel with LayerDrawable (shadow, face, highlight), rounded bottom corners, higher elevation to float above content
+- **Splash screen** — SplashActivity is the launcher activity; displays portrait splash image on black background; auto-transitions to LoginActivity after 2s; skippable via `skip_splash` setting in BootstrapService
+- **Time normalization** — EntryFormActivity normalizes time input (e.g. "930" → "09:30") on save/draft; EntryViewerActivity normalizes before formatting for display

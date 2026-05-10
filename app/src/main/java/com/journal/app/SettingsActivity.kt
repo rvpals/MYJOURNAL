@@ -193,6 +193,9 @@ class SettingsActivity : AppCompatActivity() {
         buildToggle("Auto-open last journal", bs.get("auto_open_last_journal") == "true") { checked ->
             bs.set("auto_open_last_journal", if (checked) "true" else "false")
         }
+        buildToggle("Skip splash screen", bs.get("skip_splash") == "true") { checked ->
+            bs.set("skip_splash", if (checked) "true" else "false")
+        }
         buildToggle("Warn before delete", bs.get("warn_before_delete") != "false") { checked ->
             bs.set("warn_before_delete", if (checked) "true" else "false")
         }

@@ -910,14 +910,14 @@ class EntryViewerActivity : AppCompatActivity() {
     }
 
     private fun formatTime(timeStr: String): String {
+        val normalized = if (!timeStr.contains(":") && timeStr.length in 3..4) {
+            timeStr.padStart(4, '0').let { "${it.substring(0, 2)}:${it.substring(2)}" }
+        } else timeStr
         return try {
             val fmt = ServiceProvider.bootstrapService?.get("ev_time_format") ?: timeFormat
-            val normalized = if (!timeStr.contains(":") && timeStr.length in 3..4) {
-                timeStr.padStart(4, '0').let { "${it.substring(0, 2)}:${it.substring(2)}" }
-            } else timeStr
-            val d = java.text.SimpleDateFormat("HH:mm", java.util.Locale.US).parse(normalized) ?: return timeStr
+            val d = java.text.SimpleDateFormat("HH:mm", java.util.Locale.US).parse(normalized) ?: return normalized
             java.text.SimpleDateFormat(fmt, java.util.Locale.US).format(d)
-        } catch (_: Exception) { timeStr }
+        } catch (_: Exception) { normalized }
     }
 
     private fun formatTimestamp(ts: String): String {

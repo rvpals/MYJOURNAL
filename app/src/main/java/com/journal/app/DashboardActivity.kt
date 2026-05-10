@@ -163,6 +163,32 @@ class DashboardActivity : AppCompatActivity() {
             startActivity(Intent(this, EntryFormActivity::class.java))
         }
         findViewById<View>(R.id.btn_lock).setOnClickListener { returnToLogin() }
+
+        val navbar = findViewById<LinearLayout>(R.id.navbar_panel)
+        val cardBg = ThemeManager.color(C.CARD_BG)
+        val borderColor = ThemeManager.color(C.CARD_BORDER)
+        val shadowColor = (borderColor and 0x00FFFFFF) or 0x50000000
+
+        val shadow = GradientDrawable().apply {
+            cornerRadii = floatArrayOf(0f, 0f, 0f, 0f, dp(14).toFloat(), dp(14).toFloat(), dp(14).toFloat(), dp(14).toFloat())
+            setColor(shadowColor)
+        }
+        val face = GradientDrawable().apply {
+            cornerRadii = floatArrayOf(0f, 0f, 0f, 0f, dp(12).toFloat(), dp(12).toFloat(), dp(12).toFloat(), dp(12).toFloat())
+            setColor(cardBg)
+            setStroke(dp(1), borderColor)
+        }
+        val highlight = GradientDrawable().apply {
+            cornerRadii = floatArrayOf(0f, 0f, 0f, 0f, dp(12).toFloat(), dp(12).toFloat(), dp(12).toFloat(), dp(12).toFloat())
+            setColor(Color.TRANSPARENT)
+            setStroke(dp(1), Color.parseColor("#18FFFFFF"))
+        }
+        val layered = LayerDrawable(arrayOf(shadow, face, highlight))
+        layered.setLayerInset(0, dp(2), dp(3), 0, 0)
+        layered.setLayerInset(1, 0, 0, dp(2), dp(3))
+        layered.setLayerInset(2, 0, 0, dp(2), dp(3))
+        navbar.background = layered
+        navbar.elevation = dp(8).toFloat()
     }
 
     private fun setupMenuButton() {
