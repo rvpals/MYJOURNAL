@@ -178,12 +178,19 @@ class EntryFormActivity : AppCompatActivity() {
 
         titleView.text = if (isDraft) "Edit Draft" else if (isNew) "New Entry" else "Edit Entry"
 
+        val attachBtn = findViewById<Button>(R.id.btn_attach)
+        attachBtn.visibility = View.VISIBLE
+        attachBtn.setOnClickListener {
+            if (entryId.isEmpty()) {
+                Toast.makeText(this, "Save entry first to attach files", Toast.LENGTH_SHORT).show()
+            } else {
+                openAttachments()
+            }
+        }
+
         if (!isNew && !isDraft) {
             deleteBtn.visibility = View.VISIBLE
             deleteBtn.setOnClickListener { confirmDelete() }
-            val attachBtn = findViewById<Button>(R.id.btn_attach)
-            attachBtn.visibility = View.VISIBLE
-            attachBtn.setOnClickListener { openAttachments() }
         } else if (isDraft) {
             deleteBtn.visibility = View.VISIBLE
             deleteBtn.setOnClickListener { confirmDeleteDraft() }
@@ -391,13 +398,6 @@ class EntryFormActivity : AppCompatActivity() {
         }
         timeRow.addView(timeInput)
 
-        timeRow.addView(makeSecondaryButton("Now") {
-            val cal = Calendar.getInstance()
-            timeValue = String.format(Locale.US, "%02d:%02d", cal.get(Calendar.HOUR_OF_DAY), cal.get(Calendar.MINUTE))
-            timeInput.setText(timeValue)
-        }.apply {
-            layoutParams = LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, dp(38)).apply { marginEnd = dp(4) }
-        })
         timeRow.addView(makeSecondaryButton("Pick") { showTimePicker() }.apply {
             layoutParams = LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, dp(38))
         })

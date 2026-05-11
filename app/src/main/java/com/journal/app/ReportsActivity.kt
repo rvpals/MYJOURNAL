@@ -1055,14 +1055,21 @@ class ReportsActivity : AppCompatActivity() {
 
     private fun formatTimeDisplay(timeStr: String): String {
         if (timeStr.isEmpty()) return ""
+        val normalized = if (!timeStr.contains(":") && timeStr.length in 3..4) {
+            timeStr.padStart(4, '0').let { "${it.substring(0, 2)}:${it.substring(2)}" }
+        } else timeStr
+        val parts = normalized.split(":")
+        if (parts.size != 2) return normalized
+        val h = parts[0].toIntOrNull() ?: return normalized
+        val m = parts[1].toIntOrNull() ?: return normalized
         val fmt = bs.get("ev_time_format") ?: "h:mm a"
-        return try {
-            val normalized = if (!timeStr.contains(":") && timeStr.length in 3..4) {
-                timeStr.padStart(4, '0').let { "${it.substring(0, 2)}:${it.substring(2)}" }
-            } else timeStr
-            val d = SimpleDateFormat("HH:mm", Locale.US).parse(normalized) ?: return timeStr
-            SimpleDateFormat(fmt, Locale.US).format(d)
-        } catch (_: Exception) { timeStr }
+        return if (fmt == "HH:mm") {
+            String.format(Locale.US, "%02d:%02d", h, m)
+        } else {
+            val ampm = if (h < 12) "AM" else "PM"
+            val h12 = if (h == 0) 12 else if (h > 12) h - 12 else h
+            String.format(Locale.US, "%d:%02d %s", h12, m, ampm)
+        }
     }
 
     private fun formatTimestamp(ts: String): String {

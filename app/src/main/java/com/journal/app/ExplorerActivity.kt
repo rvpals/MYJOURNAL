@@ -399,6 +399,21 @@ class ExplorerActivity : AppCompatActivity() {
         findViewById<Button>(R.id.btn_load_query).setOnClickListener { showSqlLibrary() }
         findViewById<Button>(R.id.btn_export_csv).setOnClickListener { exportCSV() }
         findViewById<Button>(R.id.btn_export_ical).setOnClickListener { exportICalendar() }
+
+        val sqlInput = findViewById<EditText>(R.id.explorer_sql_input)
+        val doubleTapDetector = android.view.GestureDetector(this, object : android.view.GestureDetector.SimpleOnGestureListener() {
+            override fun onDoubleTap(e: android.view.MotionEvent): Boolean {
+                if (sqlInput.text.toString().trim().isEmpty()) {
+                    sqlInput.setText("SELECT * FROM entries")
+                    sqlInput.setSelection(sqlInput.text.length)
+                }
+                return true
+            }
+        })
+        sqlInput.setOnTouchListener { v, event ->
+            doubleTapDetector.onTouchEvent(event)
+            false
+        }
     }
 
     // ========== Query Execution ==========

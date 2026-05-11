@@ -307,14 +307,21 @@ class SearchActivity : AppCompatActivity() {
 
     private fun formatTime(timeStr: String): String {
         if (timeStr.isEmpty()) return ""
+        val normalized = if (!timeStr.contains(":") && timeStr.length in 3..4) {
+            timeStr.padStart(4, '0').let { "${it.substring(0, 2)}:${it.substring(2)}" }
+        } else timeStr
+        val parts = normalized.split(":")
+        if (parts.size != 2) return normalized
+        val h = parts[0].toIntOrNull() ?: return normalized
+        val m = parts[1].toIntOrNull() ?: return normalized
         val fmt = ServiceProvider.bootstrapService?.get("ev_time_format") ?: "h:mm a"
-        return try {
-            val normalized = if (!timeStr.contains(":") && timeStr.length in 3..4) {
-                timeStr.padStart(4, '0').let { "${it.substring(0, 2)}:${it.substring(2)}" }
-            } else timeStr
-            val d = java.text.SimpleDateFormat("HH:mm", java.util.Locale.US).parse(normalized) ?: return timeStr
-            java.text.SimpleDateFormat(fmt, java.util.Locale.US).format(d)
-        } catch (_: Exception) { timeStr }
+        return if (fmt == "HH:mm") {
+            String.format(java.util.Locale.US, "%02d:%02d", h, m)
+        } else {
+            val ampm = if (h < 12) "AM" else "PM"
+            val h12 = if (h == 0) 12 else if (h > 12) h - 12 else h
+            String.format(java.util.Locale.US, "%d:%02d %s", h12, m, ampm)
+        }
     }
 
     private fun dp(value: Int): Int {

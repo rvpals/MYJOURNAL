@@ -100,7 +100,7 @@ class AboutActivity : AppCompatActivity() {
             val entriesJson = db?.getEntries() ?: "[]"
             val arr = org.json.JSONArray(entriesJson)
 
-            data class EntryLength(val title: String, val wordCount: Int)
+            data class EntryLength(val id: String, val title: String, val wordCount: Int)
             val entryLengths = mutableListOf<EntryLength>()
             val wordCounts = mutableMapOf<String, Int>()
             val stopWords = setOf("the", "a", "an", "is", "are", "was", "were", "be", "been",
@@ -122,7 +122,7 @@ class AboutActivity : AppCompatActivity() {
                 val e = arr.getJSONObject(i)
                 val content = e.optString("content", "")
                 val words = content.split(Regex("\\s+")).filter { it.isNotBlank() }
-                entryLengths.add(EntryLength(e.optString("title", "Untitled"), words.size))
+                entryLengths.add(EntryLength(e.optString("id", ""), e.optString("title", "Untitled"), words.size))
                 for (word in words) {
                     val cleaned = word.lowercase().replace(Regex("[^a-z']"), "")
                     if (cleaned.length > 1 && cleaned !in stopWords) {
@@ -156,6 +156,16 @@ class AboutActivity : AppCompatActivity() {
                     val row = LinearLayout(this).apply {
                         orientation = LinearLayout.VERTICAL
                         setPadding(0, 0, 0, 8)
+                        isClickable = true
+                        isFocusable = true
+                        setOnClickListener {
+                            if (entry.id.isNotEmpty()) {
+                                EntryViewerActivity.pendingEntryId = entry.id
+                                EntryViewerActivity.databaseService = ServiceProvider.databaseService
+                                EntryViewerActivity.bootstrapService = ServiceProvider.bootstrapService
+                                startActivity(Intent(this@AboutActivity, EntryViewerActivity::class.java))
+                            }
+                        }
                     }
                     val entryRow = LinearLayout(this).apply {
                         orientation = LinearLayout.HORIZONTAL
@@ -164,7 +174,7 @@ class AboutActivity : AppCompatActivity() {
                     val rank = TextView(this).apply {
                         text = "${idx + 1}. ${entry.title.take(30)}"
                         textSize = 13f
-                        setTextColor(0xFF2c3145.toInt())
+                        setTextColor(0xFF1cb3c8.toInt())
                         layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
                     }
                     entryRow.addView(rank)
@@ -251,6 +261,14 @@ class AboutActivity : AppCompatActivity() {
     }
 
     private fun buildChangelog(): String = """
+v2.5.3 (2026-05-10)
+• About screen: splash image as subtle background
+• About screen: clickable top 10 longest entries to view them
+• Entry form: attach button available for new entries (prompts to save first)
+• Entry form: removed "Now" button, time picker defaults to current time
+• SQL Explorer: double-tap empty query field to fill default query
+• Fix: time display wrong in viewer, dashboard, search, entry list, and reports (replaced SimpleDateFormat with direct string formatting)
+
 v2.5.2 (2026-05-09)
 • Splash screen with portrait image on app launch
 • Skip splash screen option in Settings > Prefs
